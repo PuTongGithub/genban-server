@@ -1,0 +1,36 @@
+{
+  "models": {
+    "qwen-test": {
+      "id": "qwen3-32b",
+      "max_tokens": 131072,
+      "api": "dash_scope",
+      "default": true
+    },
+    "qwen-flash": {
+      "id": "qwen-flash",
+      "max_tokens": 1000000,
+      "api": "dash_scope"
+    },
+    "qwen-plus": {
+      "id": "qwen-plus",
+      "max_tokens": 1000000,
+      "api": "dash_scope"
+    },
+    "qwen-max": {
+      "id": "qwen3-max-2026-01-23",
+      "max_tokens": 262144,
+      "api": "dash_scope"
+    },
+    "qwen-coder": {
+      "id": "qwen3-coder-flash",
+      "max_tokens": 1000000,
+      "api": "dash_scope"
+    }
+  },
+  "tools": {
+    "read_file_path_whitelist": [],
+    "write_file_path_whitelist": [],
+    "shell_timeout": 120,
+    "zhipu_search_engine": "search_std"
+  }
+}
