@@ -5,7 +5,7 @@ from src.config.config import env_config, app_config
 
 client = ZhipuAiClient(api_key=env_config.get('ZHIPU_API_KEY'))
 
-def web_search(search_query: str, count: int = 10, search_recency_filter: str = "noLimit") -> dict:
+def web_search(search_query: str, count: int = 10, search_recency_filter: str = "noLimit"):
     """执行网络搜索"""
     search_engine = app_config.get('tools')['zhipu_search_engine']
     try:
@@ -15,6 +15,6 @@ def web_search(search_query: str, count: int = 10, search_recency_filter: str = 
             count=count,  # 返回结果的条数，范围1-50，默认10
             search_recency_filter=search_recency_filter,  # 搜索指定日期范围内的内容
         )
-        return response
+        return response.search_result
     except Exception as e:
         return {"error": f"网络搜索发生错误: {str(e)}"}

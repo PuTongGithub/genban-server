@@ -15,7 +15,7 @@ from platformdirs import (
 )
 
 
-APP_NAME = "genban"
+APP_NAME = "server"
 APP_AUTHOR = "genban"
 
 

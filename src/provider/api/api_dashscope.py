@@ -1,11 +1,10 @@
 """阿里云DashScope API封装"""
 
 import dashscope
-from dashscope.api_entities.dashscope_response import GenerationResponse
 from src.config.config import env_config
 
 
-def call(model, messages, tools, enable_thinking) -> GenerationResponse:
+def call(model, messages, tools, enable_thinking):
     """调用大模型生成接口"""
     kwargs = {
         'api_key': env_config.get('DASHSCOPE_API_KEY'),

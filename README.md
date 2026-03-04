@@ -27,5 +27,5 @@ pip install -r requirements.txt
 ## 打包指令
 
 ```bash
-pipreqs .\src --encoding=utf-8 --savepath .\requirements.txt --force
+pip freeze > requirements.txt
 ```
