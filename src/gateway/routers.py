@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from typing import List
 
 # 导入各模块路由
-from src.user.web import user_controller
+from src.user import user_controller
 
 
 # 全局路由列表
@@ -17,5 +17,5 @@ _routers: List[APIRouter] = []
 def register_all_routers() -> List[APIRouter]:
     """注册所有路由并返回路由列表"""
     _routers.append(user_controller.router)
-    
+
     return _routers
