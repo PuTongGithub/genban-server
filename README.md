@@ -18,11 +18,26 @@ Genban 是一个以「应用可视化、模块化」为核心架构的 AI 个人
 - **多AGENT调度**：具备多AGENT的调度管理能力
 - **记忆管理**：实现记忆管理机制，具备长期记忆能力
 
-## 安装依赖
+## 初始化（首次运行前）
+
+### 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
+
+### 生成RSA密钥对
+
+登录接口使用RSA非对称加密传输密码，首次使用前需要生成密钥对：
+
+```bash
+python scripts/generate_rsa_keys.py
+```
+
+执行后会：
+- 在项目根目录创建 `keys/` 文件夹
+- 生成 `private_key.pem`（后端使用，**请勿泄露**）
+- 生成 `public_key.pem`（给前端使用）
 
 ## 打包指令
 

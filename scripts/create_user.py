@@ -7,13 +7,14 @@
 import sys
 import getpass
 from pathlib import Path
-from src.user.db.user_db import user_db
-from src.user.db.user_state_db import user_state_db
-from src.user.components.password_util import hashPassword
 
 # 添加项目根目录到路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+from src.user.db.user_db import user_db
+from src.user.db.user_state_db import user_state_db
+from src.user.components.password_util import hash_password
 
 
 def create_user():
@@ -44,7 +45,7 @@ def create_user():
         return
 
     # 创建用户
-    password_hash = hashPassword(password)
+    password_hash = hash_password(password)
     success = user_db.create(user_id, password_hash)
 
     if not success:

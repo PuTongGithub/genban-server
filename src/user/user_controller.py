@@ -11,9 +11,10 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 @router.post("/login")
 async def login(request: LoginRequest) -> LoginResponse:
-    # 用户登录接口
+    # 用户登录/自动注册接口，password字段为RSA加密后的密文
+    # 若用户不存在则自动注册，存在则验证登录
     try:
-        state = user_manager.login(request.user_id, request.password)
+        state = user_manager.login_or_register(request.user_id, request.password)
         return LoginResponse(token=state.token, expires_at=state.token_expires_at)
     except Exception as e:
         traceback.print_exc()

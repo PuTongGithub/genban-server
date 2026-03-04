@@ -20,3 +20,10 @@ class InvalidPasswordException(Exception):
 
     def __init__(self):
         super().__init__("invalid password")
+
+
+class WeakPasswordException(Exception):
+    """密码强度不足异常"""
+
+    def __init__(self, message: str = "password is too weak"):
+        super().__init__(message)

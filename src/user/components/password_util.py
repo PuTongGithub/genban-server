@@ -1,7 +1,8 @@
 import bcrypt
+from src.user.exceptions import WeakPasswordException
 
 
-def hashPassword(password: str) -> str:
+def hash_password(password: str) -> str:
     # 生成密码哈希
     passwordBytes = password.encode("utf-8")
     salt = bcrypt.gensalt()
@@ -9,8 +10,14 @@ def hashPassword(password: str) -> str:
     return hashed.decode("utf-8")
 
 
-def verifyPassword(password: str, passwordHash: str) -> bool:
+def verify_password(password: str, passwordHash: str) -> bool:
     # 校验密码
     passwordBytes = password.encode("utf-8")
     hashBytes = passwordHash.encode("utf-8")
     return bcrypt.checkpw(passwordBytes, hashBytes)
+
+
+def validate_password(password: str) -> None:
+    # 校验密码强度
+    if len(password) < 6:
+        raise WeakPasswordException("密码最少需要6位字符")

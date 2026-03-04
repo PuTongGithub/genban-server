@@ -6,12 +6,13 @@
 
 import sys
 from pathlib import Path
-from src.user.db.user_db import user_db
-from src.user.db.user_state_db import user_state_db
 
 # 添加项目根目录到路径
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+from src.user.db.user_db import user_db
+from src.user.db.user_state_db import user_state_db
 
 
 def delete_user():

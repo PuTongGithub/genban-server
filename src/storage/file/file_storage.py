@@ -54,5 +54,12 @@ class _FileStorage:
         files.sort(key=lambda p: p.stem)
         return files
 
+    # 读取文本文件内容
+    def read_text(self, file_path: Path) -> str:
+        if not file_path.exists():
+            return ""
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+
 
 file_storage = _FileStorage()
