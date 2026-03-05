@@ -6,7 +6,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 from src.common.utils.path_util import get_app_dirs, get_user_dirs
 from src.storage.file.file_storage import file_storage
-from src.config.exceptions import EnvConfigNotFoundException
+from src.config.exceptions import (
+    EnvConfigNotFoundException,
+    ModelConfigNotFoundException,
+)
 
 
 class EnvConfig:
@@ -56,6 +59,13 @@ class AppConfig:
     def get_default_model(self) -> str:
         """获取默认模型"""
         return self.default_model
+
+    def get_model_config(self, model_key: str) -> dict:
+        """获取模型配置"""
+        models = self.get("models")
+        if model_key not in models:
+            raise ModelConfigNotFoundException(model_key)
+        return models[model_key]
 
 
 class FileConfig:

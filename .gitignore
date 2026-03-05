@@ -21,6 +21,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.mypy_cache/
+.ruff_cache/
+
 
 # Virtual environments
 venv/
@@ -34,7 +37,7 @@ env/
 *.swp
 *.swo
 *~
-.mypy_cache/
+.trae/
 
 # Environment variables
 .env

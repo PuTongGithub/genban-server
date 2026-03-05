@@ -13,14 +13,14 @@ class AsyncExecutor:
     _executors: weakref.WeakSet = weakref.WeakSet()
 
     def __init__(
-        self,
-        name: Optional[str] = None,
-        on_stop: Optional[Callable[[], None]] = None
+        self, name: Optional[str] = None, on_stop: Optional[Callable[[], None]] = None
     ):
         """创建并启动执行器"""
         self._name = name or "AsyncExecutor"
         self._loop = asyncio.new_event_loop()
-        self._thread = threading.Thread(target=self._run_loop, name=self._name, daemon=True)
+        self._thread = threading.Thread(
+            target=self._run_loop, name=self._name, daemon=True
+        )
         self._stop_handlers: List[Callable[[], None]] = []
 
         if on_stop:
@@ -30,7 +30,7 @@ class AsyncExecutor:
         AsyncExecutor._executors.add(self)
 
     @classmethod
-    def get_all_executors(cls) -> List['AsyncExecutor']:
+    def get_all_executors(cls) -> List["AsyncExecutor"]:
         """获取所有活跃执行器"""
         return list(cls._executors)
 
@@ -62,6 +62,7 @@ class AsyncExecutor:
 
         self._loop.call_soon_threadsafe(self._loop.stop)
         self._thread.join(timeout=timeout)
+        AsyncExecutor._executors.discard(self)
 
     def is_running(self) -> bool:
         """检查执行器是否运行中"""
