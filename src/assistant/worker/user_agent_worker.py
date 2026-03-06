@@ -32,8 +32,6 @@ class UserAgentWorker:
     async def process_chat(self, chat: Chat) -> None:
         """处理单个 Chat"""
         try:
-            conversation_manager.add_chat(self.user_id, chat)
-
             # 使用复用的 Agent 执行调用
             new_chats = self._agent.run(chat=chat)
 

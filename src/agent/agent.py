@@ -93,7 +93,6 @@ class Agent:
         self.hook_manager.execute(ToolsHook, self.tool_caller.registry, context)
 
         # 6. NewChatHook - 处理新增的 Chat
-        self.hook_manager.async_execute(NewChatHook, context.input_chat, context)
         for chat in context.new_chats:
             self.hook_manager.async_execute(NewChatHook, chat, context)
 
@@ -129,7 +128,7 @@ class Agent:
         self.hook_manager.async_execute(NewChatHook, newChat, context)
 
     def run(self, chat: Chat) -> list[Chat]:
-        """执行 Agent 调用，返回本次所有新增的 Chat 列表
+        """执行 Agent 调用，返回本次所有新增的 Chat 列表（包括新增输入的 Chat）
 
         Args:
             chat: 当前输入的对话
@@ -141,6 +140,7 @@ class Agent:
             model_key=app_config.get_default_model(),
             user_id=self.user_id,
             input_chat=chat,
+            new_chats=[chat],
         )
 
         # 执行前置钩子链
@@ -148,10 +148,7 @@ class Agent:
 
         iteration = 0
         current_chats = (
-            [context.prompt_chat]
-            + context.history_chats
-            + [context.input_chat]
-            + context.new_chats
+            [context.prompt_chat] + context.history_chats + context.new_chats
         )
         new_chats = context.new_chats
 
