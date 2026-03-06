@@ -5,18 +5,25 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.common.async_executor import AsyncExecutor
-from src.gateway.routers import register_all_routers
+from src.gateway.routers import routers
+from src.assistant.web.stream_manager import stream_manager
 
 
 # 注册优雅停机
-atexit.register(AsyncExecutor.stop_all)
+def stop() -> None:
+    """停止所有异步任务"""
+    AsyncExecutor.stop_all()
+    stream_manager.stop()
+
+
+atexit.register(stop)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     yield
-    AsyncExecutor.stop_all()
+    stop()
 
 
 # 创建FastAPI应用，注册所有路由
@@ -31,5 +38,5 @@ app.add_middleware(
     allow_headers=["*"],  # 允许所有请求头
 )
 
-for router in register_all_routers():
+for router in routers:
     app.include_router(router)

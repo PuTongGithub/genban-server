@@ -8,13 +8,6 @@ class UserNotFoundException(Exception):
         super().__init__(f"user:{user_id} not found")
 
 
-class UnauthorizedException(Exception):
-    """未授权异常"""
-
-    def __init__(self):
-        super().__init__("unauthorized")
-
-
 class InvalidPasswordException(Exception):
     """密码无效异常"""
 
@@ -27,3 +20,10 @@ class WeakPasswordException(Exception):
 
     def __init__(self, message: str = "password is too weak"):
         super().__init__(message)
+
+
+class UserNotAllowedException(Exception):
+    """用户不在白名单异常"""
+
+    def __init__(self, user_id: str):
+        super().__init__(f"user:{user_id} not in allowed list")

@@ -30,7 +30,7 @@ class ModelProvider(ABC):
         pass
 
     @abstractmethod
-    def stream_call(
+    async def stream_call(
         self,
         model: str,
         messages: list,

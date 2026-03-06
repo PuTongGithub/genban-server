@@ -32,5 +32,8 @@
     "write_file_path_whitelist": [],
     "shell_timeout": 120,
     "zhipu_search_engine": "search_std"
+  },
+  "auth": {
+    "allowed_user_ids": ["test", "pt"]
   }
 }

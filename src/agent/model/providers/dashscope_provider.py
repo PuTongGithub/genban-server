@@ -47,6 +47,7 @@ class DashScopeProvider(ModelProvider):
             "result_format": "message",
             "stream": True,
             "parallel_tool_calls": True,
+            "incremental_output": False,
         }
         responses = dashscope.Generation.call(**kwargs)
         for response in responses:
@@ -68,9 +69,15 @@ class DashScopeProvider(ModelProvider):
         message = Message(
             role=message_data.role,
             content=message_data.content,
-            reasoning_content=getattr(message_data, "reasoning_content", ""),
-            tool_calls=getattr(message_data, "tool_calls", None),
-            tool_call_id=getattr(message_data, "tool_call_id", None),
+            reasoning_content=message_data["reasoning_content"]
+            if "reasoning_content" in message_data
+            else "",
+            tool_calls=message_data["tool_calls"]
+            if "tool_calls" in message_data
+            else None,
+            tool_call_id=message_data["tool_call_id"]
+            if "tool_call_id" in message_data
+            else None,
         )
 
         return CallResponse(

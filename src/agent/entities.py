@@ -42,7 +42,7 @@ class Chat:
     id: str = ""  # 对话id，唯一键，升序排列
     time: int = field(default_factory=time_util.get_timestamp)  # 对话时间，秒级时间戳
     total_tokens: int = 0  # 本次调用消耗的token数（仅source=assistant时有效）
-    message: Message = Message()  # 对话内容
+    message: Message = field(default_factory=Message)  # 对话内容
 
 
 @dataclass
@@ -73,10 +73,14 @@ chatTypeMap = {chatType.type: chatType for chatType in ChatType}
 class AgentContext:
     model_key: str = ""  # model_hook 结果：当前使用的模型 key
     user_id: str = ""  # 用户 ID
-    input_chat: Chat = Chat()  # 本次 Agent.run 传入的 Chat
-    prompt_chat: Chat = Chat()  # prompt_hook 结果：处理后的提示词
-    history_chats: list[Chat] = []  # chats_hook 结果：处理后的历史对话列表
-    new_chats: list[Chat] = []  # 新增的 Chat 列表（用于收集本次所有新增对话）
+    input_chat: Chat = field(default_factory=Chat)  # 本次 Agent.run 传入的 Chat
+    prompt_chat: Chat = field(default_factory=Chat)  # prompt_hook 结果：处理后的提示词
+    history_chats: list[Chat] = field(
+        default_factory=list
+    )  # chats_hook 结果：处理后的历史对话列表
+    new_chats: list[Chat] = field(
+        default_factory=list
+    )  # 新增的 Chat 列表（用于收集本次所有新增对话）
 
 
 # 工具相关的数据结构定义

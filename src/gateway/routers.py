@@ -8,14 +8,10 @@ from typing import List
 
 # 导入各模块路由
 from src.user import user_controller
+from src.assistant.web import assistant_controller
 
 
 # 全局路由列表
-_routers: List[APIRouter] = []
-
-
-def register_all_routers() -> List[APIRouter]:
-    """注册所有路由并返回路由列表"""
-    _routers.append(user_controller.router)
-
-    return _routers
+routers: List[APIRouter] = []
+routers.append(user_controller.router)
+routers.append(assistant_controller.router)

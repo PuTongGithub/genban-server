@@ -100,7 +100,7 @@ class _ChatFactory:
         """根据模型响应创建助手对话"""
         return Chat(
             type=ChatType.ASSISTANT.type,
-            id=self._create_chat_id(),
+            id=response.request_id,
             message=response.message,
             total_tokens=response.total_tokens,
         )

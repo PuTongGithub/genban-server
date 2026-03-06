@@ -3,11 +3,12 @@ import secrets
 from src.user.exceptions import (
     UserNotFoundException,
     InvalidPasswordException,
-    UnauthorizedException,
+    UserNotAllowedException,
 )
+from src.assistant.exceptions import UnauthorizedException
 from src.common.utils import time_util
 from src.common.utils.rsa_util import RsaUtil
-from src.config.config import file_config
+from src.config.config import file_config, app_config
 from src.user.db.models import UserState
 from src.user.db.user_db import user_db
 from src.user.db.user_state_db import user_state_db
@@ -28,8 +29,20 @@ class _UserManager:
         private_key = file_config.get_private_key()
         self._rsa = RsaUtil(private_key_content=private_key) if private_key else None
 
+    def _is_user_allowed(self, user_id: str) -> bool:
+        # 检查用户是否在白名单中
+        allowed_user_ids = app_config.get("auth").get("allowed_user_ids", [])
+        # 如果白名单为空，允许所有用户
+        if not allowed_user_ids:
+            return True
+        return user_id in allowed_user_ids
+
     def login_or_register(self, userId: str, encrypted_password: str) -> UserState:
         # 登录或自动注册，成功返回用户状态，encrypted_password为RSA加密后的密文
+        # 检查用户是否在白名单中
+        if not self._is_user_allowed(userId):
+            raise UserNotAllowedException(userId)
+
         password = self._rsa.decrypt(encrypted_password)
         user = user_db.get_user_by_id(userId)
 
