@@ -163,7 +163,7 @@ class Agent:
             if response_chat.message.tool_calls is not None:
                 # 处理工具调用
                 tool_results = self.tool_caller.execute_from_model_response(
-                    response_chat.message.tool_calls
+                    response_chat.message.tool_calls, context
                 )
                 for tool_result in tool_results:
                     tool_chat = chat_factory.create_tool_chat(

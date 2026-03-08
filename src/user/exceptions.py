@@ -27,3 +27,10 @@ class UserNotAllowedException(Exception):
 
     def __init__(self, user_id: str):
         super().__init__(f"user:{user_id} not in allowed list")
+
+
+class InvalidUsernameException(Exception):
+    """用户名格式不合法异常"""
+
+    def __init__(self, message: str = "username is invalid"):
+        super().__init__(message)

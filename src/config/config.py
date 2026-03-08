@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from src.common.utils.path_util import get_app_dirs, get_user_dirs
+
 from src.storage.file.file_storage import file_storage
 from src.config.exceptions import (
     EnvConfigNotFoundException,
@@ -35,15 +35,7 @@ class AppConfig:
         app_config_path = Path(__file__).parent / "jsons/app_config.json"
         with open(app_config_path, "r", encoding="utf-8") as file:
             self.config = json.load(file)
-            self._set_file_whitelist()
             self._init_configs()
-
-    def _set_file_whitelist(self) -> None:
-        """设置文件路径白名单"""
-        self.config["tools"]["read_file_path_whitelist"].extend(get_app_dirs())
-        self.config["tools"]["read_file_path_whitelist"].extend(get_user_dirs())
-        self.config["tools"]["write_file_path_whitelist"].extend(get_app_dirs())
-        self.config["tools"]["write_file_path_whitelist"].extend(get_user_dirs())
 
     def _init_configs(self) -> None:
         """初始化默认模型配置"""

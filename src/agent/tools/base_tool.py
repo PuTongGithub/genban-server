@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from src.agent.entities import ToolParameter
+from src.agent.entities import ToolParameter, AgentContext
 
 
 class BaseTool(ABC):
@@ -14,8 +14,13 @@ class BaseTool(ABC):
     parameters: list[ToolParameter] = []
 
     @abstractmethod
-    def execute(self, **kwargs: Any) -> Any:
-        """执行工具"""
+    def execute(self, context: AgentContext, **kwargs: Any) -> Any:
+        """执行工具
+
+        Args:
+            context: Agent 执行上下文
+            **kwargs: 工具参数
+        """
         pass
 
     def get_schema(self) -> dict[str, Any]:

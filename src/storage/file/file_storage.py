@@ -61,5 +61,48 @@ class _FileStorage:
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
 
+    # 读取文本文件内容为行列表
+    def read_lines(self, file_path: Path) -> List[str]:
+        if not file_path.exists():
+            return []
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.readlines()
+
+    # 写入文本文件内容（覆盖）
+    def write_text(self, file_path: Path, content: str) -> None:
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content)
+
+    # 写入行列表到文本文件（覆盖）
+    def write_lines(self, file_path: Path, lines: List[str]) -> None:
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+
+    # 列出目录内容
+    def list_dir(self, dir_path: Path) -> List[Path]:
+        if not dir_path.exists() or not dir_path.is_dir():
+            return []
+        return list(dir_path.iterdir())
+
+    # 检查路径是否存在
+    def exists(self, path: Path) -> bool:
+        return path.exists()
+
+    # 检查路径是否是文件
+    def is_file(self, path: Path) -> bool:
+        return path.is_file()
+
+    # 检查路径是否是目录
+    def is_dir(self, path: Path) -> bool:
+        return path.is_dir()
+
+    # 写入二进制文件内容（覆盖）
+    def write_bytes(self, file_path: Path, content: bytes) -> None:
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, "wb") as f:
+            f.write(content)
+
 
 file_storage = _FileStorage()

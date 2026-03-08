@@ -10,6 +10,10 @@ from src.assistant.hooks.prompt_hook import PromptSetupHook
 from src.assistant.hooks.chats_hook import HistoryChatsHook
 from src.assistant.hooks.stream_hook import StreamNewChatHook
 from src.assistant.web.stream_manager import stream_manager
+from src.modules.file_system.tools.read_file_tool import ReadFileTool
+from src.modules.file_system.tools.write_file_tool import WriteFileTool
+from src.modules.file_system.tools.edit_file_tool import EditFileTool
+from src.modules.shell.shell_tool import ShellTool
 
 
 class UserAgentWorker:
@@ -26,6 +30,12 @@ class UserAgentWorker:
                 PromptSetupHook(),
                 HistoryChatsHook(),
                 StreamNewChatHook(),
+            ],
+            tools=[
+                ReadFileTool(user_id),
+                WriteFileTool(user_id),
+                EditFileTool(user_id),
+                ShellTool(),
             ],
         )
 

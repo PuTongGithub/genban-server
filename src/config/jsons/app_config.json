@@ -28,8 +28,6 @@
     }
   },
   "tools": {
-    "read_file_path_whitelist": [],
-    "write_file_path_whitelist": [],
     "shell_timeout": 120,
     "zhipu_search_engine": "search_std"
   },

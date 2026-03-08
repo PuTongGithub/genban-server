@@ -12,10 +12,11 @@ from src.config.config import file_config, app_config
 from src.user.db.models import UserState
 from src.user.db.user_db import user_db
 from src.user.db.user_state_db import user_state_db
-from src.user.components.password_util import (
+from src.user.components.user_validate_util import (
     verify_password,
     hash_password,
     validate_password,
+    validate_username,
 )
 
 
@@ -67,6 +68,7 @@ class _UserManager:
 
     def _do_register(self, userId: str, password: str) -> UserState:
         # 注册新用户
+        validate_username(userId)
         validate_password(password)
 
         password_hash = hash_password(password)
