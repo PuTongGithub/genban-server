@@ -18,6 +18,7 @@ from src.user.components.user_validate_util import (
     validate_password,
     validate_username,
 )
+from src.modules.skills.skills_manager import skills_manager
 
 
 class _UserManager:
@@ -77,6 +78,10 @@ class _UserManager:
 
         if not user_state_db.create(userId):
             raise RuntimeError("用户状态初始化失败")
+
+        # 初始化用户 Skills（从项目根目录复制默认 Skills）
+        # 失败不影响注册流程
+        skills_manager.init_user_skills(userId)
 
         return self._create_token(userId)
 

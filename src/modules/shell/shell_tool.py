@@ -7,7 +7,7 @@ from src.agent.tools.base_tool import BaseTool
 from src.agent.entities import ToolParameter, AgentContext
 from src.common.utils import sys_util
 from src.config.config import app_config
-from src.modules.file_system.path_validator import get_user_base_dir
+from src.common.utils.path_util import get_user_dir
 
 
 # 命令行执行工具
@@ -50,7 +50,7 @@ class ShellTool(BaseTool):
         """
 
         command = kwargs.get("command", "")
-        cwd = str(get_user_base_dir(context.user_id))
+        cwd = str(get_user_dir(context.user_id))
         timeout = app_config.get("tools")["shell_timeout"]
         if not command.strip():
             return "命令不能为空"

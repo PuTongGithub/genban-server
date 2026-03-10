@@ -4,7 +4,7 @@ from typing import Any
 
 from src.agent.tools.base_tool import BaseTool
 from src.agent.entities import ToolParameter, AgentContext
-from src.modules.file_system.path_validator import validate_path
+from src.common.utils.path_util import validate_path
 from src.modules.file_system.exceptions import (
     FileNotFoundException,
     LineNumberOutOfRangeException,
@@ -41,9 +41,6 @@ class EditFileTool(BaseTool):
         ),
     ]
 
-    def __init__(self, user_id: str):
-        self.user_id = user_id
-
     def execute(self, context: AgentContext, **kwargs: Any) -> str:
         """执行编辑文件操作
 
@@ -62,7 +59,7 @@ class EditFileTool(BaseTool):
         path = kwargs.get("path", "")
         replacements = kwargs.get("replacements", [])
 
-        file_path = validate_path(path, self.user_id)
+        file_path = validate_path(path, context.user_id)
 
         if not file_storage.exists(file_path):
             raise FileNotFoundException(path)

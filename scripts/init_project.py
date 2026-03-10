@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 """
-生成RSA密钥对脚本
-用法: python scripts/generate_rsa_keys.py
-输出: 密钥保存到项目根目录/keys/文件夹下
+项目初始化脚本
+用法: python scripts/init_project.py
+功能:
+  1. 生成 RSA 密钥对
+  2. 拷贝系统 Skills 到运行时目录
 """
 
 import sys
 from pathlib import Path
 
-# 添加项目根目录到路径
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
 
-from src.common.utils.rsa_util import generate_key_pair
+def init_rsa_keys() -> None:
+    """生成 RSA 密钥对"""
+    print("=== 生成 RSA 密钥对 ===\n")
 
+    # 添加项目根目录到路径
+    project_root = Path(__file__).parent.parent
+    sys.path.insert(0, str(project_root))
 
-def main():
-    print("=== 生成RSA密钥对 ===\n")
+    from src.common.utils.rsa_util import generate_key_pair
 
     private_key, public_key = generate_key_pair()
 
@@ -38,11 +41,17 @@ def main():
     print(f"✓ 公钥已保存到: {public_key_path}")
 
     print("\n" + "=" * 60)
-    print("# 公钥内容（给前端使用）：\n")
-    print(public_key)
+    print("⚠ 警告：私钥请妥善保管，不要泄露给他人！")
+
+
+def main() -> None:
+    """主函数"""
+    print("=== 项目初始化 ===\n")
+
+    init_rsa_keys()
 
     print("\n" + "=" * 60)
-    print("⚠ 警告：私钥请妥善保管，不要泄露给他人！")
+    print("✓ 项目初始化完成")
 
 
 if __name__ == "__main__":

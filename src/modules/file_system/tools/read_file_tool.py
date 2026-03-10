@@ -4,7 +4,7 @@ from typing import Any
 
 from src.agent.tools.base_tool import BaseTool
 from src.agent.entities import ToolParameter, AgentContext
-from src.modules.file_system.path_validator import validate_path
+from src.common.utils.path_util import validate_path
 from src.modules.file_system.exceptions import FileNotFoundException
 from src.storage.file.file_storage import file_storage
 
@@ -41,9 +41,6 @@ class ReadFileTool(BaseTool):
         ),
     ]
 
-    def __init__(self, user_id: str):
-        self.user_id = user_id
-
     def execute(self, context: AgentContext, **kwargs: Any) -> str:
         """执行读取文件操作
 
@@ -65,7 +62,7 @@ class ReadFileTool(BaseTool):
         end_line = kwargs.get("end_line", None)
         show_line_numbers = kwargs.get("show_line_numbers", False)
 
-        file_path = validate_path(path, self.user_id)
+        file_path = validate_path(path, context.user_id)
 
         if not file_storage.exists(file_path):
             raise FileNotFoundException(path)

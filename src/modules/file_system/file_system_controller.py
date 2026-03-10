@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse, PlainTextResponse
 
 from src.user.auth import get_current_user_id
-from src.modules.file_system.path_validator import validate_path
+from src.common.utils.path_util import validate_path
 from src.modules.file_system.exceptions import PathNotAllowedException
 from src.modules.file_system.entities import (
     FileSystemItem,
@@ -18,6 +18,12 @@ from src.storage.file.file_storage import file_storage
 router = APIRouter(prefix="/api/file_system", tags=["file_system"])
 
 
+def get_path(path: str, user_id: str):
+    """获取路径对象，接口可操作的文件均为files目录下的文件"""
+    path = "files/" + path
+    return validate_path(path, user_id)
+
+
 @router.get("/list")
 async def list_directory(
     path: str = "",
@@ -26,14 +32,14 @@ async def list_directory(
     """查看目录内容
 
     Args:
-        path: 相对路径，默认为用户根目录
+        path: 相对路径，默认为用户根目录的files子目录
         user_id: 当前用户ID（由依赖注入）
 
     Returns:
         目录下的文件和子目录列表
     """
     try:
-        dir_path = validate_path(path, user_id)
+        dir_path = get_path(path, user_id)
     except PathNotAllowedException as e:
         raise HTTPException(status_code=403, detail=str(e))
 
@@ -73,7 +79,7 @@ async def preview_file(
         文件内容（纯文本）
     """
     try:
-        file_path = validate_path(path, user_id)
+        file_path = get_path(path, user_id)
     except PathNotAllowedException as e:
         raise HTTPException(status_code=403, detail=str(e))
 
@@ -105,7 +111,7 @@ async def download_file(
         文件下载流
     """
     try:
-        file_path = validate_path(path, user_id)
+        file_path = get_path(path, user_id)
     except PathNotAllowedException as e:
         raise HTTPException(status_code=403, detail=str(e))
 
@@ -139,7 +145,7 @@ async def upload_file(
         上传结果
     """
     try:
-        file_path = validate_path(path, user_id)
+        file_path = get_path(path, user_id)
     except PathNotAllowedException as e:
         raise HTTPException(status_code=403, detail=str(e))
 

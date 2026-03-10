@@ -5,13 +5,6 @@ from platformdirs import (
     user_config_dir,
     user_data_dir,
     user_cache_dir,
-    user_log_dir,
-    user_documents_dir,
-    user_downloads_dir,
-    user_desktop_dir,
-    user_pictures_dir,
-    user_videos_dir,
-    user_music_dir
 )
 
 
@@ -19,9 +12,17 @@ APP_NAME = "server"
 APP_AUTHOR = "genban"
 
 
-def get_path(path_str: str) -> Path:
+class PathNotAllowedException(Exception):
+    """路径不在允许范围内异常"""
+
+    def __init__(self, path: str):
+        self.path = path
+        super().__init__(f"路径 '{path}' 不在允许访问的范围内")
+
+
+def get_path(path_input: str | Path) -> Path:
     """获取或创建路径"""
-    path = Path(path_str)
+    path = Path(path_input)
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -41,33 +42,61 @@ def get_cache_dir() -> Path:
     return get_path(user_cache_dir(APP_NAME, APP_AUTHOR))
 
 
-def get_log_dir() -> Path:
-    """获取日志目录"""
-    return get_path(user_log_dir(APP_NAME, APP_AUTHOR))
+def get_system_dir() -> Path:
+    """获取系统数据目录"""
+    return get_path(get_data_dir() / "system_data")
 
 
-def get_app_dirs() -> list:
-    """获取所有应用目录"""
-    return [
-        user_config_dir(APP_NAME, APP_AUTHOR),
-        user_data_dir(APP_NAME, APP_AUTHOR),
-        user_cache_dir(APP_NAME, APP_AUTHOR),
-        user_log_dir(APP_NAME, APP_AUTHOR)
-    ]
+def get_user_dir(user_id: str) -> Path:
+    """获取用户数据目录"""
+    return get_path(get_data_dir() / "user_data" / user_id)
 
 
-def get_user_dirs() -> list:
-    """获取所有用户目录"""
-    return [
-        user_documents_dir(),
-        user_downloads_dir(),
-        user_desktop_dir(),
-        user_pictures_dir(),
-        user_videos_dir(),
-        user_music_dir()
-    ]
+def get_user_files_dir(user_id: str) -> Path:
+    """获取用户文件数据目录"""
+    return get_path(get_user_dir(user_id) / "files")
 
 
-def validate_path(path: str, whitelist: list) -> bool:
-    """验证路径是否在白名单中"""
-    return any(path.startswith(whitelist_item) for whitelist_item in whitelist)
+def get_user_skills_dir(user_id: str) -> Path:
+    """获取用户 Skills 目录"""
+    return get_path(get_user_dir(user_id) / "skills")
+
+
+def get_project_skills_dir() -> Path:
+    """获取项目根目录下的 Skills 目录（用于初始化用户 Skills）"""
+    return Path(__file__).parent.parent.parent.parent / "skills"
+
+
+def validate_path(path: str, user_id: str) -> Path:
+    """验证路径是否在用户允许的范围内，返回绝对路径
+
+    允许访问的目录：
+    - 用户目录下所有内容: {data_dir}/user_data/{user_id}
+
+    Args:
+        path: 相对路径或绝对路径
+        user_id: 用户ID
+
+    Returns:
+        验证通过的绝对路径
+
+    Raises:
+        PathNotAllowedException: 路径不在允许范围内
+    """
+    user_dir = get_user_dir(user_id)
+
+    # 确保目录存在
+    user_dir.mkdir(parents=True, exist_ok=True)
+
+    # 处理路径：如果是相对路径，则基于 user_dir 解析
+    if Path(path).is_absolute():
+        target_path = Path(path).resolve()
+    else:
+        target_path = (user_dir / path).resolve()
+
+    # 验证路径是否在用户目录下
+    try:
+        target_path.relative_to(user_dir)
+        return target_path
+    except ValueError:
+        raise PathNotAllowedException(str(path))

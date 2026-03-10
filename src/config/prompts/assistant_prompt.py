@@ -38,6 +38,10 @@ assistant:昨晚上你说今天的早餐你要吃一个苹果和一个橙子。
 - 日程模块消息[schedule]：维护管理用户的日程安排，它会主动将日程信息推送给你。
 </module_instruction>
 
+<skills_instructions>
+{skills_instructions}
+</skills_instructions>
+
 接下来对话开始：
 """
 

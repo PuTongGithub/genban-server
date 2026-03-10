@@ -26,18 +26,14 @@ Genban 是一个以「应用可视化、模块化」为核心架构的 AI 个人
 pip install -r requirements.txt
 ```
 
-### 生成RSA密钥对
-
-登录接口使用RSA非对称加密传输密码，首次使用前需要生成密钥对：
+### 执行初始化脚本
 
 ```bash
-python scripts/generate_rsa_keys.py
+python scripts/init_project.py
 ```
 
 执行后会：
-- 在项目根目录创建 `keys/` 文件夹
-- 生成 `private_key.pem`（后端使用，**请勿泄露**）
-- 生成 `public_key.pem`（给前端使用）
+- 在项目根目录创建 `keys/` 文件夹，并在其中生成RSA密钥对文件
 
 ## 打包指令
 

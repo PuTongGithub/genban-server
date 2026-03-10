@@ -14,6 +14,7 @@ from src.modules.file_system.tools.read_file_tool import ReadFileTool
 from src.modules.file_system.tools.write_file_tool import WriteFileTool
 from src.modules.file_system.tools.edit_file_tool import EditFileTool
 from src.modules.shell.shell_tool import ShellTool
+from src.modules.skills.skill_tool import SkillTool
 
 
 class UserAgentWorker:
@@ -32,10 +33,11 @@ class UserAgentWorker:
                 StreamNewChatHook(),
             ],
             tools=[
-                ReadFileTool(user_id),
-                WriteFileTool(user_id),
-                EditFileTool(user_id),
+                ReadFileTool(),
+                WriteFileTool(),
+                EditFileTool(),
                 ShellTool(),
+                SkillTool(),
             ],
         )
 
