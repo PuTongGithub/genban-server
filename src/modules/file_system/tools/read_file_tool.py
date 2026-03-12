@@ -18,7 +18,7 @@ class ReadFileTool(BaseTool):
         ToolParameter(
             name="path",
             type="string",
-            description="文件路径（相对于用户目录的相对路径）",
+            description="文件路径（相对于用户目录的相对路径，也可以是绝对路径）",
             required=True,
         ),
         ToolParameter(
@@ -33,12 +33,6 @@ class ReadFileTool(BaseTool):
             description="结束行号（包含），默认为文件末尾",
             required=False,
         ),
-        ToolParameter(
-            name="show_line_numbers",
-            type="boolean",
-            description="是否显示行号，默认为false",
-            required=False,
-        ),
     ]
 
     def execute(self, context: AgentContext, **kwargs: Any) -> str:
@@ -49,7 +43,6 @@ class ReadFileTool(BaseTool):
             path: 文件路径
             start_line: 起始行号（从1开始）
             end_line: 结束行号
-            show_line_numbers: 是否显示行号
 
         Returns:
             文件内容
@@ -60,7 +53,6 @@ class ReadFileTool(BaseTool):
         path = kwargs.get("path", "")
         start_line = kwargs.get("start_line", 1)
         end_line = kwargs.get("end_line", None)
-        show_line_numbers = kwargs.get("show_line_numbers", False)
 
         file_path = validate_path(path, context.user_id)
 
@@ -80,12 +72,5 @@ class ReadFileTool(BaseTool):
 
         # 提取指定范围的行
         selected_lines = lines[start - 1 : end]
-
-        # 添加行号
-        if show_line_numbers:
-            result_lines = []
-            for i, line in enumerate(selected_lines, start=start):
-                result_lines.append(f"{i}|{line}")
-            selected_lines = result_lines
 
         return "".join(selected_lines)

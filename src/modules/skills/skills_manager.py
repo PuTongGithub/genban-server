@@ -144,7 +144,7 @@ class SkillsManager:
         Returns:
             SKILL.md 文件内容，文件不存在或读取失败返回 None
         """
-        skill_md_path = skill.source_path / "SKILL.md"
+        skill_md_path = skill.get_skill_md_path()
 
         if not skill_md_path.exists():
             return None
@@ -157,21 +157,15 @@ class SkillsManager:
     def to_prompt(self, user_id: str) -> str:
         """生成 <available_skills> XML 块，用于包含在 Agent 提示词中
 
-        此 XML 格式是 Anthropic 推荐用于 Claude 模型的格式。
-
         Args:
             user_id: 用户 ID
 
         Returns:
-            XML 字符串，包含 <available_skills> 块，每个 skill 包含
-            name 和 description。
+            XML 字符串，包含 <available_skills> 块，每个 skill 包含 id、 name 和 description。
 
         Example output:
             <available_skills>
-            <skill>
-            <name>pdf-reader</name>
-            <description>Read and extract text from PDF files</description>
-            </skill>
+            - pdf-reader:Read and extract text from PDF files
             </available_skills>
         """
         skills = self.load_all_skills(user_id)
@@ -182,13 +176,9 @@ class SkillsManager:
         lines = ["<available_skills>"]
 
         for skill in skills:
-            lines.append("<skill>")
-            lines.append("<id>" + html.escape(skill.id) + "</id>")
-            lines.append("<name>" + html.escape(skill.name) + "</name>")
-            lines.append(
-                "<description>" + html.escape(skill.description) + "</description>"
-            )
-            lines.append("</skill>")
+            id = html.escape(skill.id)
+            des = html.escape(skill.description)
+            lines.append(f"- {id}:{des}")
 
         lines.append("</available_skills>")
 

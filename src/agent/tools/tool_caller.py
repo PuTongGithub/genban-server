@@ -1,6 +1,7 @@
 """工具调用器"""
 
 import json
+import traceback
 
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_registry import ToolRegistry
@@ -63,8 +64,17 @@ class ToolCaller:
         Returns:
             工具执行结果列表
         """
-        tool_calls = self.parser.parse_tool_calls(tool_calls_data)
-        return self.execute(tool_calls, context)
+        try:
+            tool_calls = self.parser.parse_tool_calls(tool_calls_data)
+            return self.execute(tool_calls, context)
+        except Exception as e:
+            traceback.print_exc()
+            return [
+                ToolResult(
+                    tool_call_id="",
+                    content=json.dumps({"error": str(e)}, ensure_ascii=False),
+                )
+            ]
 
     def get_tools_schemas(self) -> list[dict]:
         """获取所有工具的 Schema"""

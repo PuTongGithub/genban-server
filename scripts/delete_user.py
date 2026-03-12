@@ -4,6 +4,7 @@
 用法: python scripts/delete_user.py
 """
 
+import shutil
 import sys
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+from src.common.utils.path_util import get_user_dir
 from src.user.db.user_db import user_db
 from src.user.db.user_state_db import user_state_db
 
@@ -48,6 +50,17 @@ def delete_user():
     if not user_deleted:
         print(f"\n✗ 用户 {user_id} 删除失败")
         return
+
+    # 删除用户相关文件
+    user_dir = get_user_dir(user_id)
+    if user_dir.exists():
+        try:
+            shutil.rmtree(user_dir)
+            print(f"✓ 用户目录已删除: {user_dir}")
+        except Exception as e:
+            print(f"⚠ 用户目录删除失败: {e}")
+    else:
+        print(f"ℹ 用户目录不存在: {user_dir}")
 
     print(f"\n✓ 用户 {user_id} 删除成功！")
 

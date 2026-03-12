@@ -106,7 +106,7 @@ class Agent:
             model_key=context.model_key,
             chats=chats,
             tools=tools,
-            enable_thinking=False,
+            enable_thinking=True,
         ):
             self.hook_manager.async_execute(NewChatHook, response_chat, context)
             chat = response_chat

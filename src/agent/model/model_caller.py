@@ -68,7 +68,7 @@ class ModelCaller:
         model_key: str,
         chats: list[Chat],
         tools: list | None = None,
-        enable_thinking: bool = False,
+        enable_thinking: bool = True,
     ) -> Chat:
         """调用模型"""
         messages = self._convert_chats_to_messages(chats)
@@ -88,7 +88,7 @@ class ModelCaller:
         model_key: str,
         chats: list[Chat],
         tools: list | None = None,
-        enable_thinking: bool = False,
+        enable_thinking: bool = True,
     ):
         """流式调用模型"""
         messages = self._convert_chats_to_messages(chats)

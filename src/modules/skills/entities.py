@@ -15,6 +15,10 @@ class Skill:
     description: str  # Skill 描述内容
     source_path: Path  # Skill 所在路径
 
+    def get_skill_md_path(self) -> Path:
+        """获取 SKILL.md 文件路径"""
+        return self.source_path / "SKILL.md"
+
 
 class SkillInfo(BaseModel):
     """Skill 信息响应模型"""

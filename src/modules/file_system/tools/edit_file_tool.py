@@ -7,25 +7,15 @@ from src.agent.entities import ToolParameter, AgentContext
 from src.common.utils.path_util import validate_path
 from src.modules.file_system.exceptions import (
     FileNotFoundException,
-    LineNumberOutOfRangeException,
 )
 from src.storage.file.file_storage import file_storage
 
 
-class EditReplaceItem:
-    """替换项"""
-
-    def __init__(self, start_line: int, end_line: int, content: str):
-        self.start_line = start_line
-        self.end_line = end_line
-        self.content = content
-
-
 class EditFileTool(BaseTool):
-    """编辑文件内容工具（支持多范围替换）"""
+    """编辑文件内容工具（支持全文替换）"""
 
     name = "edit_file"
-    description = "编辑文件内容，支持同时对文件的多个部分进行替换。每个替换项指定起始行号、结束行号和替换内容。"
+    description = "在文件中执行精确的字符串替换。当replace_all=false时，old_string必须在文件中唯一存在，否则编辑失败；当replace_all=true时，替换所有匹配项。"
     parameters = [
         ToolParameter(
             name="path",
@@ -34,10 +24,22 @@ class EditFileTool(BaseTool):
             required=True,
         ),
         ToolParameter(
-            name="replacements",
-            type="array",
-            description="替换项列表，每项包含 start_line（起始行号）、end_line（结束行号）、content（替换内容）",
+            name="old_string",
+            type="string",
+            description="要被替换的原始字符串",
             required=True,
+        ),
+        ToolParameter(
+            name="new_string",
+            type="string",
+            description="用于替换的新字符串",
+            required=True,
+        ),
+        ToolParameter(
+            name="replace_all",
+            type="boolean",
+            description="是否替换所有匹配项，默认为false",
+            required=False,
         ),
     ]
 
@@ -47,59 +49,48 @@ class EditFileTool(BaseTool):
         Args:
             context: Agent 执行上下文
             path: 文件路径
-            replacements: 替换项列表，每项为 dict，包含 start_line、end_line、content
+            old_string: 要被替换的原始字符串
+            new_string: 用于替换的新字符串
+            replace_all: 是否替换所有匹配项，默认为false
 
         Returns:
             操作结果信息
 
         Raises:
             FileNotFoundException: 文件不存在
-            LineNumberOutOfRangeException: 行号超出范围
+            ValueError: old_string在文件中不存在或不唯一（当replace_all=false时）
         """
         path = kwargs.get("path", "")
-        replacements = kwargs.get("replacements", [])
+        old_string = kwargs.get("old_string", "")
+        new_string = kwargs.get("new_string", "")
+        replace_all = kwargs.get("replace_all", False)
 
         file_path = validate_path(path, context.user_id)
 
         if not file_storage.exists(file_path):
             raise FileNotFoundException(path)
 
-        lines = file_storage.read_lines(file_path)
-        total_lines = len(lines)
+        content = file_storage.read_text(file_path)
 
-        # 解析替换项
-        replace_items = []
-        for item in replacements:
-            start_line = item.get("start_line", 0)
-            end_line = item.get("end_line", 0)
-            content = item.get("content", "")
+        # 检查old_string是否存在
+        count = content.count(old_string)
+        if count == 0:
+            return f"未找到要替换的字符串: {old_string}"
 
-            # 验证行号
-            if start_line < 1 or end_line < start_line or end_line > total_lines:
-                raise LineNumberOutOfRangeException(start_line, total_lines)
-
-            replace_items.append(EditReplaceItem(start_line, end_line, content))
-
-        # 按起始行号降序排序，从后向前替换，避免行号变化
-        replace_items.sort(key=lambda x: x.start_line, reverse=True)
-
-        # 执行替换
-        for item in replace_items:
-            # 将内容按行分割
-            new_lines = item.content.split("\n")
-            # 确保每行以换行符结尾
-            new_lines = [
-                line + "\n" if not line.endswith("\n") else line for line in new_lines
-            ]
-            if new_lines and new_lines[-1] == "\n":
-                new_lines = new_lines[:-1]
-
-            # 替换指定范围的行
-            start_idx = item.start_line - 1
-            end_idx = item.end_line
-            lines = lines[:start_idx] + new_lines + lines[end_idx:]
+        if not replace_all:
+            # 当replace_all=false时，要求old_string必须唯一
+            if count > 1:
+                return f"找到 {count} 处匹配 '{old_string}'，请提供更大范围的字符串确保其唯一性，"
+            # 执行单次替换
+            new_content = content.replace(old_string, new_string, 1)
+        else:
+            # 替换所有匹配项
+            new_content = content.replace(old_string, new_string)
 
         # 写回文件
-        file_storage.write_lines(file_path, lines)
+        file_storage.write_text(file_path, new_content)
 
-        return f"成功执行 {len(replace_items)} 处替换"
+        if replace_all:
+            return f"成功替换 {count} 处内容"
+        else:
+            return "成功替换 1 处内容"

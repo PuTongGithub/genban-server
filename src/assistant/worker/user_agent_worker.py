@@ -36,7 +36,7 @@ class UserAgentWorker:
                 ReadFileTool(),
                 WriteFileTool(),
                 EditFileTool(),
-                ShellTool(),
+                ShellTool(user_id),
                 SkillTool(),
             ],
         )

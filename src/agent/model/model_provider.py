@@ -14,7 +14,7 @@ class ModelProvider(ABC):
         model: str,
         messages: list,
         tools: list | None = None,
-        enable_thinking: bool = False,
+        enable_thinking: bool = True,
     ) -> CallResponse:
         """同步调用模型
 
@@ -35,7 +35,7 @@ class ModelProvider(ABC):
         model: str,
         messages: list,
         tools: list | None = None,
-        enable_thinking: bool = False,
+        enable_thinking: bool = True,
     ):
         """流式调用模型
 

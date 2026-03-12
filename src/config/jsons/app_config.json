@@ -3,8 +3,7 @@
     "qwen-test": {
       "id": "qwen3-32b",
       "max_tokens": 131072,
-      "api": "dashscope",
-      "default": true
+      "api": "dashscope"
     },
     "qwen-flash": {
       "id": "qwen-flash",
@@ -17,9 +16,10 @@
       "api": "dashscope"
     },
     "qwen-max": {
-      "id": "qwen3-max-2026-01-23",
+      "id": "qwen3-max-preview",
       "max_tokens": 262144,
-      "api": "dashscope"
+      "api": "dashscope",
+      "default": true
     },
     "qwen-coder": {
       "id": "qwen3-coder-flash",
@@ -28,7 +28,7 @@
     }
   },
   "tools": {
-    "shell_timeout": 120,
+    "shell_timeout": 20,
     "zhipu_search_engine": "search_std"
   },
   "auth": {
