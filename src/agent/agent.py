@@ -19,6 +19,9 @@ from src.agent.hooks.hook_manager import HookManager
 from src.agent.tools.tool_parser import ToolParser
 from src.agent.chat_factory import chat_factory
 from src.config.config import app_config
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Agent:
@@ -136,6 +139,8 @@ class Agent:
         Returns:
             本次所有新增的 Chat 列表（包含 assistant 响应和 tool 调用结果）
         """
+        logger.debug(f"Agent 开始执行，user_id: {self.user_id}")
+
         context = AgentContext(
             model_key=app_config.get_default_model(),
             user_id=self.user_id,
@@ -145,6 +150,7 @@ class Agent:
 
         # 执行前置钩子链
         self._execute_pre_hooks(context)
+        logger.debug(f"前置钩子执行完成，使用模型: {context.model_key}")
 
         iteration = 0
         current_chats = (
@@ -154,13 +160,21 @@ class Agent:
 
         while iteration < self.max_iterations:
             iteration += 1
+            logger.debug(f"开始第 {iteration} 轮迭代")
 
             # 调用模型
-            response_chat = self._call_model(context, current_chats)
+            try:
+                response_chat = self._call_model(context, current_chats)
+                logger.debug(f"模型调用完成，role: {response_chat.message.role}")
+            except Exception:
+                logger.exception(f"模型调用失败，user_id: {self.user_id}")
+                raise
+
             self._handle_new_chat(current_chats, new_chats, context, response_chat)
 
             # 检查是否需要工具调用
             if response_chat.message.tool_calls is not None:
+                logger.debug(f"检测到工具调用，数量: {len(response_chat.message.tool_calls)}")
                 # 处理工具调用
                 tool_results = self.tool_caller.execute_from_model_response(
                     response_chat.message.tool_calls, context
@@ -172,10 +186,12 @@ class Agent:
                     )
                     self._handle_new_chat(current_chats, new_chats, context, tool_chat)
             else:
+                logger.debug("Agent 执行完成，无需工具调用")
                 self.hook_manager.async_execute(CompleteHook, new_chats, context)
                 return new_chats
 
         # 超过最大迭代次数，返回错误
+        logger.error(f"Agent 执行超过最大迭代次数 {self.max_iterations}，user_id: {self.user_id}")
         error_chat = chat_factory.create_error_chat(content="Error: 超过最大迭代次数")
         self._handle_new_chat(current_chats, new_chats, context, error_chat)
         self.hook_manager.async_execute(CompleteHook, new_chats, context)

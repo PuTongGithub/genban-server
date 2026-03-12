@@ -1,6 +1,5 @@
 """UserAgentWorker - 单个用户的 AgentWorker，复用 Agent 实例"""
 
-import traceback
 from src.agent.agent import Agent
 from src.agent.chat_factory import chat_factory
 from src.agent.entities import Chat
@@ -15,6 +14,9 @@ from src.modules.file_system.tools.write_file_tool import WriteFileTool
 from src.modules.file_system.tools.edit_file_tool import EditFileTool
 from src.modules.shell.shell_tool import ShellTool
 from src.modules.skills.skill_tool import SkillTool
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class UserAgentWorker:
@@ -51,7 +53,7 @@ class UserAgentWorker:
             conversation_manager.add_chats(self.user_id, new_chats)
 
         except Exception as e:
-            traceback.print_exc()
+            logger.exception(f"处理用户消息失败，user_id: {self.user_id}")
 
             # 创建错误 Chat
             error_chat = chat_factory.create_error_chat(

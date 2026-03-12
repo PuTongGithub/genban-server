@@ -1,4 +1,4 @@
-"""阿里云 DashScope 模型提供者实现"""
+"""阿里云 DashScope 多模态模型提供者实现"""
 
 import dashscope  # type: ignore
 from src.config.config import env_config
@@ -7,8 +7,8 @@ from src.agent.entities import CallResponse, Message
 from src.agent.exceptions import ModelResponseException
 
 
-class DashScopeProvider(ModelProvider):
-    """阿里云 DashScope 模型提供者"""
+class DashScopeMultiProvider(ModelProvider):
+    """阿里云 DashScope 多模态模型提供者"""
 
     def call(
         self,
@@ -28,7 +28,7 @@ class DashScopeProvider(ModelProvider):
             "stream": False,
             "parallel_tool_calls": True,
         }
-        response = dashscope.Generation.call(**kwargs)
+        response = dashscope.MultiModalConversation.call(**kwargs)
         return self._convert_to_call_response(response)
 
     def stream_call(
@@ -50,7 +50,7 @@ class DashScopeProvider(ModelProvider):
             "parallel_tool_calls": True,
             "incremental_output": False,
         }
-        responses = dashscope.Generation.call(**kwargs)
+        responses = dashscope.MultiModalConversation.call(**kwargs)
         for response in responses:
             yield self._convert_to_call_response(response)
 

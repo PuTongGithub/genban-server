@@ -3,6 +3,7 @@
 from src.config.config import app_config
 from src.agent.model.model_provider import ModelProvider
 from src.agent.model.providers.dashscope_provider import DashScopeProvider
+from src.agent.model.providers.dashscope_multi_provider import DashScopeMultiProvider
 from src.agent.exceptions import (
     ModelProviderNotFoundException,
     ModelCallLengthLimitedException,
@@ -10,6 +11,9 @@ from src.agent.exceptions import (
 )
 from src.agent.entities import CallResponse, Chat, Message
 from src.agent.chat_factory import chat_factory
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ModelCaller:
@@ -22,6 +26,7 @@ class ModelCaller:
     def _register_default_providers(self) -> None:
         """注册默认的模型提供者"""
         self._providers["dashscope"] = DashScopeProvider()
+        self._providers["dashscope_multi"] = DashScopeMultiProvider()
 
     def _get_provider(self, api_name: str) -> ModelProvider:
         """获取模型提供者"""
@@ -71,17 +76,24 @@ class ModelCaller:
         enable_thinking: bool = True,
     ) -> Chat:
         """调用模型"""
+        logger.info(f"调用模型，model_key: {model_key}")
         messages = self._convert_chats_to_messages(chats)
         model_config = app_config.get_model_config(model_key)
         provider = self._get_provider(model_config["api"])
-        response = provider.call(
-            model=model_config["id"],
-            messages=messages,
-            tools=tools,
-            enable_thinking=enable_thinking,
-        )
-        self._validate_response(response)
-        return chat_factory.create_assistant_chat(response)
+
+        try:
+            response = provider.call(
+                model=model_config["id"],
+                messages=messages,
+                tools=tools,
+                enable_thinking=enable_thinking,
+            )
+            self._validate_response(response)
+            logger.info(f"模型调用成功，model_key: {model_key}")
+            return chat_factory.create_assistant_chat(response)
+        except Exception:
+            logger.exception(f"模型调用失败，model_key: {model_key}")
+            raise
 
     def stream_call(
         self,
@@ -91,17 +103,24 @@ class ModelCaller:
         enable_thinking: bool = True,
     ):
         """流式调用模型"""
+        logger.info(f"流式调用模型，model_key: {model_key}")
         messages = self._convert_chats_to_messages(chats)
         model_config = app_config.get_model_config(model_key)
         provider = self._get_provider(model_config["api"])
-        for response in provider.stream_call(
-            model=model_config["id"],
-            messages=messages,
-            tools=tools,
-            enable_thinking=enable_thinking,
-        ):
-            self._validate_response(response)
-            yield chat_factory.create_assistant_chat(response)
+
+        try:
+            for response in provider.stream_call(
+                model=model_config["id"],
+                messages=messages,
+                tools=tools,
+                enable_thinking=enable_thinking,
+            ):
+                self._validate_response(response)
+                yield chat_factory.create_assistant_chat(response)
+            logger.info(f"流式模型调用完成，model_key: {model_key}")
+        except Exception:
+            logger.exception(f"流式模型调用失败，model_key: {model_key}")
+            raise
 
 
 model_caller = ModelCaller()

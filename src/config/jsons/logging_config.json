@@ -1,0 +1,16 @@
+{
+  "level": "INFO",
+  "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+  "date_format": "%Y-%m-%d %H:%M:%S",
+  "file_enabled": true,
+  "log_dir": "logs",
+  "log_file": "app.log",
+  "rotation_when": "midnight",
+  "rotation_interval": 1,
+  "backup_count": 7,
+  "third_party_levels": {
+    "urllib3": "WARNING",
+    "httpcore": "WARNING",
+    "asyncio": "WARNING"
+  }
+}

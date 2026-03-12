@@ -14,6 +14,9 @@ from src.modules.file_system.entities import (
     FileUploadResponse,
 )
 from src.storage.file.file_storage import file_storage
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/file_system", tags=["file_system"])
 
@@ -41,12 +44,15 @@ async def list_directory(
     try:
         dir_path = get_path(path, user_id)
     except PathNotAllowedException as e:
+        logger.warning(f"目录访问被拒绝，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=403, detail=str(e))
 
     if not file_storage.exists(dir_path):
+        logger.warning(f"目录不存在，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=404, detail="目录不存在")
 
     if not file_storage.is_dir(dir_path):
+        logger.warning(f"路径不是目录，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=400, detail="路径不是目录")
 
     items = []
@@ -81,18 +87,22 @@ async def preview_file(
     try:
         file_path = get_path(path, user_id)
     except PathNotAllowedException as e:
+        logger.warning(f"文件访问被拒绝，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=403, detail=str(e))
 
     if not file_storage.exists(file_path):
+        logger.warning(f"文件不存在，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=404, detail="文件不存在")
 
     if not file_storage.is_file(file_path):
+        logger.warning(f"路径不是文件，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=400, detail="路径不是文件")
 
     try:
         content = file_storage.read_text(file_path)
         return PlainTextResponse(content)
     except UnicodeDecodeError:
+        logger.warning(f"文件不是纯文本格式，user_id: {user_id}, path: {path}")
         return "文件不是纯文本格式，暂不支持预览"
 
 
@@ -113,12 +123,15 @@ async def download_file(
     try:
         file_path = get_path(path, user_id)
     except PathNotAllowedException as e:
+        logger.warning(f"文件访问被拒绝，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=403, detail=str(e))
 
     if not file_storage.exists(file_path):
+        logger.warning(f"文件不存在，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=404, detail="文件不存在")
 
     if not file_storage.is_file(file_path):
+        logger.warning(f"路径不是文件，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=400, detail="路径不是文件")
 
     return FileResponse(
@@ -147,6 +160,7 @@ async def upload_file(
     try:
         file_path = get_path(path, user_id)
     except PathNotAllowedException as e:
+        logger.warning(f"文件上传路径被拒绝，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=403, detail=str(e))
 
     # 保存文件（支持二进制文件）

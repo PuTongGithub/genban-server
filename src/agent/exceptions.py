@@ -23,3 +23,11 @@ class ModelCallException(Exception):
 class ModelCallLengthLimitedException(Exception):
     def __init__(self):
         super().__init__("model call length limited")
+
+
+class ModelResponseException(Exception):
+    """模型响应异常"""
+
+    def __init__(self, message: str, response: object | None = None):
+        super().__init__(message)
+        self.response = response

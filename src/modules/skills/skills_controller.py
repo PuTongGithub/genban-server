@@ -11,6 +11,9 @@ from src.modules.skills.entities import (
 )
 from src.modules.skills.skills_manager import skills_manager
 from src.modules.skills.exceptions import SkillNotFoundException
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/skills", tags=["skills"])
 
@@ -51,6 +54,7 @@ async def get_skill_content(
     content = skills_manager.get_skill_md_content(user_id, skill_id)
 
     if content is None:
+        logger.warning(f"Skill 不存在，user_id: {user_id}, skill_id: {skill_id}")
         raise HTTPException(
             status_code=404, detail=f"Skill 不存在或 SKILL.md 文件不存在: {skill_id}"
         )
@@ -72,10 +76,15 @@ async def delete_skill(
     Returns:
         删除结果
     """
+
     try:
         success = skills_manager.delete_user_skill(user_id, skill_id)
         return SkillDeleteResponse(success=success)
     except SkillNotFoundException as e:
+        logger.warning(
+            f"Skill 不存在，无法删除，user_id: {user_id}, skill_id: {skill_id}"
+        )
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"删除失败: {e}")
+    except Exception:
+        logger.exception(f"Skill 删除失败，user_id: {user_id}, skill_id: {skill_id}")
+        raise HTTPException(status_code=500, detail="删除失败")

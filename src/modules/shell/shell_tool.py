@@ -12,6 +12,9 @@ from src.common.utils.path_util import (
     validate_path,
     PathNotAllowedException,
 )
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 # 命令行执行工具
@@ -77,12 +80,15 @@ class ShellTool(BaseTool):
             try:
                 cwd = str(validate_path(cwd_param, context.user_id))
             except PathNotAllowedException:
+                logger.warning(f"Shell 命令工作目录不在允许范围内，user_id: {context.user_id}, cwd: {cwd_param}")
                 return f"错误：工作目录 '{cwd_param}' 不在允许访问的范围内"
         else:
             cwd = str(get_user_dir(context.user_id))
 
         if not command.strip():
             return "命令不能为空"
+
+        logger.info(f"执行 Shell 命令，user_id: {context.user_id}, cwd: {cwd}, command: {command[:100]}...")
 
         try:
             result = subprocess.run(
@@ -97,8 +103,11 @@ class ShellTool(BaseTool):
                 encoding="utf-8",
                 errors="replace",
             )
+            logger.info(f"Shell 命令执行成功，user_id: {context.user_id}")
             return result.stdout
         except subprocess.TimeoutExpired as e:
+            logger.error(f"Shell 命令执行超时，user_id: {context.user_id}, timeout: {timeout}")
             return f"命令执行超时，超时时间：{timeout}秒\n输出：{e.output}\n"
         except subprocess.CalledProcessError as e:
+            logger.error(f"Shell 命令执行失败，user_id: {context.user_id}, returncode: {e.returncode}")
             return f"命令执行失败，返回码：{e.returncode}\n标准输出：{e.stdout}\n标准错误：{e.stderr}"

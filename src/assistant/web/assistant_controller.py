@@ -8,7 +8,9 @@ from src.agent.chat_factory import chat_factory
 from src.assistant.entities import SubmitRequest, SubmitResponse, QueueItem
 from src.assistant.worker.agent_worker_manager import agent_worker_manager
 from src.assistant.web.stream_manager import stream_manager
+from src.common.logger import get_logger
 
+logger = get_logger(__name__)
 
 # 创建路由
 router = APIRouter(prefix="/api/assistant", tags=["assistant"])
@@ -27,6 +29,7 @@ async def submit(
     Returns:
         SubmitResponse: 提交结果
     """
+    logger.info(f"收到消息提交请求，user_id: {current_user_id}")
     try:
         # 创建用户输入 Chat
         input_chat = chat_factory.create_user_chat(
@@ -37,10 +40,12 @@ async def submit(
         item = QueueItem(user_id=current_user_id, chat=input_chat)
         agent_worker_manager.put(item)
 
+        logger.info(f"消息已入队，user_id: {current_user_id}, chat_id: {input_chat.id}")
         return SubmitResponse(success=True, chat_id=input_chat.id)
 
-    except Exception as e:
-        return SubmitResponse(success=False, chat_id="", error=str(e))
+    except Exception:
+        logger.exception(f"消息提交失败，user_id: {current_user_id}")
+        return SubmitResponse(success=False, chat_id="", error="消息提交失败")
 
 
 @router.get("/stream")
@@ -57,6 +62,7 @@ async def stream(
     Returns:
         StreamingResponse: SSE 流
     """
+    logger.info(f"建立 SSE 连接，user_id: {current_user_id}")
     return StreamingResponse(
         stream_manager.subscribe(current_user_id),
         media_type="text/event-stream",

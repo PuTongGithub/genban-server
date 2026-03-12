@@ -31,7 +31,7 @@ assistant:昨晚上你说，你的早餐要吃一个苹果和一个橙子。
 </input_instruction>
 
 <output_instruction>
-- 你的输出将展示在用户的对话窗口中，保持格式简洁。
+- 你的输出将展示在用户的对话窗口中，保持格式简洁，除非用户要求，否则不要使用表情符号
 - 语言一致：始终用用户使用的语言
 </output_instruction>
 

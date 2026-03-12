@@ -1,12 +1,14 @@
 """工具调用器"""
 
 import json
-import traceback
 
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_registry import ToolRegistry
 from src.agent.entities import ToolCall, ToolResult, AgentContext
 from src.agent.tools.tool_parser import ToolParser
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ToolCaller:
@@ -67,12 +69,14 @@ class ToolCaller:
         try:
             tool_calls = self.parser.parse_tool_calls(tool_calls_data)
             return self.execute(tool_calls, context)
-        except Exception as e:
-            traceback.print_exc()
+        except Exception:
+            logger.exception("解析或执行工具调用失败")
             return [
                 ToolResult(
                     tool_call_id="",
-                    content=json.dumps({"error": str(e)}, ensure_ascii=False),
+                    content=json.dumps(
+                        {"error": "工具调用处理失败"}, ensure_ascii=False
+                    ),
                 )
             ]
 
