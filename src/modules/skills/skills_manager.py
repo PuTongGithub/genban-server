@@ -1,6 +1,5 @@
 """Skills 管理器"""
 
-import html
 import shutil
 
 from src.common.utils.path_util import get_user_skills_dir, get_project_skills_dir
@@ -174,12 +173,8 @@ class SkillsManager:
             return "<available_skills></available_skills>"
 
         lines = ["<available_skills>"]
-
         for skill in skills:
-            id = html.escape(skill.id)
-            des = html.escape(skill.description)
-            lines.append(f"- {id}:{des}")
-
+            lines.append(f"- {skill.to_prompt_line()}")
         lines.append("</available_skills>")
 
         return "\n".join(lines)
