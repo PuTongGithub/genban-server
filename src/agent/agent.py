@@ -16,7 +16,6 @@ from src.agent.hooks.base_hook import (
     CompleteHook,
 )
 from src.agent.hooks.hook_manager import HookManager
-from src.agent.tools.tool_parser import ToolParser
 from src.agent.chat_factory import chat_factory
 from src.config.config import app_config
 from src.common.logger import get_logger
@@ -37,7 +36,6 @@ class Agent:
         self.model_caller = model_caller  # 使用单例
         self.tool_caller = ToolCaller()
         self.hook_manager = HookManager()
-        self.tool_parser = ToolParser()
         self.max_iterations = 50  # 最大工具调用迭代次数
 
         # 注册工具
@@ -174,7 +172,9 @@ class Agent:
 
             # 检查是否需要工具调用
             if response_chat.message.tool_calls is not None:
-                logger.debug(f"检测到工具调用，数量: {len(response_chat.message.tool_calls)}")
+                logger.debug(
+                    f"检测到工具调用，数量: {len(response_chat.message.tool_calls)}"
+                )
                 # 处理工具调用
                 tool_results = self.tool_caller.execute_from_model_response(
                     response_chat.message.tool_calls, context
@@ -191,7 +191,9 @@ class Agent:
                 return new_chats
 
         # 超过最大迭代次数，返回错误
-        logger.error(f"Agent 执行超过最大迭代次数 {self.max_iterations}，user_id: {self.user_id}")
+        logger.error(
+            f"Agent 执行超过最大迭代次数 {self.max_iterations}，user_id: {self.user_id}"
+        )
         error_chat = chat_factory.create_error_chat(content="Error: 超过最大迭代次数")
         self._handle_new_chat(current_chats, new_chats, context, error_chat)
         self.hook_manager.async_execute(CompleteHook, new_chats, context)

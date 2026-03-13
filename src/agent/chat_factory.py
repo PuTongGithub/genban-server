@@ -11,6 +11,15 @@ class _ChatFactory:
         self.current_time = time_util.get_timestamp()
         self.index = 0
 
+    def create_user_content(self, user_id: str, user_input: str) -> str:
+        """创建用户消息内容"""
+        time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
+        return f"[user:{user_id}:{time_str}]" + user_input
+
+    def create_system_remainder_content(self, content: str) -> str:
+        """创建系统消息内容"""
+        return f"[system_remainder]{content}[system_remain_remainder]"
+
     def _create_chat_id(self) -> str:
         """创建对话 ID"""
         current = time_util.get_timestamp()
@@ -27,10 +36,9 @@ class _ChatFactory:
 
     def create_user_message(self, user_id: str, user_input: str) -> Message:
         """创建用户消息"""
-        time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
         return Message(
             role=MessageRole.USER.value,
-            content=f"[user:{user_id}:{time_str}]" + user_input,
+            content=self.create_user_content(user_id, user_input),
         )
 
     def create_tool_message(self, tool_call_id: str, tool_result: str) -> Message:

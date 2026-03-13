@@ -5,7 +5,7 @@ import json
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_registry import ToolRegistry
 from src.agent.entities import ToolCall, ToolResult, AgentContext
-from src.agent.tools.tool_parser import ToolParser
+from src.agent.chat_factory import chat_factory
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -16,7 +16,6 @@ class ToolCaller:
 
     def __init__(self, registry: ToolRegistry | None = None) -> None:
         self.registry = registry or ToolRegistry()
-        self.parser = ToolParser()
 
     def register(self, tool: BaseTool) -> None:
         """注册工具"""
@@ -27,7 +26,7 @@ class ToolCaller:
         self.registry.register_many(tools)
 
     def execute(
-        self, tool_calls: list[ToolCall], context: AgentContext | None = None
+        self, tool_calls: list[ToolCall], context: AgentContext
     ) -> list[ToolResult]:
         """执行工具调用
 
@@ -40,22 +39,22 @@ class ToolCaller:
         """
         results: list[ToolResult] = []
         for call in tool_calls:
-            tool = self.registry.get(call.name)
             try:
-                # 确保 context 不为 None
-                if context is None:
-                    context = AgentContext()
+                tool = self.registry.get(call.name)
                 result = tool.execute(context=context, **call.arguments)
                 if not isinstance(result, str):
                     result = json.dumps(result, ensure_ascii=False)
             except Exception as e:
-                result = json.dumps({"error": str(e)}, ensure_ascii=False)
+                logger.exception("执行工具调用失败")
+                result = chat_factory.create_system_remainder_content(
+                    f"Error: {str(e)}"
+                )
 
             results.append(ToolResult(tool_call_id=call.id, content=result))
         return results
 
     def execute_from_model_response(
-        self, tool_calls_data: list[dict], context: AgentContext | None = None
+        self, tool_calls_data: list[dict], context: AgentContext
     ) -> list[ToolResult]:
         """从模型响应中解析并执行工具调用
 
@@ -66,20 +65,37 @@ class ToolCaller:
         Returns:
             工具执行结果列表
         """
-        try:
-            tool_calls = self.parser.parse_tool_calls(tool_calls_data)
+        tool_calls = self._parse_tool_calls(tool_calls_data)
+        if not tool_calls:
+            return [ToolResult(tool_call_id="", content="工具调用参数解析失败")]
+        else:
             return self.execute(tool_calls, context)
-        except Exception:
-            logger.exception("解析或执行工具调用失败")
-            return [
-                ToolResult(
-                    tool_call_id="",
-                    content=json.dumps(
-                        {"error": "工具调用处理失败"}, ensure_ascii=False
-                    ),
-                )
-            ]
 
     def get_tools_schemas(self) -> list[dict]:
         """获取所有工具的 Schema"""
         return self.registry.get_all_schemas()
+
+    def _parse_tool_calls(self, tool_calls_data: list[dict]) -> list[ToolCall]:
+        """解析工具调用数据"""
+        tool_calls: list[ToolCall] = []
+        for call_data in tool_calls_data:
+            try:
+                arguments: dict = {}
+                if "function" in call_data:
+                    func_data = call_data["function"]
+                    arguments_str = func_data.get("arguments", "{}")
+                    if isinstance(arguments_str, str):
+                        arguments = json.loads(arguments_str)
+                    else:
+                        arguments = arguments_str
+                    name = func_data.get("name", "")
+                else:
+                    name = call_data.get("name", "")
+                    arguments = call_data.get("arguments", {})
+
+                tool_calls.append(
+                    ToolCall(id=call_data.get("id", ""), name=name, arguments=arguments)
+                )
+            except Exception:
+                logger.exception("解析工具调用数据失败")
+        return tool_calls
