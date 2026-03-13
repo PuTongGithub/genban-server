@@ -6,11 +6,16 @@ from src.config.prompts.assistant_prompt import ASSISTANT_PROMPT
 class PromptsLoader:
     """提示词模板加载器"""
 
-    def get_assistant_prompt(self, skill_path: str, skills_instructions: str) -> str:
+    def get_assistant_prompt(
+        self, skill_path: str, 
+        available_modules_prompt:str, 
+        available_skills_prompt: str
+    ) -> str:
         """获取助手系统提示词"""
         return ASSISTANT_PROMPT.format(
             skill_path=skill_path,
-            skills_instructions=skills_instructions,
+            available_modules_prompt=available_modules_prompt,
+            available_skills_prompt=available_skills_prompt,
         )
 
 

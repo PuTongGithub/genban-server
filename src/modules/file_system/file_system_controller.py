@@ -22,8 +22,7 @@ router = APIRouter(prefix="/api/file_system", tags=["file_system"])
 
 
 def get_path(path: str, user_id: str):
-    """获取路径对象，接口可操作的文件均为files目录下的文件"""
-    path = "files/" + path
+    """获取路径对象，接口可操作的文件均为用户目录下的文件"""
     return validate_path(path, user_id)
 
 
@@ -35,7 +34,7 @@ async def list_directory(
     """查看目录内容
 
     Args:
-        path: 相对路径，默认为用户根目录的files子目录
+        path: 相对路径，默认为用户根目录
         user_id: 当前用户ID（由依赖注入）
 
     Returns:

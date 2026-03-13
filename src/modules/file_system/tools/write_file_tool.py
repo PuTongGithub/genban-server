@@ -17,13 +17,13 @@ class WriteFileTool(BaseTool):
         ToolParameter(
             name="path",
             type="string",
-            description="文件路径（相对于用户目录的相对路径）",
+            description="文件路径（用户目录相对路径，或绝对路径）",
             required=True,
         ),
         ToolParameter(
             name="content",
             type="string",
-            description="要写入的文件内容",
+            description="要写入的内容",
             required=True,
         ),
     ]

@@ -26,7 +26,7 @@ class ShellTool(BaseTool):
         ToolParameter(
             name="command",
             type="string",
-            description="要执行的shell命令（命令执行的工作目录为用户目录）",
+            description="要执行的shell命令",
             required=True,
         ),
         ToolParameter(
@@ -51,10 +51,9 @@ class ShellTool(BaseTool):
 - 当前系统：{systemDesc}
 - 用户目录：{get_user_dir(user_id)}
 - 在执行破坏性操作（例如 git reset --hard、git push --force、rm -rf）之前，请考虑是否有更安全的替代方案可以达到相同的目标。仅在破坏性操作确实是最佳方法时才使用它们
-- 尽量在整个会话期间使用绝对路径，避免使用相对路径（cd 切换目录）
+- 尽量在整个会话期间使用绝对路径，避免使用相对路径
+- 始终在命令中使用双引号引用包含空格的文件路径
 - 不要使用换行符来分隔命令（在引号字符串中可以使用换行符）
-- 始终在命令中使用双引号引用包含空格的文件路径（例如 cd "path with spaces/file.txt"）
-- 虽然 shell 工具可以做很多的事情，但最好优先使用其他内置工具，因为它们提供更好的用户体验，并且更容易监控工具调用情况和管控权限。
 """
 
     def execute(self, context: AgentContext, **kwargs: Any) -> str:

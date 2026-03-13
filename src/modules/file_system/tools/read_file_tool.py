@@ -13,12 +13,12 @@ class ReadFileTool(BaseTool):
     """读取文件内容工具"""
 
     name = "read_file"
-    description = "读取文件内容，支持按行范围读取，支持可选行号显示"
+    description = "读取文件内容，若文件过大，请使用指定行号范围读取"
     parameters = [
         ToolParameter(
             name="path",
             type="string",
-            description="文件路径（相对于用户目录的相对路径，也可以是绝对路径）",
+            description="文件路径（用户目录相对路径，或绝对路径）",
             required=True,
         ),
         ToolParameter(

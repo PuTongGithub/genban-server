@@ -5,6 +5,7 @@ from src.agent.entities import Chat, AgentContext
 from src.agent.chat_factory import chat_factory
 from src.config.prompts_loader import prompts_loader
 from src.modules.skills.skills_manager import skills_manager
+from src.modules.modules_manager import modules_manager
 from src.common.utils.path_util import get_user_skills_dir
 
 
@@ -16,7 +17,8 @@ class PromptSetupHook(PromptHook):
         # 创建系统提示词 Chat
         prompt = prompts_loader.get_assistant_prompt(
             skill_path=get_user_skills_dir(context.user_id),
-            skills_instructions=skills_manager.to_prompt(context.user_id),
+            available_modules_prompt=modules_manager.to_prompt(),
+            available_skills_prompt=skills_manager.to_prompt(context.user_id),
         )
         prompt_chat = chat_factory.create_prompt_chat(prompt)
         return prompt_chat
