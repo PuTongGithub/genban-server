@@ -14,11 +14,11 @@ class _ChatFactory:
     def create_user_content(self, user_id: str, user_input: str) -> str:
         """创建用户消息内容"""
         time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
-        return f"[user:{user_id}:{time_str}]" + user_input
+        return f"[{ChatType.USER.type}:{user_id}:{time_str}]" + user_input
 
     def create_system_remainder_content(self, content: str) -> str:
         """创建系统消息内容"""
-        return f"[system_remainder]{content}[system_remain_remainder]"
+        return f"[{ChatType.SYSTEM_REMAINDER.type}]{content}"
 
     def _create_chat_id(self) -> str:
         """创建对话 ID"""
@@ -53,9 +53,12 @@ class _ChatFactory:
         """创建助手消息"""
         return Message(role=MessageRole.ASSISTANT.value, content=content)
 
-    def create_default_message(self, content: str) -> Message:
-        """创建默认消息（用户角色）"""
-        return Message(role=MessageRole.USER.value, content=content)
+    def create_system_remainder_message(self, content: str) -> Message:
+        """创建系统提醒消息（用户角色）"""
+        return Message(
+            role=MessageRole.USER.value,
+            content=self.create_system_remainder_content(content),
+        )
 
     # 创建 Chat 对象
     def create_prompt_chat(self, content: str) -> Chat:
@@ -95,12 +98,20 @@ class _ChatFactory:
             for content in command_results
         ]
 
+    def create_system_remainder_chat(self, content: str) -> Chat:
+        """创建系统提醒对话"""
+        return Chat(
+            type=ChatType.SYSTEM_REMAINDER.type,
+            id=self._create_chat_id(),
+            message=self.create_system_remainder_message(content=content),
+        )
+
     def create_error_chat(self, content: str) -> Chat:
         """创建错误对话"""
         return Chat(
             type=ChatType.ERROR.type,
             id=self._create_chat_id(),
-            message=self.create_default_message(content=content),
+            message=self.create_system_remainder_message(content=content),
         )
 
     # 根据大模型返回的响应，创建响应的 Chat 对象

@@ -44,11 +44,11 @@ class ShellTool(BaseTool):
     ]
 
     def __init__(self, user_id: str) -> None:
-        systemDesc = "Windows" if sys_util.is_mswindows() else "Linux"
+        systemDesc = sys_util.get_os()
         self.system_encoding = locale.getpreferredencoding(False)
         self.description = f"""使用该工具可以执行shell命令。
 重要提示：
-- 当前系统：{systemDesc}
+- 当前操作系统：{systemDesc}
 - 用户目录：{get_user_dir(user_id)}
 - 在执行破坏性操作（例如 git reset --hard、git push --force、rm -rf）之前，请考虑是否有更安全的替代方案可以达到相同的目标。仅在破坏性操作确实是最佳方法时才使用它们
 - 尽量在整个会话期间使用绝对路径，避免使用相对路径
@@ -81,7 +81,9 @@ class ShellTool(BaseTool):
             try:
                 cwd = str(validate_path(cwd_param, context.user_id))
             except PathNotAllowedException:
-                logger.warning(f"Shell 命令工作目录不在允许范围内，user_id: {context.user_id}, cwd: {cwd_param}")
+                logger.warning(
+                    f"Shell 命令工作目录不在允许范围内，user_id: {context.user_id}, cwd: {cwd_param}"
+                )
                 return f"错误：工作目录 '{cwd_param}' 不在允许访问的范围内"
         else:
             cwd = str(get_user_dir(context.user_id))
@@ -89,7 +91,9 @@ class ShellTool(BaseTool):
         if not command.strip():
             return "命令不能为空"
 
-        logger.info(f"执行 Shell 命令，user_id: {context.user_id}, cwd: {cwd}, command: {command[:100]}...")
+        logger.info(
+            f"执行 Shell 命令，user_id: {context.user_id}, cwd: {cwd}, command: {command[:100]}..."
+        )
 
         try:
             result = subprocess.run(
@@ -107,12 +111,15 @@ class ShellTool(BaseTool):
             logger.info(f"Shell 命令执行成功，user_id: {context.user_id}")
             return result.stdout
         except subprocess.TimeoutExpired as e:
-            logger.error(f"Shell 命令执行超时，user_id: {context.user_id}, timeout: {timeout}")
+            logger.error(
+                f"Shell 命令执行超时，user_id: {context.user_id}, timeout: {timeout}"
+            )
             return f"命令执行超时，超时时间：{timeout}秒\n输出：{e.output}\n"
         except subprocess.CalledProcessError as e:
-            logger.error(f"Shell 命令执行失败，user_id: {context.user_id}, returncode: {e.returncode}")
+            logger.error(
+                f"Shell 命令执行失败，user_id: {context.user_id}, returncode: {e.returncode}"
+            )
             return f"命令执行失败，返回码：{e.returncode}\n标准输出：{e.stdout}\n标准错误：{e.stderr}"
         except Exception as e:
             logger.error(f"Shell 命令执行异常，user_id: {context.user_id}, error: {e}")
             return f"命令执行异常，错误信息：{e}"
-            

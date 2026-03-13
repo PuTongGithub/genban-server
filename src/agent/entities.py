@@ -56,25 +56,36 @@ class ChatTypeInfo:
 @unique
 class ChatType(ChatTypeInfo, Enum):
     PROMPT = ("prompt", False, True, False)
+    SYSTEM_REMAINDER = ("system_remainder", False, True, True)
     USER = ("user", False, True, True)
     ASSISTANT = ("assistant", True, True, False)
     TOOL = ("tool", True, True, False)
     COMMAND = ("command", True, False, False)
     MEMORY = ("memory", False, True, True)
-    TOOL_SUMMARY = ("toolSummary", False, True, False)
-    ERROR = ("error", True, False, False)
+    ERROR = ("error", True, True, False)
 
 
 chatTypeMap = {chatType.type: chatType for chatType in ChatType}
 
 
+# 模型配置
+@dataclass
+class ModelConfig:
+    """模型配置"""
+
+    model_key: str = ""  # 模型 key
+    enable_thinking: bool = False  # 是否启用思考模式
+
+
 # Agent 单次执行上下文
 @dataclass
 class AgentContext:
-    model_key: str = ""  # model_hook 结果：当前使用的模型 key
+    model_config: ModelConfig | None = None  # model_hook 结果：当前使用的模型配置
     user_id: str = ""  # 用户 ID
     input_chat: Chat = field(default_factory=Chat)  # 本次 Agent.run 传入的 Chat
-    prompt_chat: Chat = field(default_factory=Chat)  # prompt_hook 结果：处理后的提示词
+    prompt_chats: list[Chat] = field(
+        default_factory=list
+    )  # prompt_hook 结果：处理后的提示词列表
     history_chats: list[Chat] = field(
         default_factory=list
     )  # chats_hook 结果：处理后的历史对话列表

@@ -1,6 +1,5 @@
 """Skill 信息获取工具"""
 
-from pathlib import Path
 from typing import Any
 
 from src.agent.entities import AgentContext, ToolParameter
@@ -15,7 +14,7 @@ class SkillTool(BaseTool):
     description = """获取指定 Skill 的目录路径和 SKILL.md 内容。
 重要提示：
 - 当用户要求你执行任务时，检查是否有任何可用技能匹配。技能提供了专业能力和领域知识
-- 可用技能列在系统提示词中的 available_skills 部分
+- 可用技能列在对话开头 system_remainder 的 available_skills 之中
 - 当技能匹配用户请求时，这是阻塞性要求：在生成关于该任务的任何其他响应之前，先调用该工具获得技能信息
 - 切勿在不实际调用此工具的情况下提及技能
 - 不要调用已在运行中的技能

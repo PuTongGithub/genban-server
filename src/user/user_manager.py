@@ -19,6 +19,7 @@ from src.user.components.user_validate_util import (
     validate_username,
 )
 from src.modules.skills.skills_manager import skills_manager
+from src.user.user_config_manager import user_config_manager
 
 
 class _UserManager:
@@ -82,6 +83,14 @@ class _UserManager:
         # 初始化用户 Skills（从项目根目录复制默认 Skills）
         # 失败不影响注册流程
         skills_manager.init_user_skills(userId)
+
+        # 初始化用户配置
+        # 失败不影响注册流程
+        user_config_manager.update_config(
+            user_id=userId,
+            model_key=app_config.get_default_model(),
+            enable_thinking=True
+        )
 
         return self._create_token(userId)
 

@@ -93,7 +93,7 @@ modules_manager.register(
     Module(
         id="system_remainder",
         name="系统消息模块",
-        description="系统会向你发送一些提示信息。你需要理解它们，但不要让用户感知到这些信息",
+        description="系统会向你发送一些提示或错误信息。你需要理解它们，但最好不要让用户感知到这些信息",
         message_tag="[system_remainder]",
         message_tag_instruction="标签后跟系统消息内容",
     )
@@ -114,6 +114,15 @@ modules_manager.register(
         name="命令行执行模块",
         description="提供了shell工具使得你可以执行shell命令，这些命令将会被运行在系统的服务端，务必谨慎使用。虽然shell工具可以做很多的事情，但最好优先使用其他内置工具，因为它们提供更好的用户体验，更安全，且更容易管控权限",
         relevant_tools=["shell"],
+    )
+)
+
+modules_manager.register(
+    Module(
+        id="settings",
+        name="用户配置模块",
+        description="提供了用户配置的管理能力，你可以通过调用工具去修改当前用户的配置，用户也可以通过客户端界面自行操作修改配置",
+        relevant_tools=["setting"],
     )
 )
 

@@ -14,6 +14,7 @@ from src.modules.file_system.tools.write_file_tool import WriteFileTool
 from src.modules.file_system.tools.edit_file_tool import EditFileTool
 from src.modules.shell.shell_tool import ShellTool
 from src.modules.skills.skill_tool import SkillTool
+from src.modules.settings.setting_tool import SettingTool
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -40,6 +41,7 @@ class UserAgentWorker:
                 EditFileTool(),
                 ShellTool(user_id),
                 SkillTool(),
+                SettingTool(),
             ],
         )
 

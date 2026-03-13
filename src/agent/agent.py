@@ -17,7 +17,6 @@ from src.agent.hooks.base_hook import (
 )
 from src.agent.hooks.hook_manager import HookManager
 from src.agent.chat_factory import chat_factory
-from src.config.config import app_config
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -60,28 +59,31 @@ class Agent:
         """执行前置钩子链：model -> chat -> prompt -> chats -> tools
 
         钩子执行结果写入 context：
-        - model_key: model_hook 结果
+        - model_config: model_hook 结果
         - input_chat: chat_hook 结果
         - prompt_chat: prompt_hook 结果
         - history_chats: chats_hook 结果
 
         """
         # 1. ModelHook - 决定模型 key
-        model_result = self.hook_manager.execute(ModelHook, context.model_key, context)
+        model_result = self.hook_manager.execute(
+            ModelHook, context.model_config, context
+        )
         if model_result is not None:
-            context.model_key = model_result
+            context.model_config = model_result
 
         # 2. ChatHook - 处理单个对话
         chat_result = self.hook_manager.execute(ChatHook, context.input_chat, context)
         if chat_result is not None:
             context.input_chat = chat_result
+        context.new_chats.append(context.input_chat)
 
         # 3. PromptHook - 处理提示词
         prompt_result = self.hook_manager.execute(
-            PromptHook, context.prompt_chat, context
+            PromptHook, context.prompt_chats, context
         )
         if prompt_result is not None:
-            context.prompt_chat = prompt_result
+            context.prompt_chats = prompt_result
 
         # 4. ChatsHook - 处理对话列表
         chats_result = self.hook_manager.execute(
@@ -104,10 +106,10 @@ class Agent:
 
         chat = None
         for response_chat in self.model_caller.stream_call(
-            model_key=context.model_key,
+            model_key=context.model_config.model_key,
             chats=chats,
             tools=tools,
-            enable_thinking=True,
+            enable_thinking=context.model_config.enable_thinking,
         ):
             self.hook_manager.async_execute(NewChatHook, response_chat, context)
             chat = response_chat
@@ -140,20 +142,16 @@ class Agent:
         logger.debug(f"Agent 开始执行，user_id: {self.user_id}")
 
         context = AgentContext(
-            model_key=app_config.get_default_model(),
             user_id=self.user_id,
             input_chat=chat,
-            new_chats=[chat],
+            new_chats=[],
         )
 
         # 执行前置钩子链
         self._execute_pre_hooks(context)
-        logger.debug(f"前置钩子执行完成，使用模型: {context.model_key}")
 
         iteration = 0
-        current_chats = (
-            [context.prompt_chat] + context.history_chats + context.new_chats
-        )
+        current_chats = context.prompt_chats + context.history_chats + context.new_chats
         new_chats = context.new_chats
 
         while iteration < self.max_iterations:

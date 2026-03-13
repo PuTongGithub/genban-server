@@ -35,14 +35,6 @@ class AppConfig:
         app_config_path = Path(__file__).parent / "jsons/app_config.json"
         with open(app_config_path, "r", encoding="utf-8") as file:
             self.config = json.load(file)
-            self._init_configs()
-
-    def _init_configs(self) -> None:
-        """初始化默认模型配置"""
-        for key, value in self.config["models"].items():
-            if value.get("default", False):
-                self.default_model = key
-                break
 
     def get(self, key: str):
         """获取配置项"""
@@ -50,7 +42,10 @@ class AppConfig:
 
     def get_default_model(self) -> str:
         """获取默认模型"""
-        return self.default_model
+        for key, value in self.config["models"].items():
+            if value.get("default", False):
+                return key
+        raise ModelConfigNotFoundException("not found default model")
 
     def get_model_config(self, model_key: str) -> dict:
         """获取模型配置"""

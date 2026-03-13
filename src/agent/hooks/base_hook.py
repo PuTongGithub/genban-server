@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic
 
-from src.agent.entities import Chat, AgentContext
+from src.agent.entities import Chat, AgentContext, ModelConfig
 from src.agent.tools.tool_registry import ToolRegistry
 
 T = TypeVar("T")
@@ -33,10 +33,12 @@ class ChatHook(BaseHook[Chat]):
         raise NotImplementedError("Subclasses must implement execute method")
 
 
-class PromptHook(BaseHook[Chat]):
+class PromptHook(BaseHook[list[Chat]]):
     """处理提示词"""
 
-    def execute(self, data: Chat | None, context: AgentContext) -> Chat | None:
+    def execute(
+        self, data: list[Chat] | None, context: AgentContext
+    ) -> list[Chat] | None:
         raise NotImplementedError("Subclasses must implement execute method")
 
 
@@ -49,17 +51,19 @@ class ChatsHook(BaseHook[list[Chat]]):
         raise NotImplementedError("Subclasses must implement execute method")
 
 
-class ModelHook(BaseHook[str]):
-    """处理模型key，决定调用哪个模型（首个被执行的钩子）"""
+class ModelHook(BaseHook[ModelConfig]):
+    """处理模型配置，决定调用哪个模型（首个被执行的钩子）"""
 
-    def execute(self, data: str | None, context: AgentContext) -> str | None:
+    def execute(
+        self, data: ModelConfig | None, context: AgentContext
+    ) -> ModelConfig | None:
         """
         Args:
-            data: 默认模型 key，可能为 None
-            context: 上下文，可修改 context.model_key
+            data: 默认模型配置对象，可能为 None
+            context: 上下文，可修改 context 相关属性
 
         Returns:
-            最终使用的模型 key，可能为 None
+            最终使用的模型配置对象，可能为 None
         """
         raise NotImplementedError("Subclasses must implement execute method")
 
