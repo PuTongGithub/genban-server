@@ -20,6 +20,20 @@ Genban 是一个以「应用可视化、模块化」为核心架构的 AI 个人
 
 ## 初始化（首次运行前）
 
+### 虚拟环境设置
+
+```bash
+python -m venv .venv
+```
+激活虚拟环境：
+```bash
+source .venv/bin/activate
+```
+或在 Windows 上使用：
+```bash
+.venv\Scripts\activate
+```
+
 ### 安装依赖
 
 ```bash
@@ -31,9 +45,6 @@ pip install -r requirements.txt
 ```bash
 python scripts/init_project.py
 ```
-
-执行后会：
-- 在项目根目录创建 `keys/` 文件夹，并在其中生成RSA密钥对文件
 
 ## 打包指令
 

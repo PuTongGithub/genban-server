@@ -1,5 +1,6 @@
 """命令行执行工具"""
 
+import locale
 import subprocess
 from typing import Any
 
@@ -44,6 +45,7 @@ class ShellTool(BaseTool):
 
     def __init__(self, user_id: str) -> None:
         systemDesc = "Windows" if sys_util.is_mswindows() else "Linux"
+        self.system_encoding = locale.getpreferredencoding(False)
         self.description = f"""使用该工具可以执行shell命令。
 重要提示：
 - 当前系统：{systemDesc}
@@ -100,7 +102,7 @@ class ShellTool(BaseTool):
                 capture_output=True,
                 timeout=timeout,
                 stdin=subprocess.DEVNULL,
-                encoding="utf-8",
+                encoding=self.system_encoding,
                 errors="replace",
             )
             logger.info(f"Shell 命令执行成功，user_id: {context.user_id}")
@@ -111,3 +113,7 @@ class ShellTool(BaseTool):
         except subprocess.CalledProcessError as e:
             logger.error(f"Shell 命令执行失败，user_id: {context.user_id}, returncode: {e.returncode}")
             return f"命令执行失败，返回码：{e.returncode}\n标准输出：{e.stdout}\n标准错误：{e.stderr}"
+        except Exception as e:
+            logger.error(f"Shell 命令执行异常，user_id: {context.user_id}, error: {e}")
+            return f"命令执行异常，错误信息：{e}"
+            

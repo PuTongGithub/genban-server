@@ -12,13 +12,20 @@
 import subprocess
 import sys
 from pathlib import Path
+
+# 将项目根目录添加到 Python 路径
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 from src.common.utils import sys_util
 
 
 def check_command(command: list[str]) -> bool:
     """检查命令是否可用"""
     try:
-        subprocess.run(command, capture_output=True, check=True)
+        # Windows 上需要使用 shell=True 来正确解析某些命令
+        use_shell = sys.platform == "win32" and command[0] in ("npm", "node")
+        subprocess.run(command, capture_output=True, check=True, shell=use_shell)
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
@@ -99,7 +106,7 @@ def check_system_dependencies() -> None:
         if is_windows:
             print("  提示：如安装后命令仍不可用，请添加 PATH:")
             print(
-                '  [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "User")'
+                r'  [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "User")'
             )
         print("  提示：安装完成后如命令不可用，请重启终端")
 
@@ -136,10 +143,13 @@ def install_node_dependencies() -> None:
     for package in packages:
         print(f"安装 {package}...")
         try:
+            # Windows 上需要使用 shell=True
+            use_shell = sys.platform == "win32"
             subprocess.run(
                 ["npm", "install", "-g", package],
                 check=True,
                 capture_output=True,
+                shell=use_shell,
             )
             print(f"  ✓ {package} 安装成功")
         except subprocess.CalledProcessError as e:
@@ -149,10 +159,30 @@ def install_node_dependencies() -> None:
             break
 
 
+def check_env_file() -> None:
+    """检查 .env 文件是否存在"""
+    print("=== 检查环境配置文件 ===\n")
+
+    env_file = project_root / ".env"
+    env_example = project_root / ".env.example"
+
+    if env_file.exists():
+        print("✓ .env 文件已存在\n")
+    else:
+        print("✗ .env 文件不存在")
+        if env_example.exists():
+            print(f"  提示: 可参考 {env_example.name} 文件创建 .env 文件")
+            print(f"  命令: cp {env_example.name} .env")
+        else:
+            print("  提示: 请创建 .env 文件并配置必要的环境变量")
+        print()
+
+
 def main() -> None:
     """主函数"""
     print("=== 项目初始化 ===\n")
 
+    check_env_file()
     init_rsa_keys()
     check_system_dependencies()
     install_node_dependencies()
