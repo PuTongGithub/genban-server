@@ -6,6 +6,8 @@ from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
+# 智谱接口文档：https://docs.bigmodel.cn/cn/guide/start/introduction
+
 client = ZhipuAiClient(api_key=env_config.get("ZHIPU_API_KEY"))
 
 
@@ -24,4 +26,4 @@ def web_search(
         return response.search_result
     except Exception:
         logger.exception(f"网络搜索失败，query: {search_query}")
-        return {"error": "网络搜索发生错误"}
+        raise

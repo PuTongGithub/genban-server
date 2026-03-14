@@ -1,10 +1,12 @@
 """阿里云DashScope API封装"""
 
-import dashscope
+import dashscope  # type: ignore
 from src.config.config import env_config
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
+
+# 百炼平台接口文档：https://bailian.console.aliyun.com/cn-beijing/?tab=api#/api
 
 
 def call(model, messages, tools, enable_thinking):

@@ -15,6 +15,8 @@ from src.modules.file_system.tools.edit_file_tool import EditFileTool
 from src.modules.shell.shell_tool import ShellTool
 from src.modules.skills.skill_tool import SkillTool
 from src.modules.settings.setting_tool import SettingTool
+from src.modules.web.fetch.web_fetch_tool import WebFetchTool
+from src.modules.web.search.web_search_tool import WebSearchTool
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -26,7 +28,6 @@ class UserAgentWorker:
     def __init__(self, user_id: str):
         """初始化用户专属的 AgentWorker"""
         self.user_id = user_id
-        # 复用同一个 Agent 实例
         self._agent = Agent(
             user_id=user_id,
             hooks=[
@@ -42,6 +43,8 @@ class UserAgentWorker:
                 ShellTool(user_id),
                 SkillTool(),
                 SettingTool(),
+                WebFetchTool(),
+                WebSearchTool(),
             ],
         )
 
