@@ -11,15 +11,6 @@ class _ChatFactory:
         self.current_time = time_util.get_timestamp()
         self.index = 0
 
-    def create_user_content(self, user_id: str, user_input: str) -> str:
-        """创建用户消息内容"""
-        time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
-        return f"[{ChatType.USER.type}:{user_id}:{time_str}]" + user_input
-
-    def create_system_remainder_content(self, content: str) -> str:
-        """创建系统消息内容"""
-        return f"[{ChatType.SYSTEM_REMAINDER.type}]{content}"
-
     def _create_chat_id(self) -> str:
         """创建对话 ID"""
         current = time_util.get_timestamp()
@@ -30,9 +21,39 @@ class _ChatFactory:
         self.index += 1
         return f"{self.current_time}{self.index:04d}"
 
-    def create_system_message(self, content: str) -> Message:
-        """创建系统消息"""
-        return Message(role=MessageRole.SYSTEM.value, content=content)
+    # 创建消息内容
+
+    def _normalize_content(self, content: str | list) -> list:
+        """将 content 统一转换为列表格式
+
+        Args:
+            content: 字符串或列表类型的内容
+
+        Returns:
+            列表格式的内容，字符串会被包装为 [{"text": content}]
+        """
+        if isinstance(content, str):
+            return [{"text": content}]
+        return content
+
+    def create_user_content(self, user_id: str, user_input: str) -> list:
+        """创建用户消息内容，返回列表格式 [{"text": ...}]"""
+        time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
+        text_content = f"[{ChatType.USER.type}:{user_id}:{time_str}]" + user_input
+        return self._normalize_content(text_content)
+
+    def create_system_remainder_content(self, content: str) -> list:
+        """创建系统消息内容，返回列表格式 [{"text": ...}]"""
+        text_content = f"[{ChatType.SYSTEM_REMAINDER.type}]{content}"
+        return self._normalize_content(text_content)
+
+    # 创建消息对象
+
+    def create_system_message(self, content: str | list) -> Message:
+        """创建系统消息，content 支持字符串或列表"""
+        return Message(
+            role=MessageRole.SYSTEM.value, content=self._normalize_content(content)
+        )
 
     def create_user_message(self, user_id: str, user_input: str) -> Message:
         """创建用户消息"""
@@ -42,16 +63,18 @@ class _ChatFactory:
         )
 
     def create_tool_message(self, tool_call_id: str, tool_result: str) -> Message:
-        """创建工具消息"""
+        """创建工具消息，tool_result 转换为列表格式"""
         return Message(
             role=MessageRole.TOOL.value,
             tool_call_id=tool_call_id,
-            content=tool_result,
+            content=self._normalize_content(tool_result),
         )
 
-    def create_assistant_message(self, content: str) -> Message:
-        """创建助手消息"""
-        return Message(role=MessageRole.ASSISTANT.value, content=content)
+    def create_assistant_message(self, content: str | list) -> Message:
+        """创建助手消息，content 支持字符串或列表"""
+        return Message(
+            role=MessageRole.ASSISTANT.value, content=self._normalize_content(content)
+        )
 
     def create_system_remainder_message(self, content: str) -> Message:
         """创建系统提醒消息（用户角色）"""
@@ -61,6 +84,7 @@ class _ChatFactory:
         )
 
     # 创建 Chat 对象
+
     def create_prompt_chat(self, content: str) -> Chat:
         """创建提示词对话"""
         return Chat(

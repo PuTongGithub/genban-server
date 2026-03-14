@@ -9,7 +9,7 @@ from src.common.utils import time_util
 @dataclass
 class Message:
     role: str = ""  # 角色: system, user, assistant, tool
-    content: str = ""
+    content: list = field(default_factory=list)  # 内容统一为列表格式，纯文本为 [{"text": "内容"}]
     reasoning_content: str = ""
     tool_calls: list | None = None
     tool_call_id: str | None = None

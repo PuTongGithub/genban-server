@@ -32,7 +32,6 @@ class Agent:
         hooks: list[BaseHook] | None = None,
     ) -> None:
         self.user_id = user_id
-        self.model_caller = model_caller  # 使用单例
         self.tool_caller = ToolCaller()
         self.hook_manager = HookManager()
         self.max_iterations = 50  # 最大工具调用迭代次数
@@ -105,7 +104,7 @@ class Agent:
         tools = tools_schemas if tools_schemas else None
 
         chat = None
-        for response_chat in self.model_caller.stream_call(
+        for response_chat in model_caller.stream_call(
             model_key=context.model_config.model_key,
             chats=chats,
             tools=tools,

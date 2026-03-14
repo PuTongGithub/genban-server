@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from src.agent.entities import CallResponse
+from src.agent.entities import CallResponse, Message
 
 
 class ModelProvider(ABC):
@@ -12,7 +12,7 @@ class ModelProvider(ABC):
     def call(
         self,
         model: str,
-        messages: list,
+        messages: list[Message],
         tools: list | None = None,
         enable_thinking: bool = True,
     ) -> CallResponse:
@@ -20,7 +20,7 @@ class ModelProvider(ABC):
 
         Args:
             model: 模型名称
-            messages: 消息列表
+            messages: Message 对象列表
             tools: 工具列表
             enable_thinking: 是否启用思考模式
 
@@ -30,10 +30,10 @@ class ModelProvider(ABC):
         pass
 
     @abstractmethod
-    async def stream_call(
+    def stream_call(
         self,
         model: str,
-        messages: list,
+        messages: list[Message],
         tools: list | None = None,
         enable_thinking: bool = True,
     ):
@@ -41,7 +41,7 @@ class ModelProvider(ABC):
 
         Args:
             model: 模型名称
-            messages: 消息列表
+            messages: Message 对象列表
             tools: 工具列表
             enable_thinking: 是否启用思考模式
 

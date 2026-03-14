@@ -17,12 +17,23 @@ class SSEFormatter:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def _clean_content(self, type: str, content: str) -> str:
-        """根据类型清理内容，移除开头的 [] 包裹内容"""
+    def _clean_content(self, type: str, content: list) -> list:
+        """根据类型清理内容，移除文本项开头的 [] 包裹内容"""
         chatType: ChatType = chatTypeMap[type]
-        if chatType.messageWithTag:
-            return re.sub(r"^\[[^\]]*\]", "", content)
-        return content
+        if not chatType.messageWithTag:
+            return content
+
+        # 处理列表中的文本项
+        cleaned_content = []
+        for item in content:
+            if isinstance(item, dict) and "text" in item:
+                text = item["text"]
+                # 移除开头的 [] 包裹内容
+                cleaned_text = re.sub(r"^\[[^\]]*\]", "", text)
+                cleaned_content.append({"text": cleaned_text})
+            else:
+                cleaned_content.append(item)
+        return cleaned_content
 
     def format_chat_to_sse(self, chat: Chat) -> str:
         """将 Chat 格式化为 SSE 格式

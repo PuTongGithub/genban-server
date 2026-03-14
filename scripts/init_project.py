@@ -104,7 +104,13 @@ def check_system_dependencies() -> None:
 
 def install_python_dependencies() -> None:
     """安装 Python 系统依赖（供 subprocess 调用）"""
-    packages = ["defusedxml", "pypdf", "pdfplumber", "pypdfium2"]
+    packages = [
+        "defusedxml",
+        "pypdf",
+        "pdfplumber",
+        "pypdfium2",
+        "reportlab",
+    ]
 
     for package in packages:
         try:

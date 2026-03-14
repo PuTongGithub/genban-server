@@ -34,32 +34,12 @@ class ModelCaller:
             raise ModelProviderNotFoundException(f"provider:{api_name}")
         return self._providers[api_name]
 
-    def _convert_chats_to_messages(self, chats: list[Chat]) -> list[dict]:
-        """将 Chat 列表转换为模型调用所需的消息格式"""
-        messages: list[dict] = []
+    def _convert_chats_to_messages(self, chats: list[Chat]) -> list[Message]:
+        """将 Chat 列表转换为 Message 列表"""
+        messages: list[Message] = []
         for chat in chats:
-            msg = self._convert_message_to_dict(chat.message)
-            if msg:
-                messages.append(msg)
+            messages.append(chat.message)
         return messages
-
-    def _convert_message_to_dict(self, message: Message) -> dict | None:
-        """将 Message 转换为字典格式"""
-        if not message.role:
-            return None
-
-        msg_dict: dict = {
-            "role": message.role,
-            "content": message.content,
-        }
-
-        if message.tool_calls:
-            msg_dict["tool_calls"] = message.tool_calls
-
-        if message.tool_call_id:
-            msg_dict["tool_call_id"] = message.tool_call_id
-
-        return msg_dict
 
     def _validate_response(self, response: CallResponse) -> None:
         """验证模型响应是否有效"""

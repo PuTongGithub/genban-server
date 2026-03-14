@@ -6,12 +6,12 @@
       "api": "dashscope_multi"
     },
     "qwen-flash": {
-      "id": "qwen3.5-122b-a10b",
+      "id": "qwen3.5-35b-a3b",
       "max_tokens": 1000000,
       "api": "dashscope_multi"
     },
     "qwen-plus": {
-      "id": "qwen3.5-plus-2026-02-15",
+      "id": "qwen3.5-122b-a10b",
       "max_tokens": 1000000,
       "api": "dashscope_multi"
     },

@@ -26,7 +26,7 @@ class ChatEvent(BaseModel):
     id: str
     type: str
     time: int
-    content: str
+    content: list  # 统一为列表格式，纯文本为 [{"text": "内容"}]
     reasoning_content: str = ""
     tool_calls: list[dict[str, Any]] | None = None
 
