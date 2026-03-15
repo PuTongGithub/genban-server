@@ -7,7 +7,8 @@ from src.agent.model.message_formatter import (
     format_text_content,
     convert_messages_for_text_model,
 )
-from src.agent.entities import CallResponse, Message
+from src.agent.entities import Message
+from src.agent.model.entities import CallResponse
 
 
 class DashScopeProvider(ModelProvider):

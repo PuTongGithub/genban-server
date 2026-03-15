@@ -1,7 +1,7 @@
 """Agent 主流程控制器"""
 
 from src.agent.entities import Chat, AgentContext
-from src.agent.exceptions import ModelCallException
+from src.agent.exceptions import ModelCallException, ModelHookException
 from src.agent.model.model_caller import model_caller
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_caller import ToolCaller
@@ -17,6 +17,7 @@ from src.agent.hooks.base_hook import (
 )
 from src.agent.hooks.hook_manager import HookManager
 from src.agent.chat_factory import chat_factory
+from src.modules.base_module import BaseModule
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,11 +31,18 @@ class Agent:
         user_id: str,
         tools: list[BaseTool] | None = None,
         hooks: list[BaseHook] | None = None,
+        modules: list[BaseModule] | None = None,
     ) -> None:
         self.user_id = user_id
         self.tool_caller = ToolCaller()
         self.hook_manager = HookManager()
         self.max_iterations = 50  # 最大工具调用迭代次数
+        self._modules: list[BaseModule] = []  # 内部维护模块列表
+
+        # 注册模块（先注册模块，模块会提供tools和hooks）
+        if modules:
+            for module in modules:
+                self.register_module(module)
 
         # 注册工具
         if tools:
@@ -54,6 +62,26 @@ class Agent:
         """注册钩子"""
         self.hook_manager.register(hook)
 
+    def register_module(self, module: BaseModule) -> None:
+        """注册模块，自动注入模块的tools和hooks
+
+        Args:
+            module: 模块实例，需继承 BaseModule
+        """
+        self._modules.append(module)
+
+        # 自动注册模块提供的工具
+        tools = module.get_tools()
+        if tools:
+            for tool in tools:
+                self.register_tool(tool)
+
+        # 自动注册模块提供的钩子
+        hooks = module.get_hooks()
+        if hooks:
+            for hook in hooks:
+                self.register_hook(hook)
+
     def _execute_pre_hooks(self, context: AgentContext) -> None:
         """执行前置钩子链：model -> chat -> prompt -> chats -> tools
 
@@ -70,6 +98,8 @@ class Agent:
         )
         if model_result is not None:
             context.model_config = model_result
+        else:
+            raise ModelHookException("model hook failed")
 
         # 2. ChatHook - 处理单个对话
         chat_result = self.hook_manager.execute(ChatHook, context.input_chat, context)
@@ -100,6 +130,9 @@ class Agent:
 
     def _call_model(self, context: AgentContext, chats: list[Chat]) -> Chat:
         """调用大模型"""
+        if context.model_config is None:
+            raise ModelCallException("model config is None")
+
         tools_schemas = self.tool_caller.get_tools_schemas()
         tools = tools_schemas if tools_schemas else None
 
@@ -144,6 +177,7 @@ class Agent:
             user_id=self.user_id,
             input_chat=chat,
             new_chats=[],
+            modules=self._modules,
         )
 
         # 执行前置钩子链

@@ -2,7 +2,7 @@
 
 from src.agent.hooks.base_hook import ChatsHook
 from src.agent.entities import Chat, AgentContext
-from src.assistant.conversation_manager import conversation_manager
+from src.modules.memory.conversation_manager import conversation_manager
 
 
 class HistoryChatsHook(ChatsHook):

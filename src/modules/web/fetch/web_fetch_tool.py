@@ -3,7 +3,8 @@
 from typing import Any
 
 from src.agent.tools.base_tool import BaseTool
-from src.agent.entities import ToolParameter, AgentContext
+from src.agent.tools.entities import ToolParameter
+from src.agent.entities import AgentContext
 from src.provider.api.api_jina import fetch_webpage
 from src.common.logger import get_logger
 from src.agent.chat_factory import chat_factory
@@ -38,7 +39,7 @@ class WebFetchTool(BaseTool):
         url = kwargs.get("url", "")
 
         if not url.strip():
-            return chat_factory.create_system_remainder_content("错误：URL不能为空")
+            return chat_factory.create_system_remainder_str("错误：URL不能为空")
 
         try:
             content = fetch_webpage(url)
@@ -48,13 +49,13 @@ class WebFetchTool(BaseTool):
                 logger.warning(
                     f"网页内容获取失败，user_id: {context.user_id}, url: {url}"
                 )
-                return chat_factory.create_system_remainder_content(
+                return chat_factory.create_system_remainder_str(
                     f"错误：无法获取网页内容，请检查URL是否正确: {url}"
                 )
         except Exception as e:
             logger.exception(
                 f"网页获取过程发生异常，user_id: {context.user_id}, url: {url}"
             )
-            return chat_factory.create_system_remainder_content(
+            return chat_factory.create_system_remainder_str(
                 f"错误：获取网页时发生异常: {e}"
             )

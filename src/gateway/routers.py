@@ -9,7 +9,7 @@ from typing import List
 # 导入各模块路由
 from src.user import user_controller
 from src.modules.settings import setting_controller
-from src.assistant.web import assistant_controller
+from src.modules.user_message import assistant_controller
 from src.modules.file_system import file_system_controller
 from src.modules.skills import skills_controller
 

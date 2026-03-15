@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import Header
 
 from src.user.user_manager import user_manager
-from src.assistant.exceptions import UnauthorizedException
+from src.user.exceptions import UnauthorizedException
 
 
 async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:

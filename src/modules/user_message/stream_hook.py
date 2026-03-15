@@ -2,10 +2,10 @@
 
 from src.agent.hooks.base_hook import NewChatHook
 from src.agent.entities import Chat, AgentContext
-from src.assistant.web.stream_manager import stream_manager
+from src.modules.user_message.stream_manager import stream_manager
 
 
-class StreamNewChatHook(NewChatHook):
+class StreamHook(NewChatHook):
     """NewChatHook 实现，将新 Chat 推送到 SSE 流"""
 
     def execute(self, data: Chat | None, context: AgentContext) -> Chat | None:

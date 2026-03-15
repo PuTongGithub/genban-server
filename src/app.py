@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.common.async_executor import AsyncExecutor
 from src.common.logger import setup_logging, get_logger
 from src.gateway.routers import routers
-from src.assistant.web.stream_manager import stream_manager
+from src.modules.user_message.stream_manager import stream_manager
 
 # 初始化日志系统
 setup_logging()

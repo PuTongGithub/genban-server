@@ -3,7 +3,8 @@
 from typing import Any
 
 from src.agent.tools.base_tool import BaseTool
-from src.agent.entities import ToolParameter, AgentContext
+from src.agent.tools.entities import ToolParameter
+from src.agent.entities import AgentContext
 from src.provider.api.api_zai_sdk import web_search
 from src.common.logger import get_logger
 from src.agent.chat_factory import chat_factory
@@ -59,7 +60,7 @@ class WebSearchTool(BaseTool):
         search_recency_filter = kwargs.get("search_recency_filter", "noLimit")
 
         if not search_query.strip():
-            return chat_factory.create_system_remainder_content(
+            return chat_factory.create_system_remainder_str(
                 content="错误：搜索关键词不能为空"
             )
 
@@ -79,7 +80,7 @@ class WebSearchTool(BaseTool):
             )
 
             if isinstance(result, dict) and "error" in result:
-                return chat_factory.create_system_remainder_content(
+                return chat_factory.create_system_remainder_str(
                     content=f"搜索失败：{result['error']}"
                 )
 
@@ -88,7 +89,7 @@ class WebSearchTool(BaseTool):
             logger.exception(
                 f"网络搜索执行异常，user_id: {context.user_id}, query: {search_query}"
             )
-            return chat_factory.create_system_remainder_content(
+            return chat_factory.create_system_remainder_str(
                 content=f"搜索执行异常：{str(e)}"
             )
 

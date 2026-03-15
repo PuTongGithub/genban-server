@@ -1,7 +1,8 @@
 """消息格式化工具模块"""
 
 from typing import Callable
-from src.agent.entities import CallResponse, Message
+from src.agent.entities import Message
+from src.agent.model.entities import CallResponse
 from src.agent.exceptions import ModelResponseException
 
 

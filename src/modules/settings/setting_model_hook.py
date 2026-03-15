@@ -1,12 +1,15 @@
 """ModelHook 实现 - 设置默认模型"""
 
 from src.agent.hooks.base_hook import ModelHook
-from src.agent.entities import AgentContext, ModelConfig
+from src.agent.entities import AgentContext
+from src.agent.hooks.entities import ModelConfig
 from src.user.user_config_manager import user_config_manager
 
 
-class DefaultModelHook(ModelHook):
+class SettingModelHook(ModelHook):
     """设置默认模型的钩子"""
+
+    order = 0
 
     def execute(
         self, data: ModelConfig | None, context: AgentContext

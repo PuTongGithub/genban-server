@@ -3,20 +3,17 @@
 from src.agent.agent import Agent
 from src.agent.chat_factory import chat_factory
 from src.agent.entities import Chat
-from src.assistant.conversation_manager import conversation_manager
-from src.assistant.hooks.model_hook import DefaultModelHook
-from src.assistant.hooks.prompt_hook import PromptSetupHook
-from src.assistant.hooks.chats_hook import HistoryChatsHook
-from src.assistant.hooks.stream_hook import StreamNewChatHook
-from src.assistant.web.stream_manager import stream_manager
-from src.modules.file_system.tools.read_file_tool import ReadFileTool
-from src.modules.file_system.tools.write_file_tool import WriteFileTool
-from src.modules.file_system.tools.edit_file_tool import EditFileTool
-from src.modules.shell.shell_tool import ShellTool
-from src.modules.skills.skill_tool import SkillTool
-from src.modules.settings.setting_tool import SettingTool
-from src.modules.web.fetch.web_fetch_tool import WebFetchTool
-from src.modules.web.search.web_search_tool import WebSearchTool
+from src.modules.memory.conversation_manager import conversation_manager
+from src.modules.user_message.stream_manager import stream_manager
+from src.modules.file_system.file_system_module import FileSystemModule
+from src.modules.shell.shell_module import ShellModule
+from src.modules.user_message.user_message_module import UserMessageModule
+from src.modules.system_remainder.system_remainder_module import SystemRemainderModule
+from src.modules.settings.settings_module import SettingsModule
+from src.modules.skills.skills_module import SkillsModule
+from src.modules.web.web_module import WebModule
+from src.modules.memory.memory_module import MemoryModule
+from src.modules.schedule.schedule_module import ScheduleModule
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -28,24 +25,23 @@ class UserAgentWorker:
     def __init__(self, user_id: str):
         """初始化用户专属的 AgentWorker"""
         self.user_id = user_id
+
+        # 创建模块实例
+        modules = [
+            UserMessageModule(),
+            SystemRemainderModule(),
+            FileSystemModule(),
+            ShellModule(user_id),
+            SettingsModule(),
+            SkillsModule(),
+            WebModule(),
+            MemoryModule(),
+            ScheduleModule(),
+        ]
+
         self._agent = Agent(
             user_id=user_id,
-            hooks=[
-                DefaultModelHook(),
-                PromptSetupHook(),
-                HistoryChatsHook(),
-                StreamNewChatHook(),
-            ],
-            tools=[
-                ReadFileTool(),
-                WriteFileTool(),
-                EditFileTool(),
-                ShellTool(user_id),
-                SkillTool(),
-                SettingTool(),
-                WebFetchTool(),
-                WebSearchTool(),
-            ],
+            modules=modules,
         )
 
     async def process_chat(self, chat: Chat) -> None:

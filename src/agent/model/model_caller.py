@@ -9,7 +9,8 @@ from src.agent.exceptions import (
     ModelCallLengthLimitedException,
     ModelCallException,
 )
-from src.agent.entities import CallResponse, Chat, Message
+from src.agent.entities import Chat, Message
+from src.agent.model.entities import CallResponse
 from src.agent.chat_factory import chat_factory
 from src.common.logger import get_logger
 

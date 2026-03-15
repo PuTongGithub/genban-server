@@ -5,7 +5,7 @@ from src.user.exceptions import (
     InvalidPasswordException,
     UserNotAllowedException,
 )
-from src.assistant.exceptions import UnauthorizedException
+from src.user.exceptions import UnauthorizedException
 from src.common.utils import time_util
 from src.common.utils.rsa_util import RsaUtil
 from src.config.config import file_config, app_config
@@ -89,7 +89,7 @@ class _UserManager:
         user_config_manager.update_config(
             user_id=userId,
             model_key=app_config.get_default_model(),
-            enable_thinking=True
+            enable_thinking=True,
         )
 
         return self._create_token(userId)

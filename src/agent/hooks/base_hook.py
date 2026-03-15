@@ -1,16 +1,20 @@
 """钩子抽象基类和点位定义"""
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, ClassVar
 
-from src.agent.entities import Chat, AgentContext, ModelConfig
+from src.agent.entities import Chat, AgentContext
 from src.agent.tools.tool_registry import ToolRegistry
+from src.agent.hooks.entities import ModelConfig
+
 
 T = TypeVar("T")
 
 
 class BaseHook(ABC, Generic[T]):
     """钩子抽象基类，入参出参同类型"""
+
+    order: ClassVar[int] = 100  # 执行顺序，数值越小越先执行，默认靠后
 
     @abstractmethod
     def execute(self, data: T | None, context: AgentContext) -> T | None:

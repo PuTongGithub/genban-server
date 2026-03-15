@@ -28,12 +28,13 @@ class HookRegistry:
                 self._registry[hook_type].append(hook)
 
     def get_hooks(self, hook_type: type[BaseHook[T]]) -> list[BaseHook[T]]:
-        """获取指定类型的所有钩子
+        """获取指定类型的所有钩子，按 order 排序
 
         Args:
             hook_type: 钩子类型
 
         Returns:
-            钩子实例列表
+            按 order 排序后的钩子实例列表
         """
-        return self._registry.get(hook_type, [])
+        hooks = self._registry.get(hook_type, [])
+        return sorted(hooks, key=lambda h: type(h).order)

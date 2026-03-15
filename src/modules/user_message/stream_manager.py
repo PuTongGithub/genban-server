@@ -4,7 +4,7 @@ import asyncio
 from typing import AsyncGenerator, Dict
 
 from src.agent.entities import Chat
-from src.assistant.web.sse_formatter import sse_formatter
+from src.modules.user_message.sse_formatter import sse_formatter
 
 
 class StreamManager:

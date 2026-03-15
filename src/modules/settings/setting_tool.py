@@ -3,7 +3,8 @@
 from typing import Any
 
 from src.agent.tools.base_tool import BaseTool
-from src.agent.entities import ToolParameter, AgentContext
+from src.agent.tools.entities import ToolParameter
+from src.agent.entities import AgentContext
 from src.user.user_config_manager import user_config_manager
 from src.common.logger import get_logger
 from src.config.config import app_config

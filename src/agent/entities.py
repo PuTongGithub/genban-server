@@ -1,15 +1,22 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum, unique, Enum
-from typing import Any
+from typing import TYPE_CHECKING
 
 from src.common.utils import time_util
+from src.agent.hooks.entities import ModelConfig
+
+if TYPE_CHECKING:
+    from src.modules.base_module import BaseModule
 
 
 # 大模型消息实体
 @dataclass
 class Message:
     role: str = ""  # 角色: system, user, assistant, tool
-    content: list = field(default_factory=list)  # 内容统一为列表格式，纯文本为 [{"text": "内容"}]
+    content: list = field(
+        default_factory=list
+    )  # 内容统一为列表格式，纯文本为 [{"text": "内容"}]
     reasoning_content: str = ""
     tool_calls: list | None = None
     tool_call_id: str | None = None
@@ -21,16 +28,6 @@ class MessageRole(StrEnum):
     USER = "user"
     ASSISTANT = "assistant"
     TOOL = "tool"
-
-
-# 大模型接口调用返回值统一封装
-@dataclass
-class CallResponse:
-    request_id: str
-    status_code: int
-    total_tokens: int
-    finish_reason: str
-    message: Message
 
 
 # agent模块针对对话内容的封装
@@ -68,15 +65,6 @@ class ChatType(ChatTypeInfo, Enum):
 chatTypeMap = {chatType.type: chatType for chatType in ChatType}
 
 
-# 模型配置
-@dataclass
-class ModelConfig:
-    """模型配置"""
-
-    model_key: str = ""  # 模型 key
-    enable_thinking: bool = False  # 是否启用思考模式
-
-
 # Agent 单次执行上下文
 @dataclass
 class AgentContext:
@@ -92,32 +80,6 @@ class AgentContext:
     new_chats: list[Chat] = field(
         default_factory=list
     )  # 新增的 Chat 列表（用于收集本次所有新增对话）
-
-
-# 工具相关的数据结构定义
-@dataclass
-class ToolParameter:
-    """工具参数定义"""
-
-    name: str
-    type: str
-    description: str
-    required: bool = True
-    enum: list | None = None
-
-
-@dataclass
-class ToolCall:
-    """工具调用定义"""
-
-    id: str
-    name: str
-    arguments: dict[str, Any]
-
-
-@dataclass
-class ToolResult:
-    """工具执行结果"""
-
-    tool_call_id: str
-    content: str
+    modules: list["BaseModule"] = field(
+        default_factory=list
+    )  # 已注册的模块列表，供钩子访问

@@ -15,6 +15,13 @@ class ToolNotExistException(Exception):
         super().__init__(f"tool:{tool_name} not found")
 
 
+class ModelHookException(Exception):
+    """模型钩子异常"""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 class ModelCallException(Exception):
     def __init__(self, message: str):
         super().__init__(message)

@@ -2,7 +2,7 @@
 
 import asyncio
 from src.common.async_executor import AsyncExecutor
-from src.assistant.entities import QueueItem
+from src.modules.user_message.entities import QueueItem
 from src.assistant.worker.user_agent_worker import UserAgentWorker
 
 

@@ -1,6 +1,7 @@
 """Chat 工厂类，用于创建各种 Chat 和 Message 对象"""
 
-from src.agent.entities import Message, Chat, CallResponse, MessageRole, ChatType
+from src.agent.entities import Message, Chat, MessageRole, ChatType
+from src.agent.model.entities import CallResponse
 from src.common.utils import time_util
 
 
@@ -20,6 +21,10 @@ class _ChatFactory:
 
         self.index += 1
         return f"{self.current_time}{self.index:04d}"
+
+    def create_system_remainder_str(self, content: str) -> str:
+        """创建系统消息内容，返回字符串格式"""
+        return f"[{ChatType.SYSTEM_REMAINDER.type}]{content}"
 
     # 创建消息内容
 
@@ -44,7 +49,7 @@ class _ChatFactory:
 
     def create_system_remainder_content(self, content: str) -> list:
         """创建系统消息内容，返回列表格式 [{"text": ...}]"""
-        text_content = f"[{ChatType.SYSTEM_REMAINDER.type}]{content}"
+        text_content = self.create_system_remainder_str(content)
         return self._normalize_content(text_content)
 
     # 创建消息对象

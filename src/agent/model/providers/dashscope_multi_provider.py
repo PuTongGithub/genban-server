@@ -6,7 +6,8 @@ from src.agent.model.message_formatter import (
     convert_to_call_response,
     convert_messages_for_multimodal_model,
 )
-from src.agent.entities import CallResponse, Message
+from src.agent.entities import Message
+from src.agent.model.entities import CallResponse
 
 
 class DashScopeMultiProvider(ModelProvider):

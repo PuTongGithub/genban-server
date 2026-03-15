@@ -4,7 +4,8 @@ import json
 
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_registry import ToolRegistry
-from src.agent.entities import ToolCall, ToolResult, AgentContext
+from src.agent.tools.entities import ToolCall, ToolResult
+from src.agent.entities import AgentContext
 from src.agent.chat_factory import chat_factory
 from src.common.logger import get_logger
 
@@ -46,9 +47,7 @@ class ToolCaller:
                     result = json.dumps(result, ensure_ascii=False)
             except Exception as e:
                 logger.exception("执行工具调用失败")
-                result = chat_factory.create_system_remainder_content(
-                    f"Error: {str(e)}"
-                )
+                result = chat_factory.create_system_remainder_str(f"Error: {str(e)}")
 
             results.append(ToolResult(tool_call_id=call.id, content=result))
         return results

@@ -5,9 +5,9 @@ from fastapi.responses import StreamingResponse
 
 from src.user.auth import get_current_user_id
 from src.agent.chat_factory import chat_factory
-from src.assistant.entities import SubmitRequest, SubmitResponse, QueueItem
+from src.modules.user_message.entities import SubmitRequest, SubmitResponse, QueueItem
 from src.assistant.worker.agent_worker_manager import agent_worker_manager
-from src.assistant.web.stream_manager import stream_manager
+from src.modules.user_message.stream_manager import stream_manager
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)

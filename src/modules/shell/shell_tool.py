@@ -5,7 +5,8 @@ import subprocess
 from typing import Any
 
 from src.agent.tools.base_tool import BaseTool
-from src.agent.entities import ToolParameter, AgentContext
+from src.agent.tools.entities import ToolParameter
+from src.agent.entities import AgentContext
 from src.common.utils import sys_util
 from src.config.config import app_config
 from src.common.utils.path_util import (

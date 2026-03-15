@@ -1,7 +1,6 @@
 """Assistant 模块实体定义"""
 
 from pydantic import BaseModel
-from typing import Any
 
 from src.agent.entities import Chat
 
@@ -18,17 +17,6 @@ class SubmitResponse(BaseModel):
     success: bool = False
     chat_id: str = ""  # 本次输入新增的 Chat ID
     error: str = ""
-
-
-class ChatEvent(BaseModel):
-    """SSE 聊天事件"""
-
-    id: str
-    type: str
-    time: int
-    content: list  # 统一为列表格式，纯文本为 [{"text": "内容"}]
-    reasoning_content: str = ""
-    tool_calls: list[dict[str, Any]] | None = None
 
 
 class QueueItem:

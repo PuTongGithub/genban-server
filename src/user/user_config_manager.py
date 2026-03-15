@@ -1,4 +1,4 @@
-from src.agent.entities import ModelConfig
+from src.agent.hooks.entities import ModelConfig
 from src.config.config import app_config
 from src.user.db.user_config_db import user_config_db
 
@@ -19,7 +19,9 @@ class _UserConfigManager:
             enable_thinking=True,
         )
 
-    def update_config(self, user_id: str, model_key: str, enable_thinking: bool) -> bool:
+    def update_config(
+        self, user_id: str, model_key: str, enable_thinking: bool
+    ) -> bool:
         # 更新用户配置
         return user_config_db.update_config(user_id, model_key, enable_thinking)
 
