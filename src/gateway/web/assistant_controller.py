@@ -5,14 +5,13 @@ from fastapi.responses import StreamingResponse
 
 from src.user.auth import get_current_user_id
 from src.agent.chat_factory import chat_factory
-from src.modules.user_message.entities import SubmitRequest, SubmitResponse, QueueItem
-from src.assistant.worker.agent_worker_manager import agent_worker_manager
-from src.modules.user_message.stream_manager import stream_manager
+from src.gateway.web.entities import SubmitRequest, SubmitResponse, StopResponse
+from src.assistant.assistant_manager import assistant_manager
+from src.gateway.web.stream_manager import stream_manager
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
-# 创建路由
 router = APIRouter(prefix="/api/assistant", tags=["assistant"])
 
 
@@ -37,15 +36,42 @@ async def submit(
         )
 
         # 创建队列项并入队
-        item = QueueItem(user_id=current_user_id, chat=input_chat)
-        agent_worker_manager.put(item)
+        assistant_manager.submit_chat(user_id=current_user_id, chat=input_chat)
 
-        logger.info(f"消息已入队，user_id: {current_user_id}, chat_id: {input_chat.id}")
+        logger.info(f"消息已提交，user_id: {current_user_id}, chat_id: {input_chat.id}")
         return SubmitResponse(success=True, chat_id=input_chat.id)
 
     except Exception:
         logger.exception(f"消息提交失败，user_id: {current_user_id}")
         return SubmitResponse(success=False, chat_id="", error="消息提交失败")
+
+
+@router.post("/stop")
+async def stop(current_user_id: str = Depends(get_current_user_id)) -> StopResponse:
+    """停止当前对话
+
+    Args:
+        current_user_id: 当前用户ID（通过鉴权依赖注入）
+
+    Returns:
+        StopResponse: 停止结果
+    """
+    logger.info(f"收到停止请求，user_id: {current_user_id}")
+    try:
+        # 创建停止 Chat
+        stop_chat = chat_factory.create_stop_chat()
+
+        # 提交到处理队列
+        assistant_manager.submit_chat(user_id=current_user_id, chat=stop_chat)
+
+        logger.info(
+            f"停止请求已提交，user_id: {current_user_id}, chat_id: {stop_chat.id}"
+        )
+        return StopResponse(success=True, chat_id=stop_chat.id)
+
+    except Exception:
+        logger.exception(f"停止请求提交失败，user_id: {current_user_id}")
+        return StopResponse(success=False, chat_id="", error="停止请求提交失败")
 
 
 @router.get("/stream")

@@ -1,5 +1,6 @@
 """消息格式化工具模块"""
 
+import copy
 from typing import Callable
 from src.agent.entities import Message
 from src.agent.model.entities import CallResponse
@@ -8,7 +9,7 @@ from src.agent.exceptions import ModelResponseException
 
 def convert_to_call_response(
     response,
-    content_formatter: Callable | None = None,
+    content_formatter: Callable,
 ) -> CallResponse:
     """将模型响应转换为 CallResponse
 
@@ -29,11 +30,7 @@ def convert_to_call_response(
         raise ModelResponseException(f"响应异常：{response}", response)
 
     message_data = output.choices[0].message
-    content = message_data.content
-
-    # 如果有 content 格式化函数，应用它
-    if content_formatter:
-        content = content_formatter(content)
+    content = content_formatter(message_data.content)
 
     message = Message(
         role=message_data.role,
@@ -79,7 +76,7 @@ def pass_through_content(content: list) -> list:
     Returns:
         原样返回 content
     """
-    return content
+    return copy.deepcopy(content)
 
 
 def convert_messages_for_text_model(messages: list[Message]) -> list[dict]:

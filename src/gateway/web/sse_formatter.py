@@ -10,13 +10,6 @@ from src.agent.entities import Chat, ChatType, chatTypeMap
 class SSEFormatter:
     """将内部对象格式化为 SSE 格式的工具类（单例模式）"""
 
-    _instance: "SSEFormatter | None" = None
-
-    def __new__(cls) -> "SSEFormatter":
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
     def _clean_content(self, type: str, content: list) -> list:
         """根据类型清理内容，移除文本项开头的 [] 包裹内容"""
         chatType: ChatType = chatTypeMap[type]
@@ -53,8 +46,16 @@ class SSEFormatter:
             "tool_calls": chat.message.tool_calls,
         }
 
-        # SSE 格式: data: {...}\n\n
-        return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+        # SSE 格式: event: message\ndata: {...}\n\n
+        return f"event: message\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+    def format_close_signal(self) -> str:
+        """格式化 SSE 关闭信号
+
+        Returns:
+            SSE 关闭信号格式的字符串
+        """
+        return "event: close\ndata: {}\n\n"
 
 
 # 全局单例（模块加载时初始化）

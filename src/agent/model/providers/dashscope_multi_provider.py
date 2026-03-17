@@ -4,6 +4,7 @@ from src.provider.api import api_dashscope
 from src.agent.model.model_provider import ModelProvider
 from src.agent.model.message_formatter import (
     convert_to_call_response,
+    pass_through_content,
     convert_messages_for_multimodal_model,
 )
 from src.agent.entities import Message
@@ -29,7 +30,7 @@ class DashScopeMultiProvider(ModelProvider):
             tools=tools,
             enable_thinking=enable_thinking,
         )
-        return convert_to_call_response(response)
+        return convert_to_call_response(response, pass_through_content)
 
     def stream_call(
         self,
@@ -47,4 +48,4 @@ class DashScopeMultiProvider(ModelProvider):
             tools=tools,
             enable_thinking=enable_thinking,
         ):
-            yield convert_to_call_response(response)
+            yield convert_to_call_response(response, pass_through_content)

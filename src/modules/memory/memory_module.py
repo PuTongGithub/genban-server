@@ -3,7 +3,8 @@
 from src.modules.base_module import BaseModule
 from src.agent.tools.base_tool import BaseTool
 from src.agent.hooks.base_hook import BaseHook
-from src.modules.memory.chats_hook import HistoryChatsHook
+from src.modules.memory.read_memory_hook import ReadMemoryHook
+from src.modules.memory.write_memory_hook import WriteMemoryHook
 
 
 class MemoryModule(BaseModule):
@@ -17,7 +18,7 @@ class MemoryModule(BaseModule):
 
     def __init__(self) -> None:
         self._tools: list[BaseTool] = []
-        self._hooks: list[BaseHook] = [HistoryChatsHook()]
+        self._hooks: list[BaseHook] = [ReadMemoryHook(), WriteMemoryHook()]
 
     def get_tools(self) -> list[BaseTool]:
         return self._tools

@@ -2,8 +2,6 @@
 
 from pydantic import BaseModel
 
-from src.agent.entities import Chat
-
 
 class SubmitRequest(BaseModel):
     """提交消息请求"""
@@ -19,9 +17,9 @@ class SubmitResponse(BaseModel):
     error: str = ""
 
 
-class QueueItem:
-    """队列项 - 包含用户ID和Chat对象"""
+class StopResponse(BaseModel):
+    """停止响应"""
 
-    def __init__(self, user_id: str, chat: Chat):
-        self.user_id = user_id
-        self.chat = chat
+    success: bool = False
+    chat_id: str = ""  # 本次停止消息的 Chat ID
+    error: str = ""

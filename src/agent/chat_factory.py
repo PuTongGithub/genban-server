@@ -22,6 +22,8 @@ class _ChatFactory:
         self.index += 1
         return f"{self.current_time}{self.index:04d}"
 
+    # 创建消息字符串
+
     def create_system_remainder_str(self, content: str) -> str:
         """创建系统消息内容，返回字符串格式"""
         return f"[{ChatType.SYSTEM_REMAINDER.type}]{content}"
@@ -75,12 +77,6 @@ class _ChatFactory:
             content=self._normalize_content(tool_result),
         )
 
-    def create_assistant_message(self, content: str | list) -> Message:
-        """创建助手消息，content 支持字符串或列表"""
-        return Message(
-            role=MessageRole.ASSISTANT.value, content=self._normalize_content(content)
-        )
-
     def create_system_remainder_message(self, content: str) -> Message:
         """创建系统提醒消息（用户角色）"""
         return Message(
@@ -116,17 +112,6 @@ class _ChatFactory:
             ),
         )
 
-    def create_command_chats(self, command_results: list[str]) -> list[Chat]:
-        """创建命令结果对话列表"""
-        return [
-            Chat(
-                type=ChatType.COMMAND.type,
-                id=self._create_chat_id(),
-                message=self.create_assistant_message(content=content),
-            )
-            for content in command_results
-        ]
-
     def create_system_remainder_chat(self, content: str) -> Chat:
         """创建系统提醒对话"""
         return Chat(
@@ -141,6 +126,14 @@ class _ChatFactory:
             type=ChatType.ERROR.type,
             id=self._create_chat_id(),
             message=self.create_system_remainder_message(content=content),
+        )
+
+    def create_stop_chat(self) -> Chat:
+        """创建停止对话，用于中断 Agent 执行"""
+        return Chat(
+            type=ChatType.STOP.type,
+            id=self._create_chat_id(),
+            message=self.create_system_remainder_message(content="用户请求中断执行"),
         )
 
     # 根据大模型返回的响应，创建响应的 Chat 对象

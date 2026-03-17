@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, ClassVar
 
 from src.agent.entities import Chat, AgentContext
-from src.agent.tools.tool_registry import ToolRegistry
 from src.agent.hooks.entities import ModelConfig
 
 
@@ -30,13 +29,6 @@ class BaseHook(ABC, Generic[T]):
         pass
 
 
-class ChatHook(BaseHook[Chat]):
-    """处理单个对话"""
-
-    def execute(self, data: Chat | None, context: AgentContext) -> Chat | None:
-        raise NotImplementedError("Subclasses must implement execute method")
-
-
 class PromptHook(BaseHook[list[Chat]]):
     """处理提示词"""
 
@@ -46,8 +38,8 @@ class PromptHook(BaseHook[list[Chat]]):
         raise NotImplementedError("Subclasses must implement execute method")
 
 
-class ChatsHook(BaseHook[list[Chat]]):
-    """处理对话列表"""
+class HistoryChatsHook(BaseHook[list[Chat]]):
+    """处理历史对话列表"""
 
     def execute(
         self, data: list[Chat] | None, context: AgentContext
@@ -72,26 +64,8 @@ class ModelHook(BaseHook[ModelConfig]):
         raise NotImplementedError("Subclasses must implement execute method")
 
 
-class ToolsHook(BaseHook[ToolRegistry]):
-    """处理工具注册表"""
-
-    def execute(
-        self, data: ToolRegistry | None, context: AgentContext
-    ) -> ToolRegistry | None:
-        raise NotImplementedError("Subclasses must implement execute method")
-
-
-class NewChatHook(BaseHook[Chat]):
-    """处理新对话"""
+class ConfirmedChatHook(BaseHook[Chat]):
+    """处理已确认的新增对话"""
 
     def execute(self, data: Chat | None, context: AgentContext) -> Chat | None:
-        raise NotImplementedError("Subclasses must implement execute method")
-
-
-class CompleteHook(BaseHook[list[Chat]]):
-    """处理完成对话"""
-
-    def execute(
-        self, data: list[Chat] | None, context: AgentContext
-    ) -> list[Chat] | None:
         raise NotImplementedError("Subclasses must implement execute method")

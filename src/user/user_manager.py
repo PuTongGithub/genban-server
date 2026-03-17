@@ -89,7 +89,7 @@ class _UserManager:
         user_config_manager.update_config(
             user_id=userId,
             model_key=app_config.get_default_model(),
-            enable_thinking=True,
+            enable_thinking=False,
         )
 
         return self._create_token(userId)

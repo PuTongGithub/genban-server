@@ -1,23 +1,23 @@
 """Agent 主流程控制器"""
 
-from src.agent.entities import Chat, AgentContext
+from src.agent.entities import Chat, AgentContext, ChatType
 from src.agent.exceptions import ModelCallException, ModelHookException
 from src.agent.model.model_caller import model_caller
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_caller import ToolCaller
 from src.agent.hooks.base_hook import (
     BaseHook,
-    ChatHook,
     PromptHook,
-    ChatsHook,
+    HistoryChatsHook,
     ModelHook,
-    ToolsHook,
-    NewChatHook,
-    CompleteHook,
+    ConfirmedChatHook,
 )
 from src.agent.hooks.hook_manager import HookManager
 from src.agent.chat_factory import chat_factory
+from src.common.message.message_pipe_factory import MessagePipeFactory
+from src.agent.entities import MessagePipeContent
 from src.modules.base_module import BaseModule
+from src.common.thread_executor import ThreadExecutor
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -34,10 +34,11 @@ class Agent:
         modules: list[BaseModule] | None = None,
     ) -> None:
         self.user_id = user_id
-        self.tool_caller = ToolCaller()
-        self.hook_manager = HookManager()
-        self.max_iterations = 50  # 最大工具调用迭代次数
-        self._modules: list[BaseModule] = []  # 内部维护模块列表
+        self._tool_caller = ToolCaller()
+        self._hook_manager = HookManager(user_id)
+        self._modules: list[BaseModule] = []
+        self._in_message_pipe = MessagePipeFactory.create_in_pipe(user_id)
+        self._out_message_pipe = MessagePipeFactory.create_out_pipe(user_id)
 
         # 注册模块（先注册模块，模块会提供tools和hooks）
         if modules:
@@ -54,13 +55,20 @@ class Agent:
             for hook in hooks:
                 self.register_hook(hook)
 
+        self._executor = ThreadExecutor(
+            name=f"Agent-{user_id}",
+            target=self._run,
+            on_stop=self.stop,
+        )
+        self._executor.start()
+
     def register_tool(self, tool: BaseTool) -> None:
         """注册工具"""
-        self.tool_caller.register(tool)
+        self._tool_caller.register(tool)
 
     def register_hook(self, hook: BaseHook) -> None:
         """注册钩子"""
-        self.hook_manager.register(hook)
+        self._hook_manager.register(hook)
 
     def register_module(self, module: BaseModule) -> None:
         """注册模块，自动注入模块的tools和hooks
@@ -82,150 +90,152 @@ class Agent:
             for hook in hooks:
                 self.register_hook(hook)
 
-    def _execute_pre_hooks(self, context: AgentContext) -> None:
-        """执行前置钩子链：model -> chat -> prompt -> chats -> tools
+    def send_chat(self, chat: Chat) -> None:
+        """发送消息到输入管道"""
+        self._in_message_pipe.push(MessagePipeContent(chat=chat))
 
-        钩子执行结果写入 context：
-        - model_config: model_hook 结果
-        - input_chat: chat_hook 结果
-        - prompt_chat: prompt_hook 结果
-        - history_chats: chats_hook 结果
+    def recv_chat(self) -> Chat | None:
+        """从输出管道接收消息"""
+        content = self._out_message_pipe.pull()
+        return content.chat if content else None
 
+    def stop(self) -> None:
+        """停止 Agent 主流程"""
+        self._executor.stop()
+        self._hook_manager.stop()
+
+    def _run(self):
+        """运行 Agent 主流程"""
+        logger.info(f"Agent 开始执行，user_id: {self.user_id}")
+
+        block_pull = True
+        while True:
+            if not self._executor.is_running():
+                logger.info(f"用户 {self.user_id} 服务端已关闭，退出循环")
+                break
+
+            try:
+                if block_pull:
+                    # 阻塞3秒拉取所有消息，有消息则执行
+                    contents = self._in_message_pipe.pull_all()
+                    if contents:
+                        block_pull = self._process_contents(contents)
+                else:
+                    # 非阻塞拉取所有消息，无论是否有消息都执行
+                    if not self._in_message_pipe.is_empty():
+                        contents = self._in_message_pipe.pull_all()
+                    else:
+                        contents = []
+                    block_pull = self._process_contents(contents)
+            except Exception as e:
+                logger.exception(f"Agent 处理消息时出错: {e}")
+                block_pull = True
+
+    def _process_contents(
+        self,
+        contents: list[MessagePipeContent],
+    ) -> bool:
+        """收到一批消息，执行处理流程，进行调用大模型等操作。
+        若有工具调用，返回 False 表示非阻塞拉取，否则返回 True 表示阻塞拉取。
         """
-        # 1. ModelHook - 决定模型 key
-        model_result = self.hook_manager.execute(
+        try:
+            context = AgentContext(
+                user_id=self.user_id,
+                modules=self._modules,
+            )
+
+            self._handle_new_chat(context, contents)
+
+            if self._has_stop_signal(context):
+                return True
+            logger.info(f"用户 {self.user_id} 的 Agent 收到 {len(contents)} 条消息")
+
+            self._execute_pre_hooks(context)
+
+            chats = context.prompt_chats + context.history_chats
+            response_chat = self._call_model(context, chats)
+
+            return self._handle_tool_calls(context, response_chat)
+        except Exception as e:
+            logger.exception(f"Agent 处理消息时出错: {e}")
+            error_chat = chat_factory.create_error_chat(
+                f"Agent 处理消息时出错: {str(e)}"
+            )
+            self._handle_confirmed_chat(context, error_chat)
+            return True
+
+    def _handle_new_chat(
+        self, context: AgentContext, contents: list[MessagePipeContent]
+    ) -> None:
+        """处理新增的 Chat ，触发 OutMessagePipe 发送"""
+        for content in contents:
+            new_chat = content.chat
+            context.new_chats.append(new_chat)
+            self._handle_confirmed_chat(context, new_chat)
+
+    def _has_stop_signal(self, context: AgentContext) -> bool:
+        """判断新增的 Chat 是否为停止信号"""
+        if not context.new_chats:
+            return False
+
+        last_chat = context.new_chats[-1]
+        return ChatType.STOP.type == last_chat.type
+
+    def _execute_pre_hooks(self, context: AgentContext) -> None:
+        """执行前置钩子链"""
+        # ModelHook - 决定模型 key
+        model_result = self._hook_manager.execute(
             ModelHook, context.model_config, context
         )
         if model_result is not None:
             context.model_config = model_result
         else:
-            raise ModelHookException("model hook failed")
+            raise ModelHookException(f"uid:{self.user_id} model hook failed")
 
-        # 2. ChatHook - 处理单个对话
-        chat_result = self.hook_manager.execute(ChatHook, context.input_chat, context)
-        if chat_result is not None:
-            context.input_chat = chat_result
-        context.new_chats.append(context.input_chat)
+        # PromptHook - 处理提示词
+        self._hook_manager.execute(PromptHook, context.prompt_chats, context)
 
-        # 3. PromptHook - 处理提示词
-        prompt_result = self.hook_manager.execute(
-            PromptHook, context.prompt_chats, context
-        )
-        if prompt_result is not None:
-            context.prompt_chats = prompt_result
-
-        # 4. ChatsHook - 处理对话列表
-        chats_result = self.hook_manager.execute(
-            ChatsHook, context.history_chats, context
-        )
-        if chats_result is not None:
-            context.history_chats = chats_result
-
-        # 5. ToolsHook - 处理工具注册表
-        self.hook_manager.execute(ToolsHook, self.tool_caller.registry, context)
-
-        # 6. NewChatHook - 处理新增的 Chat
-        for chat in context.new_chats:
-            self.hook_manager.async_execute(NewChatHook, chat, context)
+        # HistoryChatsHook - 处理历史对话列表
+        self._hook_manager.execute(HistoryChatsHook, context.history_chats, context)
 
     def _call_model(self, context: AgentContext, chats: list[Chat]) -> Chat:
         """调用大模型"""
         if context.model_config is None:
             raise ModelCallException("model config is None")
 
-        tools_schemas = self.tool_caller.get_tools_schemas()
-        tools = tools_schemas if tools_schemas else None
-
-        chat = None
         for response_chat in model_caller.stream_call(
             model_key=context.model_config.model_key,
             chats=chats,
-            tools=tools,
+            tools=self._tool_caller.get_tools_schemas(),
             enable_thinking=context.model_config.enable_thinking,
         ):
-            self.hook_manager.async_execute(NewChatHook, response_chat, context)
+            self._out_message_pipe.push(MessagePipeContent(chat=response_chat))
             chat = response_chat
-        if chat is None:
-            raise ModelCallException("model call failed")
-        else:
+        if chat is not None:
+            self._handle_confirmed_chat(context, chat)
             return chat
+        else:
+            raise ModelCallException(f"uid:{self.user_id} model call failed")
 
-    def _handle_new_chat(
-        self,
-        current_chats: list[Chat],
-        new_chats: list[Chat],
-        context: AgentContext,
-        newChat: Chat,
-    ) -> None:
-        """处理新增的 Chat ，并触发 NewChatHook 钩子执行"""
-        current_chats.append(newChat)
-        new_chats.append(newChat)
-        self.hook_manager.async_execute(NewChatHook, newChat, context)
+    def _handle_tool_calls(self, context: AgentContext, response_chat: Chat) -> bool:
+        """处理工具调用"""
+        if response_chat.message.tool_calls is None:
+            # 没有工具调用，返回阻塞拉取消息
+            return True
 
-    def run(self, chat: Chat) -> list[Chat]:
-        """执行 Agent 调用，返回本次所有新增的 Chat 列表（包括新增输入的 Chat）
-
-        Args:
-            chat: 当前输入的对话
-
-        Returns:
-            本次所有新增的 Chat 列表（包含 assistant 响应和 tool 调用结果）
-        """
-        logger.debug(f"Agent 开始执行，user_id: {self.user_id}")
-
-        context = AgentContext(
-            user_id=self.user_id,
-            input_chat=chat,
-            new_chats=[],
-            modules=self._modules,
+        # 处理工具调用
+        tool_results = self._tool_caller.execute_from_model_response(
+            response_chat.message.tool_calls, context
         )
+        for tool_result in tool_results:
+            tool_chat = chat_factory.create_tool_chat(
+                tool_call_id=tool_result.tool_call_id,
+                tool_result=tool_result.content,
+            )
+            self._handle_confirmed_chat(context, tool_chat)
+        return False
 
-        # 执行前置钩子链
-        self._execute_pre_hooks(context)
-
-        iteration = 0
-        current_chats = context.prompt_chats + context.history_chats + context.new_chats
-        new_chats = context.new_chats
-
-        while iteration < self.max_iterations:
-            iteration += 1
-            logger.debug(f"开始第 {iteration} 轮迭代")
-
-            # 调用模型
-            try:
-                response_chat = self._call_model(context, current_chats)
-                logger.debug(f"模型调用完成，role: {response_chat.message.role}")
-            except Exception:
-                logger.exception(f"模型调用失败，user_id: {self.user_id}")
-                raise
-
-            self._handle_new_chat(current_chats, new_chats, context, response_chat)
-
-            # 检查是否需要工具调用
-            if response_chat.message.tool_calls is not None:
-                logger.debug(
-                    f"检测到工具调用，数量: {len(response_chat.message.tool_calls)}"
-                )
-                # 处理工具调用
-                tool_results = self.tool_caller.execute_from_model_response(
-                    response_chat.message.tool_calls, context
-                )
-                for tool_result in tool_results:
-                    tool_chat = chat_factory.create_tool_chat(
-                        tool_call_id=tool_result.tool_call_id,
-                        tool_result=tool_result.content,
-                    )
-                    self._handle_new_chat(current_chats, new_chats, context, tool_chat)
-            else:
-                logger.debug("Agent 执行完成，无需工具调用")
-                self.hook_manager.async_execute(CompleteHook, new_chats, context)
-                return new_chats
-
-        # 超过最大迭代次数，返回错误
-        logger.error(
-            f"Agent 执行超过最大迭代次数 {self.max_iterations}，user_id: {self.user_id}"
-        )
-        error_chat = chat_factory.create_error_chat(content="Error: 超过最大迭代次数")
-        self._handle_new_chat(current_chats, new_chats, context, error_chat)
-        self.hook_manager.async_execute(CompleteHook, new_chats, context)
-        return new_chats
+    def _handle_confirmed_chat(self, context: AgentContext, chat: Chat) -> None:
+        """处理确认的消息"""
+        self._out_message_pipe.push(MessagePipeContent(chat=chat))
+        self._hook_manager.async_execute(ConfirmedChatHook, chat, context)

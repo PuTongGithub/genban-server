@@ -3,7 +3,6 @@
 from src.modules.base_module import BaseModule
 from src.agent.tools.base_tool import BaseTool
 from src.agent.hooks.base_hook import BaseHook
-from src.modules.user_message.stream_hook import StreamHook
 
 
 class UserMessageModule(BaseModule):
@@ -18,7 +17,7 @@ class UserMessageModule(BaseModule):
     def __init__(self) -> None:
         """初始化用户消息模块"""
         self._tools: list[BaseTool] = []
-        self._hooks: list[BaseHook] = [StreamHook()]
+        self._hooks: list[BaseHook] = []
 
     def get_tools(self) -> list[BaseTool]:
         return self._tools

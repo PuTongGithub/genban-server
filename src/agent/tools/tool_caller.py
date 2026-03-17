@@ -70,9 +70,10 @@ class ToolCaller:
         else:
             return self.execute(tool_calls, context)
 
-    def get_tools_schemas(self) -> list[dict]:
+    def get_tools_schemas(self) -> list[dict] | None:
         """获取所有工具的 Schema"""
-        return self.registry.get_all_schemas()
+        schemas = self.registry.get_all_schemas()
+        return len(schemas) > 0 and schemas or None
 
     def _parse_tool_calls(self, tool_calls_data: list[dict]) -> list[ToolCall]:
         """解析工具调用数据"""

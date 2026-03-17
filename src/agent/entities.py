@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 # 大模型消息实体
 @dataclass
 class Message:
-    role: str = ""  # 角色: system, user, assistant, tool
+    role: str = ""  # 角色类型，参考 MessageRole 枚举
     content: list = field(
         default_factory=list
     )  # 内容统一为列表格式，纯文本为 [{"text": "内容"}]
@@ -33,9 +33,7 @@ class MessageRole(StrEnum):
 # agent模块针对对话内容的封装
 @dataclass
 class Chat:
-    type: str = (
-        ""  # 对话类型: prompt, user, assistant, tool, command, memory, toolSummary
-    )
+    type: str = ""  # 对话类型，参考 ChatType 枚举
     id: str = ""  # 对话id，唯一键，升序排列
     time: int = field(default_factory=time_util.get_timestamp)  # 对话时间，秒级时间戳
     total_tokens: int = 0  # 本次调用消耗的token数（仅source=assistant时有效）
@@ -54,12 +52,12 @@ class ChatTypeInfo:
 class ChatType(ChatTypeInfo, Enum):
     PROMPT = ("prompt", False, True, False)
     SYSTEM_REMAINDER = ("system_remainder", False, True, True)
-    USER = ("user", False, True, True)
+    USER = ("user", True, True, True)
     ASSISTANT = ("assistant", True, True, False)
     TOOL = ("tool", True, True, False)
-    COMMAND = ("command", True, False, False)
     MEMORY = ("memory", False, True, True)
-    ERROR = ("error", True, True, False)
+    ERROR = ("error", True, True, True)
+    STOP = ("stop", True, True, True)  # 停止消息，用于中断 Agent 执行
 
 
 chatTypeMap = {chatType.type: chatType for chatType in ChatType}
@@ -68,18 +66,22 @@ chatTypeMap = {chatType.type: chatType for chatType in ChatType}
 # Agent 单次执行上下文
 @dataclass
 class AgentContext:
-    model_config: ModelConfig | None = None  # model_hook 结果：当前使用的模型配置
     user_id: str = ""  # 用户 ID
-    input_chat: Chat = field(default_factory=Chat)  # 本次 Agent.run 传入的 Chat
+    model_config: ModelConfig | None = None  # model_hook 结果：当前使用的模型配置
     prompt_chats: list[Chat] = field(
         default_factory=list
     )  # prompt_hook 结果：处理后的提示词列表
     history_chats: list[Chat] = field(
         default_factory=list
     )  # chats_hook 结果：处理后的历史对话列表
-    new_chats: list[Chat] = field(
-        default_factory=list
-    )  # 新增的 Chat 列表（用于收集本次所有新增对话）
+    new_chats: list[Chat] = field(default_factory=list)  # 本次新增的 Chat 列表
     modules: list["BaseModule"] = field(
         default_factory=list
     )  # 已注册的模块列表，供钩子访问
+
+
+@dataclass
+class MessagePipeContent:
+    """消息管道实体"""
+
+    chat: Chat

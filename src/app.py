@@ -2,13 +2,15 @@
 
 import atexit
 import logging
+import signal
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.common.async_executor import AsyncExecutor
+from src.common.thread_executor import ThreadExecutor
+from src.gateway.web.stream_manager import stream_manager
 from src.common.logger import setup_logging, get_logger
-from src.gateway.routers import routers
-from src.modules.user_message.stream_manager import stream_manager
+from src.gateway.web.routers import routers
 
 # 初始化日志系统
 setup_logging()
@@ -20,6 +22,7 @@ def stop() -> None:
     """停止所有异步任务"""
     logger.info("应用正在关闭...")
     AsyncExecutor.stop_all()
+    ThreadExecutor.stop_all()
     stream_manager.stop()
     logger.info("应用已关闭")
     logging.shutdown()
@@ -31,8 +34,9 @@ atexit.register(stop)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
-    logger.info("应用启动完成")
+    logger.info("lifespan 启动")
     yield
+    logger.info("lifespan 关闭")
     stop()
 
 

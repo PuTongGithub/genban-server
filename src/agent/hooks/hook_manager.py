@@ -13,9 +13,9 @@ T = TypeVar("T")
 class HookManager:
     """钩子执行管理器，负责执行各类钩子"""
 
-    def __init__(self, registry: HookRegistry | None = None) -> None:
+    def __init__(self, user_id: str, registry: HookRegistry | None = None) -> None:
         self._registry = registry or HookRegistry()
-        self._async_executor = AsyncExecutor(name="HookManagerExecutor")
+        self._async_executor = AsyncExecutor(name=f"HookManagerExecutor_{user_id}")
 
     def register(self, hook: BaseHook) -> None:
         """注册钩子"""
