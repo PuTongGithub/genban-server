@@ -12,5 +12,7 @@ class CallResponse:
     request_id: str
     status_code: int
     total_tokens: int
+    input_tokens: int
+    output_tokens: int
     finish_reason: str
     message: Message

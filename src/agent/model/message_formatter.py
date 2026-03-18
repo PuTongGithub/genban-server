@@ -48,6 +48,8 @@ def convert_to_call_response(
         request_id=response.request_id,
         status_code=response.status_code,
         total_tokens=usage.total_tokens,
+        input_tokens=usage.input_tokens,
+        output_tokens=usage.output_tokens,
         finish_reason=output.choices[0].finish_reason,
         message=message,
     )

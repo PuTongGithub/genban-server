@@ -1,6 +1,6 @@
 """Chat 工厂类，用于创建各种 Chat 和 Message 对象"""
 
-from src.agent.entities import Message, Chat, MessageRole, ChatType
+from src.agent.entities import Message, Chat, MessageRole, ChatType, Usage
 from src.agent.model.entities import CallResponse
 from src.common.utils import time_util
 
@@ -143,7 +143,11 @@ class _ChatFactory:
             type=ChatType.ASSISTANT.type,
             id=response.request_id,
             message=response.message,
-            total_tokens=response.total_tokens,
+            usage=Usage(
+                total_tokens=response.total_tokens,
+                input_tokens=response.input_tokens,
+                output_tokens=response.output_tokens,
+            ),
         )
 
 

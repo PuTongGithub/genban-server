@@ -19,6 +19,7 @@ from src.agent.entities import MessagePipeContent
 from src.modules.base_module import BaseModule
 from src.common.thread_executor import ThreadExecutor
 from src.common.logger import get_logger
+from src.user.user_cost.user_cost_manager import user_cost_manager
 
 logger = get_logger(__name__)
 
@@ -203,6 +204,8 @@ class Agent:
         if context.model_config is None:
             raise ModelCallException("model config is None")
 
+        last_chat = None
+
         for response_chat in model_caller.stream_call(
             model_key=context.model_config.model_key,
             chats=chats,
@@ -210,12 +213,31 @@ class Agent:
             enable_thinking=context.model_config.enable_thinking,
         ):
             self._out_message_pipe.push(MessagePipeContent(chat=response_chat))
-            chat = response_chat
-        if chat is not None:
-            self._handle_confirmed_chat(context, chat)
-            return chat
+            last_chat = response_chat
+
+        if last_chat is not None:
+            self._handle_confirmed_chat(context, last_chat)
+            self._record_token_cost(context, last_chat)
+            return last_chat
         else:
             raise ModelCallException(f"uid:{self.user_id} model call failed")
+
+    def _record_token_cost(
+        self,
+        context: AgentContext,
+        chat: Chat,
+    ) -> None:
+        """记录token消耗"""
+        try:
+            user_cost_manager.record_cost(
+                user_id=context.user_id,
+                model_key=context.model_config.model_key,
+                input_tokens=chat.usage.input_tokens,
+                output_tokens=chat.usage.output_tokens,
+                total_tokens=chat.usage.total_tokens,
+            )
+        except Exception:
+            logger.exception(f"记录token消耗失败，user_id: {context.user_id}")
 
     def _handle_tool_calls(self, context: AgentContext, response_chat: Chat) -> bool:
         """处理工具调用"""
