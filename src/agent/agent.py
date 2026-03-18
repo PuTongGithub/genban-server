@@ -3,6 +3,7 @@
 from src.agent.entities import Chat, AgentContext, ChatType
 from src.agent.exceptions import ModelCallException, ModelHookException
 from src.agent.model.model_caller import model_caller
+from src.agent.model.entities import CallResponse
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_caller import ToolCaller
 from src.agent.hooks.base_hook import (
@@ -204,37 +205,39 @@ class Agent:
         if context.model_config is None:
             raise ModelCallException("model config is None")
 
-        last_chat = None
+        last_response = None
 
-        for response_chat in model_caller.stream_call(
+        for response in model_caller.stream_call(
             model_key=context.model_config.model_key,
             chats=chats,
             tools=self._tool_caller.get_tools_schemas(),
             enable_thinking=context.model_config.enable_thinking,
         ):
+            response_chat = chat_factory.create_assistant_chat(response)
             self._out_message_pipe.push(MessagePipeContent(chat=response_chat))
-            last_chat = response_chat
+            last_response = response
 
-        if last_chat is not None:
-            self._handle_confirmed_chat(context, last_chat)
-            self._record_token_cost(context, last_chat)
-            return last_chat
+        if last_response is not None:
+            response_chat = chat_factory.create_assistant_chat(last_response)
+            self._handle_confirmed_chat(context, response_chat)
+            self._record_token_cost(context, last_response)
+            return response_chat
         else:
             raise ModelCallException(f"uid:{self.user_id} model call failed")
 
     def _record_token_cost(
         self,
         context: AgentContext,
-        chat: Chat,
+        response: CallResponse,
     ) -> None:
         """记录token消耗"""
         try:
             user_cost_manager.record_cost(
                 user_id=context.user_id,
                 model_key=context.model_config.model_key,
-                input_tokens=chat.usage.input_tokens,
-                output_tokens=chat.usage.output_tokens,
-                total_tokens=chat.usage.total_tokens,
+                input_tokens=response.input_tokens,
+                output_tokens=response.output_tokens,
+                total_tokens=response.total_tokens,
             )
         except Exception:
             logger.exception(f"记录token消耗失败，user_id: {context.user_id}")

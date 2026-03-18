@@ -11,7 +11,6 @@ from src.agent.exceptions import (
 )
 from src.agent.entities import Chat, Message
 from src.agent.model.entities import CallResponse
-from src.agent.chat_factory import chat_factory
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -55,7 +54,7 @@ class ModelCaller:
         chats: list[Chat],
         tools: list | None = None,
         enable_thinking: bool = True,
-    ) -> Chat:
+    ) -> CallResponse:
         """调用模型"""
         logger.info(f"调用模型，model_key: {model_key}")
         messages = self._convert_chats_to_messages(chats)
@@ -71,7 +70,7 @@ class ModelCaller:
             )
             self._validate_response(response)
             logger.info(f"模型调用成功，model_key: {model_key}")
-            return chat_factory.create_assistant_chat(response)
+            return response
         except Exception:
             logger.exception(f"模型调用失败，model_key: {model_key}")
             raise
@@ -97,7 +96,7 @@ class ModelCaller:
                 enable_thinking=enable_thinking,
             ):
                 self._validate_response(response)
-                yield chat_factory.create_assistant_chat(response)
+                yield response
             logger.info(f"流式模型调用完成，model_key: {model_key}")
         except Exception:
             logger.exception(f"流式模型调用失败，model_key: {model_key}")

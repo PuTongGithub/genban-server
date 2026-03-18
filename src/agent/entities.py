@@ -30,21 +30,12 @@ class MessageRole(StrEnum):
     TOOL = "tool"
 
 
-# Token使用统计
-@dataclass
-class Usage:
-    total_tokens: int = 0  # 本次调用消耗的总token数
-    input_tokens: int = 0  # 输入token数
-    output_tokens: int = 0  # 输出token数
-
-
 # agent模块针对对话内容的封装
 @dataclass
 class Chat:
     type: str = ""  # 对话类型，参考 ChatType 枚举
     id: str = ""  # 对话id，唯一键，升序排列
     time: int = field(default_factory=time_util.get_timestamp)  # 对话时间，秒级时间戳
-    usage: Usage = field(default_factory=Usage)  # Token使用统计
     message: Message = field(default_factory=Message)  # 对话内容
 
 
