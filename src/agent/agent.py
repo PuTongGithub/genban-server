@@ -2,8 +2,8 @@
 
 from src.agent.entities import Chat, AgentContext, ChatType
 from src.agent.exceptions import ModelCallException, ModelHookException
-from src.agent.model.model_caller import model_caller
-from src.agent.model.entities import CallResponse
+from src.model.model_caller import model_caller
+from src.model.entities import CallResponse
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_caller import ToolCaller
 from src.agent.hooks.base_hook import (

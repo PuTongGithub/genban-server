@@ -1,16 +1,16 @@
 """模型调用器"""
 
 from src.config.config import app_config
-from src.agent.model.model_provider import ModelProvider
-from src.agent.model.providers.dashscope_provider import DashScopeProvider
-from src.agent.model.providers.dashscope_multi_provider import DashScopeMultiProvider
+from src.model.model_provider import ModelProvider
+from src.model.providers.dashscope_provider import DashScopeProvider
+from src.model.providers.dashscope_multi_provider import DashScopeMultiProvider
 from src.agent.exceptions import (
     ModelProviderNotFoundException,
     ModelCallLengthLimitedException,
     ModelCallException,
 )
 from src.agent.entities import Chat, Message
-from src.agent.model.entities import CallResponse
+from src.model.entities import CallResponse
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)

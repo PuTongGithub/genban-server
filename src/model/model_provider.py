@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 
 from src.agent.entities import Message
-from src.agent.model.entities import CallResponse
+from src.model.entities import CallResponse
 
 
 class ModelProvider(ABC):

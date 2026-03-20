@@ -1,7 +1,7 @@
 """Chat 工厂类，用于创建各种 Chat 和 Message 对象"""
 
 from src.agent.entities import Message, Chat, MessageRole, ChatType
-from src.agent.model.entities import CallResponse
+from src.model.entities import CallResponse
 from src.common.utils import time_util
 
 

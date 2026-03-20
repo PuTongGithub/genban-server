@@ -1,14 +1,14 @@
 """阿里云 DashScope 模型提供者实现"""
 
 from src.provider.api import api_dashscope
-from src.agent.model.model_provider import ModelProvider
-from src.agent.model.message_formatter import (
+from src.model.model_provider import ModelProvider
+from src.model.message_formatter import (
     convert_to_call_response,
     format_text_content,
     convert_messages_for_text_model,
 )
 from src.agent.entities import Message
-from src.agent.model.entities import CallResponse
+from src.model.entities import CallResponse
 
 
 class DashScopeProvider(ModelProvider):
