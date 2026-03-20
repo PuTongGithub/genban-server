@@ -62,6 +62,16 @@ def get_user_skills_dir(user_id: str) -> Path:
     return get_path(get_user_dir(user_id) / "skills")
 
 
+def get_memory_data_dir() -> Path:
+    """获取记忆数据目录"""
+    return get_path(get_data_dir() / "memory_data")
+
+
+def get_user_chat_dir(user_id: str) -> Path:
+    """获取用户对话存储目录"""
+    return get_path(get_memory_data_dir() / user_id / "chat")
+
+
 def get_project_skills_dir() -> Path:
     """获取项目根目录下的 Skills 目录（用于初始化用户 Skills）"""
     return Path(__file__).parent.parent.parent.parent / "skills"

@@ -1,25 +1,24 @@
 """Agent 主流程控制器"""
 
-from src.agent.entities import Chat, AgentContext, ChatType
+from src.agent.chat_factory import chat_factory
+from src.agent.entities import AgentContext, Chat, ChatType, MessagePipeContent
 from src.agent.exceptions import ModelCallException, ModelHookException
-from src.model.model_caller import model_caller
-from src.model.entities import CallResponse
-from src.agent.tools.base_tool import BaseTool
-from src.agent.tools.tool_caller import ToolCaller
 from src.agent.hooks.base_hook import (
     BaseHook,
-    PromptHook,
+    ConfirmedChatHook,
     HistoryChatsHook,
     ModelHook,
-    ConfirmedChatHook,
+    PromptHook,
 )
 from src.agent.hooks.hook_manager import HookManager
-from src.agent.chat_factory import chat_factory
-from src.common.message.message_pipe_factory import MessagePipeFactory
-from src.agent.entities import MessagePipeContent
-from src.modules.base_module import BaseModule
-from src.common.thread_executor import ThreadExecutor
+from src.agent.tools.base_tool import BaseTool
+from src.agent.tools.tool_caller import ToolCaller
 from src.common.logger import get_logger
+from src.common.message.message_pipe_factory import MessagePipeFactory
+from src.common.thread_executor import ThreadExecutor
+from src.model.entities import CallResponse
+from src.model.model_caller import model_caller
+from src.modules.base_module import BaseModule
 from src.user.user_cost.user_cost_manager import user_cost_manager
 
 logger = get_logger(__name__)
@@ -140,12 +139,12 @@ class Agent:
         """收到一批消息，执行处理流程，进行调用大模型等操作。
         若有工具调用，返回 False 表示非阻塞拉取，否则返回 True 表示阻塞拉取。
         """
-        try:
-            context = AgentContext(
-                user_id=self.user_id,
-                modules=self._modules,
-            )
+        context = AgentContext(
+            user_id=self.user_id,
+            modules=self._modules,
+        )
 
+        try:
             self._handle_new_chat(context, contents)
 
             if self._has_stop_signal(context):
@@ -154,7 +153,7 @@ class Agent:
 
             self._execute_pre_hooks(context)
 
-            chats = context.prompt_chats + context.history_chats
+            chats = context.prompt_chats + context.history_chats + context.new_chats
             response_chat = self._call_model(context, chats)
 
             return self._handle_tool_calls(context, response_chat)
@@ -163,17 +162,24 @@ class Agent:
             error_chat = chat_factory.create_error_chat(
                 f"Agent 处理消息时出错: {str(e)}"
             )
-            self._handle_confirmed_chat(context, error_chat)
+            context.new_chats.append(error_chat)
+            self._send_to_output_pipe(error_chat)
             return True
+        finally:
+            # 在 finally 中批量执行 ConfirmedChatHook
+            if context.new_chats:
+                self._hook_manager.async_execute(
+                    ConfirmedChatHook, context.new_chats, context
+                )
 
     def _handle_new_chat(
         self, context: AgentContext, contents: list[MessagePipeContent]
     ) -> None:
-        """处理新增的 Chat ，触发 OutMessagePipe 发送"""
+        """处理新增的 Chat，收集到 context.new_chats 并发送到输出管道"""
         for content in contents:
             new_chat = content.chat
             context.new_chats.append(new_chat)
-            self._handle_confirmed_chat(context, new_chat)
+            self._send_to_output_pipe(new_chat)
 
     def _has_stop_signal(self, context: AgentContext) -> bool:
         """判断新增的 Chat 是否为停止信号"""
@@ -206,6 +212,7 @@ class Agent:
             raise ModelCallException("model config is None")
 
         last_response = None
+        response_chat = None
 
         for response in model_caller.stream_call(
             model_key=context.model_config.model_key,
@@ -214,12 +221,11 @@ class Agent:
             enable_thinking=context.model_config.enable_thinking,
         ):
             response_chat = chat_factory.create_assistant_chat(response)
-            self._out_message_pipe.push(MessagePipeContent(chat=response_chat))
+            self._send_to_output_pipe(response_chat)
             last_response = response
 
         if last_response is not None:
-            response_chat = chat_factory.create_assistant_chat(last_response)
-            self._handle_confirmed_chat(context, response_chat)
+            context.new_chats.append(response_chat)
             self._record_token_cost(context, last_response)
             return response_chat
         else:
@@ -257,10 +263,10 @@ class Agent:
                 tool_call_id=tool_result.tool_call_id,
                 tool_result=tool_result.content,
             )
-            self._handle_confirmed_chat(context, tool_chat)
+            self._send_to_output_pipe(tool_chat)
+            context.new_chats.append(tool_chat)
         return False
 
-    def _handle_confirmed_chat(self, context: AgentContext, chat: Chat) -> None:
-        """处理确认的消息"""
+    def _send_to_output_pipe(self, chat: Chat) -> None:
+        """发送消息到输出管道"""
         self._out_message_pipe.push(MessagePipeContent(chat=chat))
-        self._hook_manager.async_execute(ConfirmedChatHook, chat, context)

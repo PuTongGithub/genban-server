@@ -1,11 +1,10 @@
 """钩子抽象基类和点位定义"""
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, ClassVar
+from typing import ClassVar, Generic, TypeVar
 
-from src.agent.entities import Chat, AgentContext
+from src.agent.entities import AgentContext, Chat
 from src.agent.hooks.entities import ModelConfig
-
 
 T = TypeVar("T")
 
@@ -64,8 +63,10 @@ class ModelHook(BaseHook[ModelConfig]):
         raise NotImplementedError("Subclasses must implement execute method")
 
 
-class ConfirmedChatHook(BaseHook[Chat]):
-    """处理已确认的新增对话"""
+class ConfirmedChatHook(BaseHook[list[Chat]]):
+    """处理已确认的新增对话列表"""
 
-    def execute(self, data: Chat | None, context: AgentContext) -> Chat | None:
+    def execute(
+        self, data: list[Chat] | None, context: AgentContext
+    ) -> list[Chat] | None:
         raise NotImplementedError("Subclasses must implement execute method")

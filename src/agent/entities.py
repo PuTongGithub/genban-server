@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from enum import StrEnum, unique, Enum
+from enum import Enum, StrEnum, unique
 from typing import TYPE_CHECKING
 
-from src.common.utils import time_util
 from src.agent.hooks.entities import ModelConfig
+from src.common.utils import time_util
 
 if TYPE_CHECKING:
     from src.modules.base_module import BaseModule
@@ -20,6 +21,27 @@ class Message:
     reasoning_content: str = ""
     tool_calls: list | None = None
     tool_call_id: str | None = None
+
+    def to_dict(self) -> dict:
+        """将 Message 对象转换为字典"""
+        return {
+            "role": self.role,
+            "content": self.content,
+            "reasoning_content": self.reasoning_content,
+            "tool_calls": self.tool_calls,
+            "tool_call_id": self.tool_call_id,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Message:
+        """从字典创建 Message 对象"""
+        return cls(
+            role=data.get("role", ""),
+            content=data.get("content", []),
+            reasoning_content=data.get("reasoning_content", ""),
+            tool_calls=data.get("tool_calls"),
+            tool_call_id=data.get("tool_call_id"),
+        )
 
 
 @unique
@@ -37,6 +59,26 @@ class Chat:
     id: str = ""  # 对话id，唯一键，升序排列
     time: int = field(default_factory=time_util.get_timestamp)  # 对话时间，秒级时间戳
     message: Message = field(default_factory=Message)  # 对话内容
+
+    def to_dict(self) -> dict:
+        """将 Chat 对象转换为字典"""
+        return {
+            "id": self.id,
+            "type": self.type,
+            "time": self.time,
+            "message": self.message.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Chat:
+        """从字典创建 Chat 对象"""
+        message_data = data.get("message", {})
+        return cls(
+            id=data.get("id", ""),
+            type=data.get("type", ""),
+            time=data.get("time", 0),
+            message=Message.from_dict(message_data),
+        )
 
 
 @dataclass

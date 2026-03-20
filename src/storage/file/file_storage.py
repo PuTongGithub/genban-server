@@ -38,22 +38,6 @@ class _FileStorage:
 
         return records
 
-    # 列出指定日期范围内的 JSONL 文件
-    def list_jsonl_files(
-        self, dir_path: Path, start_date: str, end_date: str
-    ) -> List[Path]:
-        if not dir_path.exists():
-            return []
-
-        files = []
-        for file_path in dir_path.glob("*.jsonl"):
-            date_str = file_path.stem
-            if start_date <= date_str <= end_date:
-                files.append(file_path)
-
-        files.sort(key=lambda p: p.stem)
-        return files
-
     # 读取文本文件内容
     def read_text(self, file_path: Path) -> str:
         if not file_path.exists():
