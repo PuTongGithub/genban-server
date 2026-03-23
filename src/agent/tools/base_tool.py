@@ -3,8 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from src.agent.tools.entities import ToolParameter
 from src.agent.entities import AgentContext
+from src.agent.tools.entities import ToolParameter
 
 
 class BaseTool(ABC):

@@ -69,7 +69,7 @@ class ModelCaller:
                 enable_thinking=enable_thinking,
             )
             self._validate_response(response)
-            logger.info(f"模型调用成功，model_key: {model_key}")
+            logger.debug(f"模型调用成功，model_key: {model_key}，response: {str(response)}")
             return response
         except Exception:
             logger.exception(f"模型调用失败，model_key: {model_key}")
@@ -89,6 +89,7 @@ class ModelCaller:
         provider = self._get_provider(model_config["api"])
 
         try:
+            last_response = None
             for response in provider.stream_call(
                 model=model_config["id"],
                 messages=messages,
@@ -96,10 +97,11 @@ class ModelCaller:
                 enable_thinking=enable_thinking,
             ):
                 self._validate_response(response)
+                last_response = response
                 yield response
-            logger.info(f"流式模型调用完成，model_key: {model_key}")
+            logger.debug(f"流式调用完成，model_key: {model_key}，response: {str(last_response)}")
         except Exception:
-            logger.exception(f"流式模型调用失败，model_key: {model_key}")
+            logger.exception(f"流式调用失败，model_key: {model_key}")
             raise
 
 

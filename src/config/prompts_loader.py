@@ -1,11 +1,12 @@
 """提示词加载模块"""
 
-from src.common.utils import time_util, sys_util
+from src.common.utils import path_util, sys_util, time_util
 from src.config.prompts.assistant_prompt import (
     ASSISTANT_PROMPT,
-    SKILL_PROMPT_TEMPLATE,
     ENV_PROMPT_TEMPLATE,
+    SKILL_PROMPT_TEMPLATE,
 )
+from src.config.prompts.memory_prompt import CONTEXT_COMPRESSION_PROMPT_TEMPLATE
 
 
 class PromptsLoader:
@@ -16,9 +17,7 @@ class PromptsLoader:
         available_modules_prompt: str,
     ) -> str:
         """获取助手系统提示词"""
-        return ASSISTANT_PROMPT.format(
-            available_modules_prompt=available_modules_prompt
-        )
+        return ASSISTANT_PROMPT.format(available_modules_prompt=available_modules_prompt)
 
     def get_skill_prompt(self, available_skills_prompt: str) -> str:
         """获取技能提示词"""
@@ -26,12 +25,25 @@ class PromptsLoader:
             available_skills_prompt=available_skills_prompt,
         )
 
-    def get_env_prompt(self, model_key: str) -> str:
+    def get_env_prompt(self, model_key: str, user_id: str) -> str:
         """获取环境变量提示词"""
         return ENV_PROMPT_TEMPLATE.format(
             os=sys_util.get_os(),
             model_key=model_key,
+            user_dir=str(path_util.get_user_dir(user_id)),
             today_date=time_util.get_now_str(time_util.STR_FORMATTER_DATE_WITH_MARKS),
+        )
+
+    def get_conversation_compression_prompt(
+        self,
+        available_modules_prompt: str,
+        chat_history: str,
+    ) -> str:
+        """获取对话压缩提示词"""
+        return CONTEXT_COMPRESSION_PROMPT_TEMPLATE.format(
+            available_modules_prompt=available_modules_prompt,
+            chat_history=chat_history,
+            current_timestamp=time_util.get_timestamp(),
         )
 
 

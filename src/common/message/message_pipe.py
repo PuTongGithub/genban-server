@@ -32,7 +32,6 @@ class MessagePipe(Generic[T]):
         """
         self._name = name
         self._queue: queue.Queue[T] = queue.Queue(maxsize=maxsize)
-        logger.debug(f"MessagePipe 已创建: {name}")
 
     def push(self, message: T) -> None:
         """发送消息到管道
@@ -41,7 +40,6 @@ class MessagePipe(Generic[T]):
             message: 要发送的消息
         """
         self._queue.put(message)
-        logger.debug(f"MessagePipe [{self._name}] 发送消息 {str(message)}")
 
     def push_batch(self, messages: list[T]) -> None:
         """批量发送消息到管道
@@ -54,9 +52,6 @@ class MessagePipe(Generic[T]):
 
         for message in messages:
             self._queue.put(message)
-        logger.debug(
-            f"MessagePipe [{self._name}] 批量发送 {len(messages)} 条消息 {str(messages)}"
-        )
 
     def pull(self, timeout: float = 3.0) -> T | None:
         """从管道中拉取一条消息
@@ -69,7 +64,6 @@ class MessagePipe(Generic[T]):
         """
         try:
             message = self._queue.get(timeout=timeout)
-            logger.debug(f"MessagePipe [{self._name}] 拉取消息 {str(message)}")
             return message
         except queue.Empty:
             return None
@@ -100,9 +94,6 @@ class MessagePipe(Generic[T]):
             except queue.Empty:
                 break
 
-        logger.debug(
-            f"MessagePipe [{self._name}] 拉取 {len(results)} 条消息 {str(results)}"
-        )
         return results
 
     def is_empty(self) -> bool:

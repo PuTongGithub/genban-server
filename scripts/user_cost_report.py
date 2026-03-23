@@ -59,9 +59,28 @@ def print_summary(summary: dict):
     print(f"  总调用次数:     {format_number(summary['total_calls']):>15}")
 
 
+def print_type_summary(type_stats: list[dict]):
+    """打印按类型汇总信息"""
+    print(f"\n{'=' * 60}")
+    print("  按类型Token消耗汇总")
+    print(f"{'=' * 60}")
+
+    if not type_stats:
+        print("  无数据")
+        return
+
+    for stat in type_stats:
+        type_name = "主助手" if stat["type"] == "assistant" else "对话压缩"
+        print(f"  {type_name:12}  输入: {format_number(stat['total_input_tokens']):>12}  "
+              f"输出: {format_number(stat['total_output_tokens']):>12}  "
+              f"总计: {format_number(stat['total_tokens']):>12}  "
+              f"调用: {format_number(stat['total_calls']):>8}")
+
+
 def generate_console_report(report: dict):
     """生成控制台报表"""
     summary = report["summary"]
+    type_stats = report["by_type"]
     user_stats = report["by_user"]
     model_stats = report["by_model"]
     user_model_stats = report["by_user_model"]
@@ -69,6 +88,9 @@ def generate_console_report(report: dict):
 
     # 打印汇总
     print_summary(summary)
+
+    # 按类型统计
+    print_type_summary(type_stats)
 
     # 按天统计
     daily_rows = [
@@ -155,6 +177,21 @@ def generate_csv_report(report: dict, output_path: str):
         writer.writerow(["总输出Token数", report["summary"]["total_output_tokens"]])
         writer.writerow(["总Token数", report["summary"]["total_tokens"]])
         writer.writerow(["总调用次数", report["summary"]["total_calls"]])
+        writer.writerow([])
+
+        # 按类型统计
+        writer.writerow(["按类型统计"])
+        writer.writerow(["类型", "输入Token", "输出Token", "总Token", "调用次数"])
+        for stat in report["by_type"]:
+            writer.writerow(
+                [
+                    stat["type"],
+                    stat["total_input_tokens"],
+                    stat["total_output_tokens"],
+                    stat["total_tokens"],
+                    stat["call_count"],
+                ]
+            )
         writer.writerow([])
 
         # 按天统计
@@ -270,7 +307,35 @@ def main():
     end_date = args.end_date
 
     # 获取报表数据
-    report = user_cost_manager.get_cost_report(start_date, end_date)
+    report = {
+        "summary": {
+            "total_input_tokens": 0,
+            "total_output_tokens": 0,
+            "total_tokens": 0,
+            "total_calls": 0,
+        },
+        "by_type": user_cost_manager.get_type_cost_stats(start_date, end_date),
+        "by_user": user_cost_manager.get_user_cost_stats(start_date, end_date),
+        "by_model": user_cost_manager.get_model_cost_stats(start_date, end_date),
+        "by_user_model": [],
+        "by_day": [],
+    }
+
+    # 获取每个用户的模型统计并合并
+    for user_stat in report["by_user"]:
+        user_id = user_stat["user_id"]
+        user_model_stats = user_cost_manager.get_user_model_cost_stats(
+            user_id, start_date, end_date
+        )
+        for stat in user_model_stats:
+            report["by_user_model"].append({"user_id": user_id, **stat})
+
+    # 计算汇总数据
+    for stat in report["by_type"]:
+        report["summary"]["total_input_tokens"] += stat["total_input_tokens"]
+        report["summary"]["total_output_tokens"] += stat["total_output_tokens"]
+        report["summary"]["total_tokens"] += stat["total_tokens"]
+        report["summary"]["total_calls"] += stat["total_calls"]
 
     # 生成报表
     if args.format == "csv":

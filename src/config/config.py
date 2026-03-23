@@ -47,6 +47,13 @@ class AppConfig:
                 return key
         raise ModelConfigNotFoundException("not found default model")
 
+    def get_memory_model_key(self) -> str:
+        """获取用于记忆系统的模型 key"""
+        for key, value in self.config["models"].items():
+            if value.get("memory_model", False):
+                return key
+        return self.get_default_model()
+
     def get_model_config(self, model_key: str) -> dict:
         """获取模型配置"""
         models = self.get("models")

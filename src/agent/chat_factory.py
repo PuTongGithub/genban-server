@@ -1,8 +1,8 @@
 """Chat 工厂类，用于创建各种 Chat 和 Message 对象"""
 
-from src.agent.entities import Message, Chat, MessageRole, ChatType
-from src.model.entities import CallResponse
+from src.agent.entities import Chat, ChatType, Message, MessageRole
 from src.common.utils import time_util
+from src.model.entities import CallResponse
 
 
 class _ChatFactory:
@@ -44,23 +44,26 @@ class _ChatFactory:
         return content
 
     def create_user_content(self, user_id: str, user_input: str) -> list:
-        """创建用户消息内容，返回列表格式 [{"text": ...}]"""
+        """创建用户消息内容"""
         time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
         text_content = f"[{ChatType.USER.type}:{user_id}:{time_str}]" + user_input
         return self._normalize_content(text_content)
 
     def create_system_remainder_content(self, content: str) -> list:
-        """创建系统消息内容，返回列表格式 [{"text": ...}]"""
+        """创建系统消息内容"""
         text_content = self.create_system_remainder_str(content)
+        return self._normalize_content(text_content)
+
+    def create_conversation_content(self, content: str) -> list:
+        """创建对话概要消息内容"""
+        text_content = f"[{ChatType.CONVERSATION.type}]{content}"
         return self._normalize_content(text_content)
 
     # 创建消息对象
 
     def create_system_message(self, content: str | list) -> Message:
         """创建系统消息，content 支持字符串或列表"""
-        return Message(
-            role=MessageRole.SYSTEM.value, content=self._normalize_content(content)
-        )
+        return Message(role=MessageRole.SYSTEM.value, content=self._normalize_content(content))
 
     def create_user_message(self, user_id: str, user_input: str) -> Message:
         """创建用户消息"""
@@ -82,6 +85,13 @@ class _ChatFactory:
         return Message(
             role=MessageRole.USER.value,
             content=self.create_system_remainder_content(content),
+        )
+
+    def create_conversation_message(self, content: str) -> Message:
+        """创建对话概要消息"""
+        return Message(
+            role=MessageRole.USER.value,
+            content=self.create_conversation_content(content),
         )
 
     # 创建 Chat 对象
@@ -107,9 +117,7 @@ class _ChatFactory:
         return Chat(
             type=ChatType.TOOL.type,
             id=self._create_chat_id(),
-            message=self.create_tool_message(
-                tool_call_id=tool_call_id, tool_result=tool_result
-            ),
+            message=self.create_tool_message(tool_call_id=tool_call_id, tool_result=tool_result),
         )
 
     def create_system_remainder_chat(self, content: str) -> Chat:
@@ -118,6 +126,14 @@ class _ChatFactory:
             type=ChatType.SYSTEM_REMAINDER.type,
             id=self._create_chat_id(),
             message=self.create_system_remainder_message(content=content),
+        )
+
+    def create_conversation_chat(self, content: str) -> Chat:
+        """创建对话概要对话"""
+        return Chat(
+            type=ChatType.CONVERSATION.type,
+            id=self._create_chat_id(),
+            message=self.create_conversation_message(content=content),
         )
 
     def create_error_chat(self, content: str) -> Chat:

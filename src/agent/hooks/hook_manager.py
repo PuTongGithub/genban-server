@@ -1,11 +1,14 @@
 """钩子执行管理器"""
 
-from typing import TypeVar, Type, Any
+from typing import Any, Type, TypeVar
 
+from src.agent.entities import AgentContext
 from src.agent.hooks.base_hook import BaseHook
 from src.agent.hooks.hook_registry import HookRegistry
-from src.agent.entities import AgentContext
 from src.common.async_executor import AsyncExecutor
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 T = TypeVar("T")
 
@@ -21,14 +24,29 @@ class HookManager:
         """注册钩子"""
         self._registry.register(hook)
 
+    def _execute_hooks(
+        self,
+        hook_type: Type[BaseHook[T]],
+        initial_data: T | None,
+        context: AgentContext,
+    ) -> T | None:
+        """执行指定类型的所有钩子，统一处理异常"""
+        hooks = self._registry.get_hooks(hook_type)
+        result = initial_data
+        for hook in hooks:
+            try:
+                result = hook.execute(result, context)
+            except Exception:
+                logger.exception(
+                    f"钩子执行失败: hook={hook.__class__.__name__}, type={hook_type.__name__}"
+                )
+        return result
+
     def execute(
         self, hook_type: Type[BaseHook[T]], data: T | None, context: AgentContext
     ) -> T | None:
         """同步执行指定类型的所有钩子"""
-        hooks = self._registry.get_hooks(hook_type)
-        for hook in hooks:
-            data = hook.execute(data, context)
-        return data
+        return self._execute_hooks(hook_type, data, context)
 
     def async_execute(
         self, hook_type: Type[BaseHook[T]], data: T | None, context: AgentContext
@@ -39,11 +57,7 @@ class HookManager:
         """
 
         async def _execute_async(initial_data: T | None, ctx: AgentContext) -> T | None:
-            hooks = self._registry.get_hooks(hook_type)
-            result = initial_data
-            for hook in hooks:
-                result = hook.execute(result, ctx)
-            return result
+            return self._execute_hooks(hook_type, initial_data, ctx)
 
         return self._async_executor.submit(_execute_async(data, context))
 

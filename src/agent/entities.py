@@ -2,22 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, unique
-from typing import TYPE_CHECKING
 
 from src.agent.hooks.entities import ModelConfig
 from src.common.utils import time_util
-
-if TYPE_CHECKING:
-    from src.modules.base_module import BaseModule
 
 
 # 大模型消息实体
 @dataclass
 class Message:
     role: str = ""  # 角色类型，参考 MessageRole 枚举
-    content: list = field(
-        default_factory=list
-    )  # 内容统一为列表格式，纯文本为 [{"text": "内容"}]
+    content: list = field(default_factory=list)  # 内容统一为列表格式，纯文本为 [{"text": "内容"}]
     reasoning_content: str = ""
     tool_calls: list | None = None
     tool_call_id: str | None = None
@@ -31,6 +25,19 @@ class Message:
             "tool_calls": self.tool_calls,
             "tool_call_id": self.tool_call_id,
         }
+
+    def get_text_contents(self) -> list[str]:
+        """提取消息中的所有文本内容"""
+        text_parts: list[str] = []
+        for item in self.content:
+            if isinstance(item, dict) and "text" in item:
+                text_parts.append(item["text"])
+        return text_parts
+
+    def get_text_content(self) -> str:
+        """提取消息中的文本内容"""
+        text_parts = self.get_text_contents()
+        return "".join(text_parts).strip()
 
     @classmethod
     def from_dict(cls, data: dict) -> Message:
@@ -84,15 +91,16 @@ class Chat:
 @dataclass
 class ChatTypeInfo:
     type: str = ""
-    userVisible: bool = False
-    assistantVisible: bool = False
-    messageWithTag: bool = False
+    user_visible: bool = False
+    assistant_visible: bool = False
+    message_with_tag: bool = False
 
 
 @unique
 class ChatType(ChatTypeInfo, Enum):
     PROMPT = ("prompt", False, True, False)
     SYSTEM_REMAINDER = ("system_remainder", False, True, True)
+    CONVERSATION = ("conversation", False, True, True)
     USER = ("user", True, True, True)
     ASSISTANT = ("assistant", True, True, False)
     TOOL = ("tool", True, True, False)
@@ -101,7 +109,7 @@ class ChatType(ChatTypeInfo, Enum):
     STOP = ("stop", True, True, True)  # 停止消息，用于中断 Agent 执行
 
 
-chatTypeMap = {chatType.type: chatType for chatType in ChatType}
+chat_type_map = {chatType.type: chatType for chatType in ChatType}
 
 
 # Agent 单次执行上下文
@@ -109,16 +117,11 @@ chatTypeMap = {chatType.type: chatType for chatType in ChatType}
 class AgentContext:
     user_id: str = ""  # 用户 ID
     model_config: ModelConfig | None = None  # model_hook 结果：当前使用的模型配置
-    prompt_chats: list[Chat] = field(
-        default_factory=list
-    )  # prompt_hook 结果：处理后的提示词列表
-    history_chats: list[Chat] = field(
-        default_factory=list
-    )  # chats_hook 结果：处理后的历史对话列表
+    prompt_chats: list[Chat] = field(default_factory=list)  # prompt_hook 结果：处理后的提示词列表
+    history_chats: list[Chat] = field(default_factory=list)  # chats_hook 结果：处理后的历史对话列表
     new_chats: list[Chat] = field(default_factory=list)  # 本次新增的 Chat 列表
-    modules: list["BaseModule"] = field(
-        default_factory=list
-    )  # 已注册的模块列表，供钩子访问
+    total_tokens: int = 0  # 当前对话的总 token 数
+    process_result: bool = False  # _process_contents 的返回值，表示本轮对话是否完成
 
 
 @dataclass

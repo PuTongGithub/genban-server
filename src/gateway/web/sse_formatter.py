@@ -4,7 +4,7 @@ import json
 import re
 from typing import Any
 
-from src.agent.entities import Chat, ChatType, chatTypeMap
+from src.agent.entities import Chat, ChatType, chat_type_map
 
 
 class SSEFormatter:
@@ -12,8 +12,8 @@ class SSEFormatter:
 
     def _clean_content(self, type: str, content: list) -> list:
         """根据类型清理内容，移除文本项开头的 [] 包裹内容"""
-        chatType: ChatType = chatTypeMap[type]
-        if not chatType.messageWithTag:
+        chatType: ChatType = chat_type_map[type]
+        if not chatType.message_with_tag:
             return content
 
         # 处理列表中的文本项

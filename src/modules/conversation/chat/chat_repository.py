@@ -3,7 +3,7 @@
 from src.agent.entities import Chat
 from src.common.logger import get_logger
 from src.common.utils.time_util import get_timestamp
-from src.modules.memory.chat.chat_file_storage import chat_file_storage
+from src.modules.conversation.chat.chat_file_storage import chat_file_storage
 
 logger = get_logger(__name__)
 
@@ -58,6 +58,38 @@ class ChatRepository:
             return chats
         except Exception:
             logger.exception(f"获取最近 Chat 失败: user_id={user_id}")
+            return []
+
+    def get_chats_after(
+        self, user_id: str, after_chat_id: str, after_time: int
+    ) -> list[Chat]:
+        """获取指定 chat_id 和时间之后的 Chat
+
+        Args:
+            user_id: 用户 ID
+            after_chat_id: 参考 chat ID
+            after_time: 参考时间戳（秒）
+
+        Returns:
+            Chat 对象列表，按时间升序排列
+        """
+        try:
+            # 从文件读取数据
+            chat_dicts = chat_file_storage.read_chats_after(
+                user_id, after_chat_id, after_time
+            )
+
+            # 使用 Chat.from_dict 反序列化
+            chats = [Chat.from_dict(chat_dict) for chat_dict in chat_dicts]
+
+            logger.debug(
+                f"已获取 chat_id 之后的 Chat: user_id={user_id}, "
+                f"after_chat_id={after_chat_id}, after_time={after_time}, 数量={len(chats)}"
+            )
+
+            return chats
+        except Exception:
+            logger.exception(f"获取 chat_id 之后的 Chat 失败: user_id={user_id}")
             return []
 
 

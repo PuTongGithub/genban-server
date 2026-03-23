@@ -1,24 +1,28 @@
-"""记忆模块"""
+"""记忆模块
 
-from src.modules.base_module import BaseModule
-from src.agent.tools.base_tool import BaseTool
+提供长期记忆存储和检索功能
+"""
+
 from src.agent.hooks.base_hook import BaseHook
-from src.modules.memory.read_memory_hook import ReadMemoryHook
-from src.modules.memory.write_memory_hook import WriteMemoryHook
+from src.agent.tools.base_tool import BaseTool
+from src.modules.base_module import BaseModule
 
 
 class MemoryModule(BaseModule):
-    """记忆模块"""
+    """记忆模块
+
+    负责长期记忆的存储、检索和管理
+    """
 
     id = "memory"
-    name = "记忆模块(目前未实装)"
-    description = "提供了对用户记忆的管理能力"
-    message_tag = "[memory]"
-    message_tag_instruction = "标签后跟记忆内容"
+    name = "记忆模块"
+    description = "提供长期记忆存储和检索功能"
+    message_tag = None
+    message_tag_instruction = None
 
     def __init__(self) -> None:
         self._tools: list[BaseTool] = []
-        self._hooks: list[BaseHook] = [ReadMemoryHook(), WriteMemoryHook()]
+        self._hooks: list[BaseHook] = []
 
     def get_tools(self) -> list[BaseTool]:
         return self._tools

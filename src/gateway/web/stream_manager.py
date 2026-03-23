@@ -3,7 +3,7 @@
 import asyncio
 from typing import AsyncGenerator
 
-from src.agent.entities import chatTypeMap
+from src.agent.entities import chat_type_map
 from src.gateway.web.sse_formatter import sse_formatter
 from src.assistant.assistant_manager import assistant_manager
 from src.common.message.message_pipe import MessagePipe
@@ -62,8 +62,8 @@ class StreamManager:
 
                 count_none = 0
                 # 检查消息类型是否用户可见
-                chatType = chatTypeMap[chat.type]
-                if not chatType.userVisible:
+                chatType = chat_type_map[chat.type]
+                if not chatType.user_visible:
                     continue
 
                 # 格式化为 SSE 格式

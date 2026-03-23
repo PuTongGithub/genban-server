@@ -139,15 +139,13 @@ class Agent:
         """收到一批消息，执行处理流程，进行调用大模型等操作。
         若有工具调用，返回 False 表示非阻塞拉取，否则返回 True 表示阻塞拉取。
         """
-        context = AgentContext(
-            user_id=self.user_id,
-            modules=self._modules,
-        )
+        context = AgentContext(user_id=self.user_id)
 
         try:
             self._handle_new_chat(context, contents)
 
             if self._has_stop_signal(context):
+                context.process_result = True
                 return True
             logger.info(f"用户 {self.user_id} 的 Agent 收到 {len(contents)} 条消息")
 
@@ -156,25 +154,22 @@ class Agent:
             chats = context.prompt_chats + context.history_chats + context.new_chats
             response_chat = self._call_model(context, chats)
 
-            return self._handle_tool_calls(context, response_chat)
+            result = self._handle_tool_calls(context, response_chat)
+            context.process_result = result
+            return result
         except Exception as e:
             logger.exception(f"Agent 处理消息时出错: {e}")
-            error_chat = chat_factory.create_error_chat(
-                f"Agent 处理消息时出错: {str(e)}"
-            )
+            error_chat = chat_factory.create_error_chat(f"Agent 处理消息时出错: {str(e)}")
             context.new_chats.append(error_chat)
             self._send_to_output_pipe(error_chat)
+            context.process_result = True
             return True
         finally:
             # 在 finally 中批量执行 ConfirmedChatHook
             if context.new_chats:
-                self._hook_manager.async_execute(
-                    ConfirmedChatHook, context.new_chats, context
-                )
+                self._hook_manager.execute(ConfirmedChatHook, context.new_chats, context)
 
-    def _handle_new_chat(
-        self, context: AgentContext, contents: list[MessagePipeContent]
-    ) -> None:
+    def _handle_new_chat(self, context: AgentContext, contents: list[MessagePipeContent]) -> None:
         """处理新增的 Chat，收集到 context.new_chats 并发送到输出管道"""
         for content in contents:
             new_chat = content.chat
@@ -192,9 +187,7 @@ class Agent:
     def _execute_pre_hooks(self, context: AgentContext) -> None:
         """执行前置钩子链"""
         # ModelHook - 决定模型 key
-        model_result = self._hook_manager.execute(
-            ModelHook, context.model_config, context
-        )
+        model_result = self._hook_manager.execute(ModelHook, context.model_config, context)
         if model_result is not None:
             context.model_config = model_result
         else:
@@ -212,7 +205,7 @@ class Agent:
             raise ModelCallException("model config is None")
 
         last_response = None
-        response_chat = None
+        response_chat: Chat | None = None
 
         for response in model_caller.stream_call(
             model_key=context.model_config.model_key,
@@ -224,8 +217,9 @@ class Agent:
             self._send_to_output_pipe(response_chat)
             last_response = response
 
-        if last_response is not None:
+        if last_response is not None and response_chat is not None:
             context.new_chats.append(response_chat)
+            context.total_tokens = last_response.total_tokens
             self._record_token_cost(context, last_response)
             return response_chat
         else:

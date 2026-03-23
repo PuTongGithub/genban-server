@@ -1,24 +1,24 @@
 import secrets
 
-from src.user.exceptions import (
-    UserNotFoundException,
-    InvalidPasswordException,
-    UserNotAllowedException,
-)
-from src.user.exceptions import UnauthorizedException
 from src.common.utils import time_util
 from src.common.utils.rsa_util import RsaUtil
-from src.config.config import file_config, app_config
-from src.user.db.models import UserState
-from src.user.db.user_db import user_db
-from src.user.db.user_state_db import user_state_db
+from src.config.config import app_config, file_config
+from src.modules.skills.skills_manager import skills_manager
+from src.storage.sqlite.models import UserState
 from src.user.components.user_validate_util import (
-    verify_password,
     hash_password,
     validate_password,
     validate_username,
+    verify_password,
 )
-from src.modules.skills.skills_manager import skills_manager
+from src.user.db.user_db import user_db
+from src.user.db.user_state_db import user_state_db
+from src.user.exceptions import (
+    InvalidPasswordException,
+    UnauthorizedException,
+    UserNotAllowedException,
+    UserNotFoundException,
+)
 from src.user.user_config_manager import user_config_manager
 
 

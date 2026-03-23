@@ -3,8 +3,8 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from src.agent.tools.base_tool import BaseTool
 from src.agent.hooks.base_hook import BaseHook
+from src.agent.tools.base_tool import BaseTool
 
 
 class BaseModule(ABC):
@@ -44,9 +44,7 @@ class BaseModule(ABC):
                 f"<message_tag_instruction>{self.message_tag_instruction}</message_tag_instruction>"
             )
         if self.relevant_skills:
-            lines.append(
-                f"<relevant_skills>{','.join(self.relevant_skills)}</relevant_skills>"
-            )
+            lines.append(f"<relevant_skills>{','.join(self.relevant_skills)}</relevant_skills>")
         # 添加工具信息到提示词
         tools = self.get_tools()
         if tools:

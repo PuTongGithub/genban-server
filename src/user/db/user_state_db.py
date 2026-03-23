@@ -1,7 +1,8 @@
 from typing import Optional
-from src.storage.sqlite.database import db_execute, db_query
-from src.user.db.models import UserState
+
 from src.common.utils import time_util
+from src.storage.sqlite.database import db_execute, db_query
+from src.storage.sqlite.models import UserState
 
 
 class _UserStateDb:

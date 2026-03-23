@@ -4,17 +4,16 @@ import locale
 import subprocess
 from typing import Any
 
+from src.agent.entities import AgentContext
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.entities import ToolParameter
-from src.agent.entities import AgentContext
-from src.common.utils import sys_util
-from src.config.config import app_config
+from src.common.logger import get_logger
 from src.common.utils.path_util import (
+    PathNotAllowedException,
     get_user_dir,
     validate_path,
-    PathNotAllowedException,
 )
-from src.common.logger import get_logger
+from src.config.config import app_config
 
 logger = get_logger(__name__)
 
@@ -44,13 +43,10 @@ class ShellTool(BaseTool):
         ),
     ]
 
-    def __init__(self, user_id: str) -> None:
-        systemDesc = sys_util.get_os()
+    def __init__(self) -> None:
         self.system_encoding = locale.getpreferredencoding(False)
-        self.description = f"""使用该工具可以执行shell命令。
+        self.description = """使用该工具可以执行shell命令。
 重要提示：
-- 当前操作系统：{systemDesc}
-- 用户目录：{get_user_dir(user_id)}
 - 在执行破坏性操作（例如 git reset --hard、git push --force、rm -rf）之前，请考虑是否有更安全的替代方案可以达到相同的目标。仅在破坏性操作确实是最佳方法时才使用它们
 - 尽量在整个会话期间使用绝对路径，避免使用相对路径
 - 始终在命令中使用双引号引用包含空格的文件路径
@@ -112,15 +108,15 @@ class ShellTool(BaseTool):
             logger.info(f"Shell 命令执行成功，user_id: {context.user_id}")
             return result.stdout
         except subprocess.TimeoutExpired as e:
-            logger.error(
-                f"Shell 命令执行超时，user_id: {context.user_id}, timeout: {timeout}"
-            )
+            logger.error(f"Shell 命令执行超时，user_id: {context.user_id}, timeout: {timeout}")
             return f"命令执行超时，超时时间：{timeout}秒\n输出：{e.output}\n"
         except subprocess.CalledProcessError as e:
             logger.error(
                 f"Shell 命令执行失败，user_id: {context.user_id}, returncode: {e.returncode}"
             )
-            return f"命令执行失败，返回码：{e.returncode}\n标准输出：{e.stdout}\n标准错误：{e.stderr}"
+            return (
+                f"命令执行失败，返回码：{e.returncode}\n标准输出：{e.stdout}\n标准错误：{e.stderr}"
+            )
         except Exception as e:
             logger.error(f"Shell 命令执行异常，user_id: {context.user_id}, error: {e}")
             return f"命令执行异常，错误信息：{e}"
