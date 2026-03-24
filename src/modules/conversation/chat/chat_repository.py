@@ -92,6 +92,39 @@ class ChatRepository:
             logger.exception(f"获取 chat_id 之后的 Chat 失败: user_id={user_id}")
             return []
 
+    def get_chats_before(
+        self, user_id: str, before_chat_id: str | None, before_time: int | None, count: int
+    ) -> list[Chat]:
+        """获取指定 chat_id 和时间之前的 Chat
+
+        Args:
+            user_id: 用户 ID
+            before_chat_id: 参考 chat ID，为空则返回最新的 count 条
+            before_time: 参考时间戳（秒），用于确定起始日期
+            count: 查询数量
+
+        Returns:
+            Chat 对象列表，按时间降序排列（最新的在前）
+        """
+        try:
+            # 从文件读取数据
+            chat_dicts = chat_file_storage.read_chats_before(
+                user_id, before_chat_id, before_time, count
+            )
+
+            # 使用 Chat.from_dict 反序列化
+            chats = [Chat.from_dict(chat_dict) for chat_dict in chat_dicts]
+
+            logger.debug(
+                f"已获取 chat_id 之前的 Chat: user_id={user_id}, "
+                f"before_chat_id={before_chat_id}, before_time={before_time}, 数量={len(chats)}"
+            )
+
+            return chats
+        except Exception:
+            logger.exception(f"获取 chat_id 之前的 Chat 失败: user_id={user_id}")
+            return []
+
 
 # 全局单例
 chat_repository = ChatRepository()

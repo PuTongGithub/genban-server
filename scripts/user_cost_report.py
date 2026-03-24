@@ -31,14 +31,10 @@ def print_table(headers: list[str], rows: list[list[str]], title: str = ""):
 
     # 计算每列的最大宽度
     all_rows = [headers] + rows
-    col_widths = [
-        max(len(str(row[i])) for row in all_rows) for i in range(len(headers))
-    ]
+    col_widths = [max(len(str(row[i])) for row in all_rows) for i in range(len(headers))]
 
     # 打印表头
-    header_line = "  |  ".join(
-        f"{headers[i]:<{col_widths[i]}}" for i in range(len(headers))
-    )
+    header_line = "  |  ".join(f"{headers[i]:<{col_widths[i]}}" for i in range(len(headers)))
     print(f"  {header_line}")
     print(f"  {'-' * len(header_line)}")
 
@@ -71,10 +67,12 @@ def print_type_summary(type_stats: list[dict]):
 
     for stat in type_stats:
         type_name = "主助手" if stat["type"] == "assistant" else "对话压缩"
-        print(f"  {type_name:12}  输入: {format_number(stat['total_input_tokens']):>12}  "
-              f"输出: {format_number(stat['total_output_tokens']):>12}  "
-              f"总计: {format_number(stat['total_tokens']):>12}  "
-              f"调用: {format_number(stat['total_calls']):>8}")
+        print(
+            f"  {type_name:12}  输入: {format_number(stat['total_input_tokens']):>12}  "
+            f"输出: {format_number(stat['total_output_tokens']):>12}  "
+            f"总计: {format_number(stat['total_tokens']):>12}  "
+            f"调用: {format_number(stat['total_calls']):>8}"
+        )
 
 
 def generate_console_report(report: dict):
@@ -99,7 +97,7 @@ def generate_console_report(report: dict):
             format_number(stat["total_input_tokens"]),
             format_number(stat["total_output_tokens"]),
             format_number(stat["total_tokens"]),
-            format_number(stat["call_count"]),
+            format_number(stat["total_calls"]),
         ]
         for stat in daily_stats
     ]
@@ -116,7 +114,7 @@ def generate_console_report(report: dict):
             format_number(stat["total_input_tokens"]),
             format_number(stat["total_output_tokens"]),
             format_number(stat["total_tokens"]),
-            format_number(stat["call_count"]),
+            format_number(stat["total_calls"]),
         ]
         for stat in user_stats
     ]
@@ -133,7 +131,7 @@ def generate_console_report(report: dict):
             format_number(stat["total_input_tokens"]),
             format_number(stat["total_output_tokens"]),
             format_number(stat["total_tokens"]),
-            format_number(stat["call_count"]),
+            format_number(stat["total_calls"]),
         ]
         for stat in model_stats
     ]
@@ -151,7 +149,7 @@ def generate_console_report(report: dict):
             format_number(stat["total_input_tokens"]),
             format_number(stat["total_output_tokens"]),
             format_number(stat["total_tokens"]),
-            format_number(stat["call_count"]),
+            format_number(stat["total_calls"]),
         ]
         for stat in user_model_stats
     ]
@@ -189,7 +187,7 @@ def generate_csv_report(report: dict, output_path: str):
                     stat["total_input_tokens"],
                     stat["total_output_tokens"],
                     stat["total_tokens"],
-                    stat["call_count"],
+                    stat["total_calls"],
                 ]
             )
         writer.writerow([])
@@ -204,7 +202,7 @@ def generate_csv_report(report: dict, output_path: str):
                     stat["total_input_tokens"],
                     stat["total_output_tokens"],
                     stat["total_tokens"],
-                    stat["call_count"],
+                    stat["total_calls"],
                 ]
             )
         writer.writerow([])
@@ -219,7 +217,7 @@ def generate_csv_report(report: dict, output_path: str):
                     stat["total_input_tokens"],
                     stat["total_output_tokens"],
                     stat["total_tokens"],
-                    stat["call_count"],
+                    stat["total_calls"],
                 ]
             )
         writer.writerow([])
@@ -234,16 +232,14 @@ def generate_csv_report(report: dict, output_path: str):
                     stat["total_input_tokens"],
                     stat["total_output_tokens"],
                     stat["total_tokens"],
-                    stat["call_count"],
+                    stat["total_calls"],
                 ]
             )
         writer.writerow([])
 
         # 按用户和模型统计
         writer.writerow(["按用户和模型统计"])
-        writer.writerow(
-            ["用户ID", "模型", "输入Token", "输出Token", "总Token", "调用次数"]
-        )
+        writer.writerow(["用户ID", "模型", "输入Token", "输出Token", "总Token", "调用次数"])
         for stat in report["by_user_model"]:
             writer.writerow(
                 [
@@ -252,7 +248,7 @@ def generate_csv_report(report: dict, output_path: str):
                     stat["total_input_tokens"],
                     stat["total_output_tokens"],
                     stat["total_tokens"],
-                    stat["call_count"],
+                    stat["total_calls"],
                 ]
             )
 

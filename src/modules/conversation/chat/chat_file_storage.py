@@ -152,6 +152,69 @@ class ChatFileStorage:
             logger.exception(f"读取 chat_id 之后的 Chat 失败: user_id={user_id}")
             return []
 
+    def read_chats_before(
+        self, user_id: str, before_chat_id: str | None, before_time: int | None, count: int
+    ) -> list[dict]:
+        """读取指定 chat_id 和时间之前的 Chat
+
+        Args:
+            user_id: 用户 ID
+            before_chat_id: 参考 chat ID，为空则返回最新的 count 条
+            before_time: 参考时间戳（秒），用于确定起始日期，为空则从最新日期开始
+            count: 查询数量
+
+        Returns:
+            Chat 字典列表，按时间降序排列（最新的在前）
+        """
+        try:
+            chat_dir = get_user_chat_dir(user_id)
+
+            # 确定结束时间（用于确定起始日期）
+            end_time = before_time if before_time else get_timestamp()
+            end_date_str = timestamp_to_date_str(end_time)
+
+            # 获取用户目录下所有 jsonl 文件，并按日期降序排序
+            all_files = sorted(
+                [f for f in chat_dir.glob("*.jsonl") if f.stem.isdigit()],
+                key=lambda x: x.stem,
+                reverse=True,
+            )
+
+            all_chats: list[dict] = []
+
+            # 如果指定了 before_chat_id，需要先找到该 ID，然后收集它之后的数据
+            found_before_id = before_chat_id is None  # 如果没有指定 ID，直接开始收集
+
+            for file_path in all_files:
+                # 只处理结束日期及之前的文件
+                if file_path.stem > end_date_str:
+                    continue
+
+                records = file_storage.read_jsonl(file_path)
+                # 按时间降序排序（最新的在前）
+                records.sort(key=lambda x: x.get("time", 0), reverse=True)
+
+                for chat in records:
+                    chat_id = chat.get("id", "")
+
+                    # 如果还没找到 before_chat_id，跳过所有数据
+                    if not found_before_id:
+                        if chat_id == before_chat_id:
+                            found_before_id = True  # 找到了，下次循环开始收集
+                        continue  # 跳过当前数据（包括 before_chat_id 本身）
+
+                    # 开始收集数据
+                    all_chats.append(chat)
+
+                    # 收集到足够的记录就返回
+                    if len(all_chats) >= count:
+                        return all_chats[:count]
+
+            return all_chats
+        except Exception:
+            logger.exception(f"读取 chat_id 之前的 Chat 失败: user_id={user_id}")
+            return []
+
 
 # 全局单例
 chat_file_storage = ChatFileStorage()

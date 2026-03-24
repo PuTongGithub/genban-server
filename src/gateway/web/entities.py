@@ -1,5 +1,7 @@
 """Assistant 模块实体定义"""
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -22,4 +24,32 @@ class StopResponse(BaseModel):
 
     success: bool = False
     chat_id: str = ""  # 本次停止消息的 Chat ID
+    error: str = ""
+
+
+class HistoryRequest(BaseModel):
+    """查询历史对话请求"""
+
+    chat_id: str | None = None  # 查询起点 chat ID，不传则返回最新的 count 条
+    chat_time: int | None = None  # 查询起点时间戳（秒级），用于路由文件
+    count: int = 20  # 查询数量，默认 20
+
+
+class HistoryChatItem(BaseModel):
+    """历史对话条目"""
+
+    id: str
+    type: str
+    time: int
+    content: list[dict[str, Any]]
+    reasoning_content: str = ""
+    tool_calls: list[dict[str, Any]] | None = None
+
+
+class HistoryResponse(BaseModel):
+    """查询历史对话响应"""
+
+    success: bool = True
+    chats: list[HistoryChatItem] = []
+    total: int = 0
     error: str = ""
