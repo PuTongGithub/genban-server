@@ -92,9 +92,8 @@ class ContextCompressor:
         chats = [chat_factory.create_prompt_chat(prompt)]
 
         return model_caller.call(
-            model_key=app_config.get_memory_model_key(),
+            model_key=app_config.get_light_model_key(),
             chats=chats,
-            tools=[],
             enable_thinking=True,
         )
 
@@ -168,7 +167,7 @@ class ContextCompressor:
         """
         user_cost_manager.record_cost(
             user_id=user_id,
-            model_key=app_config.get_memory_model_key(),
+            model_key=app_config.get_light_model_key(),
             input_tokens=response.input_tokens,
             output_tokens=response.output_tokens,
             total_tokens=response.total_tokens,

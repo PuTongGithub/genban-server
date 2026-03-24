@@ -2,12 +2,13 @@
 
 from typing import Any
 
+from src.agent.chat_factory import chat_factory
+from src.agent.entities import AgentContext
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.entities import ToolParameter
-from src.agent.entities import AgentContext
-from src.provider.api.api_zai_sdk import web_search
 from src.common.logger import get_logger
-from src.agent.chat_factory import chat_factory
+from src.modules.web.search.search_result_compressor import search_result_compressor
+from src.provider.api.api_zai_sdk import web_search
 
 logger = get_logger(__name__)
 
@@ -60,9 +61,7 @@ class WebSearchTool(BaseTool):
         search_recency_filter = kwargs.get("search_recency_filter", "noLimit")
 
         if not search_query.strip():
-            return chat_factory.create_system_remainder_str(
-                content="错误：搜索关键词不能为空"
-            )
+            return chat_factory.create_system_remainder_str(content="错误：搜索关键词不能为空")
 
         # 确保count在有效范围内
         if count not in search_count_enum:
@@ -84,19 +83,17 @@ class WebSearchTool(BaseTool):
                     content=f"搜索失败：{result['error']}"
                 )
 
-            return self._format_result(result)
+            return self._format_result(context, search_query, result)
         except Exception as e:
-            logger.exception(
-                f"网络搜索执行异常，user_id: {context.user_id}, query: {search_query}"
-            )
-            return chat_factory.create_system_remainder_str(
-                content=f"搜索执行异常：{str(e)}"
-            )
+            logger.exception(f"网络搜索执行异常，user_id: {context.user_id}, query: {search_query}")
+            return chat_factory.create_system_remainder_str(content=f"搜索执行异常：{str(e)}")
 
-    def _format_result(self, result: Any) -> str:
-        """格式化搜索结果为易读字符串
+    def _format_result(self, context: AgentContext, search_query: str, result: list) -> str:
+        """格式化搜索结果为易读字符串，并使用LLM进行压缩
 
         Args:
+            context: Agent 执行上下文
+            search_query: 搜索查询
             result: 搜索结果数据
 
         Returns:
@@ -105,19 +102,29 @@ class WebSearchTool(BaseTool):
         if not result:
             return "未找到相关搜索结果"
 
-        if isinstance(result, dict):
-            if "search_result" in result:
-                items = result["search_result"]
-            else:
-                items = [result]
-        elif isinstance(result, list):
-            items = result
-        else:
-            return str(result)
+        try:
+            compressed = search_result_compressor.compress(
+                user_id=context.user_id,
+                search_query=search_query,
+                search_results=result,
+            )
+            return f"搜索结果（{len(result)}条）摘要：\n\n{compressed}"
+        except Exception:
+            logger.exception(
+                f"搜索结果压缩失败，使用原始格式，user_id: {context.user_id}, query: {search_query}"
+            )
+            # 压缩失败时返回原始格式化结果
+            return self._format_result_original(result)
 
-        if not items:
-            return "未找到相关搜索结果"
+    def _format_result_original(self, items: list) -> str:
+        """格式化原始搜索结果（未压缩版本）
 
+        Args:
+            items: 搜索结果列表
+
+        Returns:
+            格式化后的字符串
+        """
         formatted_lines = []
         formatted_lines.append(f"找到 {len(items)} 条搜索结果：")
         formatted_lines.append("")

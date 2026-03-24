@@ -1,17 +1,17 @@
 """模型调用器"""
 
-from src.config.config import app_config
-from src.model.model_provider import ModelProvider
-from src.model.providers.dashscope_provider import DashScopeProvider
-from src.model.providers.dashscope_multi_provider import DashScopeMultiProvider
-from src.agent.exceptions import (
-    ModelProviderNotFoundException,
-    ModelCallLengthLimitedException,
-    ModelCallException,
-)
 from src.agent.entities import Chat, Message
-from src.model.entities import CallResponse
+from src.agent.exceptions import (
+    ModelCallException,
+    ModelCallLengthLimitedException,
+    ModelProviderNotFoundException,
+)
 from src.common.logger import get_logger
+from src.config.config import app_config
+from src.model.entities import CallResponse
+from src.model.model_provider import ModelProvider
+from src.model.providers.dashscope_multi_provider import DashScopeMultiProvider
+from src.model.providers.dashscope_provider import DashScopeProvider
 
 logger = get_logger(__name__)
 
@@ -54,6 +54,7 @@ class ModelCaller:
         chats: list[Chat],
         tools: list | None = None,
         enable_thinking: bool = True,
+        response_format_type: str = "text",
     ) -> CallResponse:
         """调用模型"""
         logger.info(f"调用模型，model_key: {model_key}")
@@ -67,6 +68,7 @@ class ModelCaller:
                 messages=messages,
                 tools=tools,
                 enable_thinking=enable_thinking,
+                response_format_type=response_format_type,
             )
             self._validate_response(response)
             logger.debug(f"模型调用成功，model_key: {model_key}，response: {str(response)}")
@@ -81,6 +83,7 @@ class ModelCaller:
         chats: list[Chat],
         tools: list | None = None,
         enable_thinking: bool = True,
+        response_format_type: str = "text",
     ):
         """流式调用模型"""
         logger.info(f"流式调用模型，model_key: {model_key}")
@@ -95,6 +98,7 @@ class ModelCaller:
                 messages=messages,
                 tools=tools,
                 enable_thinking=enable_thinking,
+                response_format_type=response_format_type,
             ):
                 self._validate_response(response)
                 last_response = response

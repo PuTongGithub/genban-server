@@ -16,6 +16,7 @@ class ModelProvider(ABC):
         messages: list[Message],
         tools: list | None = None,
         enable_thinking: bool = True,
+        response_format_type: str = "text",
     ) -> CallResponse:
         """同步调用模型
 
@@ -24,6 +25,7 @@ class ModelProvider(ABC):
             messages: Message 对象列表
             tools: 工具列表
             enable_thinking: 是否启用思考模式
+            response_format_type: 响应格式类型，默认为"text"
 
         Returns:
             模型调用响应
@@ -37,6 +39,7 @@ class ModelProvider(ABC):
         messages: list[Message],
         tools: list | None = None,
         enable_thinking: bool = True,
+        response_format_type: str = "text",
     ):
         """流式调用模型
 
@@ -45,6 +48,7 @@ class ModelProvider(ABC):
             messages: Message 对象列表
             tools: 工具列表
             enable_thinking: 是否启用思考模式
+            response_format_type: 响应格式类型，默认为"text"
 
         Returns:
             流式响应迭代器

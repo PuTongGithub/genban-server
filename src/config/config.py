@@ -3,13 +3,14 @@
 import json
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
-from src.storage.file.file_storage import file_storage
 from src.config.exceptions import (
     EnvConfigNotFoundException,
     ModelConfigNotFoundException,
 )
+from src.storage.file.file_storage import file_storage
 
 
 class EnvConfig:
@@ -47,10 +48,10 @@ class AppConfig:
                 return key
         raise ModelConfigNotFoundException("not found default model")
 
-    def get_memory_model_key(self) -> str:
-        """获取用于记忆系统的模型 key"""
+    def get_light_model_key(self) -> str:
+        """获取轻量模型 key（用于压缩等轻量任务）"""
         for key, value in self.config["models"].items():
-            if value.get("memory_model", False):
+            if value.get("light_model", False):
                 return key
         return self.get_default_model()
 

@@ -7,6 +7,7 @@ from src.config.prompts.assistant_prompt import (
     SKILL_PROMPT_TEMPLATE,
 )
 from src.config.prompts.memory_prompt import CONTEXT_COMPRESSION_PROMPT_TEMPLATE
+from src.config.prompts.web_search_prompt import SEARCH_RESULT_COMPRESSION_PROMPT_TEMPLATE
 
 
 class PromptsLoader:
@@ -44,6 +45,17 @@ class PromptsLoader:
             available_modules_prompt=available_modules_prompt,
             chat_history=chat_history,
             current_timestamp=time_util.get_timestamp(),
+        )
+
+    def get_search_compression_prompt(
+        self,
+        search_query: str,
+        search_results: str,
+    ) -> str:
+        """获取搜索结果压缩提示词"""
+        return SEARCH_RESULT_COMPRESSION_PROMPT_TEMPLATE.format(
+            search_query=search_query,
+            search_results=search_results,
         )
 
 
