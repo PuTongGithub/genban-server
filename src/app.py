@@ -2,15 +2,17 @@
 
 import atexit
 import logging
-import signal
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from src.common.async_executor import AsyncExecutor
+from src.common.logger import get_logger, setup_logging
 from src.common.thread_executor import ThreadExecutor
-from src.gateway.web.stream_manager import stream_manager
-from src.common.logger import setup_logging, get_logger
 from src.gateway.web.routers import routers
+from src.gateway.web.stream_manager import stream_manager
+from src.modules.schedule.scheduler.scheduler import scheduler
 
 # 初始化日志系统
 setup_logging()
@@ -24,6 +26,7 @@ def stop() -> None:
     AsyncExecutor.stop_all()
     ThreadExecutor.stop_all()
     stream_manager.stop()
+    scheduler.shutdown()
     logger.info("应用已关闭")
     logging.shutdown()
 

@@ -1,7 +1,9 @@
 from contextlib import contextmanager
 from functools import wraps
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 from src.common.utils.path_util import get_data_dir
 
 # 数据库文件路径
@@ -12,7 +14,12 @@ db_path.parent.mkdir(parents=True, exist_ok=True)
 engine = create_engine(f"sqlite:///{db_path}", echo=False)
 
 # 创建会话类
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    expire_on_commit=False,  # 提交后不过期对象属性，避免 DetachedInstanceError
+)
 
 # 声明基类
 Base = declarative_base()
@@ -38,6 +45,7 @@ def db_execute(func):
     def wrapper(self, *args, **kwargs):
         with get_db() as db:
             return func(self, db, *args, **kwargs)
+
     return wrapper
 
 
@@ -50,4 +58,5 @@ def db_query(func):
             return func(self, db, *args, **kwargs)
         finally:
             db.close()
+
     return wrapper

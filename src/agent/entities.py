@@ -100,6 +100,9 @@ class ChatTypeInfo:
 class ChatType(ChatTypeInfo, Enum):
     PROMPT = ("prompt", False, True, False)
     SYSTEM_REMAINDER = ("system_remainder", False, True, True)
+    SKILL_PROMPT = ("skill_prompt", False, True, True)
+    SCHEDULE = ("schedule", False, True, True)
+    SCHEDULE_REMINDER = ("schedule_reminder", True, True, True)
     CONVERSATION = ("conversation", False, True, True)
     USER = ("user", True, True, True)
     ASSISTANT = ("assistant", True, True, False)

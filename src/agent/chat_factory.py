@@ -24,9 +24,16 @@ class _ChatFactory:
 
     # 创建消息字符串
 
+    def create_str_with_tag(self, content: str, tag: str | None = None) -> str:
+        """创建消息字符串，添加标签"""
+        if tag:
+            return f"[{tag}]{content}"
+        else:
+            return content
+
     def create_system_remainder_str(self, content: str) -> str:
         """创建系统消息内容，返回字符串格式"""
-        return f"[{ChatType.SYSTEM_REMAINDER.type}]{content}"
+        return self.create_str_with_tag(content, ChatType.SYSTEM_REMAINDER.type)
 
     # 创建消息内容
 
@@ -46,24 +53,27 @@ class _ChatFactory:
     def create_user_content(self, user_id: str, user_input: str) -> list:
         """创建用户消息内容"""
         time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
-        text_content = f"[{ChatType.USER.type}:{user_id}:{time_str}]" + user_input
+        text_content = self.create_str_with_tag(
+            user_input, f"{ChatType.USER.type}:{user_id}:{time_str}"
+        )
         return self._normalize_content(text_content)
 
-    def create_system_remainder_content(self, content: str) -> list:
-        """创建系统消息内容"""
-        text_content = self.create_system_remainder_str(content)
-        return self._normalize_content(text_content)
-
-    def create_conversation_content(self, content: str) -> list:
-        """创建对话概要消息内容"""
-        text_content = f"[{ChatType.CONVERSATION.type}]{content}"
-        return self._normalize_content(text_content)
+    def create_content_with_tag(self, content: str, chat_type: ChatType) -> list:
+        """创建消息内容，添加标签"""
+        if chat_type.message_with_tag:
+            _str = self.create_str_with_tag(content, chat_type.type)
+        else:
+            _str = content
+        return self._normalize_content(_str)
 
     # 创建消息对象
 
-    def create_system_message(self, content: str | list) -> Message:
-        """创建系统消息，content 支持字符串或列表"""
-        return Message(role=MessageRole.SYSTEM.value, content=self._normalize_content(content))
+    def create_message(self, content: str, role: MessageRole, chat_type: ChatType) -> Message:
+        """创建消息对象，添加标签"""
+        return Message(
+            role=role.value,
+            content=self.create_content_with_tag(content, chat_type),
+        )
 
     def create_user_message(self, user_id: str, user_input: str) -> Message:
         """创建用户消息"""
@@ -80,20 +90,6 @@ class _ChatFactory:
             content=self._normalize_content(tool_result),
         )
 
-    def create_system_remainder_message(self, content: str) -> Message:
-        """创建系统提醒消息（用户角色）"""
-        return Message(
-            role=MessageRole.USER.value,
-            content=self.create_system_remainder_content(content),
-        )
-
-    def create_conversation_message(self, content: str) -> Message:
-        """创建对话概要消息"""
-        return Message(
-            role=MessageRole.USER.value,
-            content=self.create_conversation_content(content),
-        )
-
     # 创建 Chat 对象
 
     def create_prompt_chat(self, content: str) -> Chat:
@@ -101,7 +97,9 @@ class _ChatFactory:
         return Chat(
             type=ChatType.PROMPT.type,
             id=self._create_chat_id(),
-            message=self.create_system_message(content=content),
+            message=self.create_message(
+                content=content, role=MessageRole.SYSTEM, chat_type=ChatType.PROMPT
+            ),
         )
 
     def create_user_chat(self, user_id: str, user_input: str) -> Chat:
@@ -125,7 +123,39 @@ class _ChatFactory:
         return Chat(
             type=ChatType.SYSTEM_REMAINDER.type,
             id=self._create_chat_id(),
-            message=self.create_system_remainder_message(content=content),
+            message=self.create_message(
+                content=content, role=MessageRole.USER, chat_type=ChatType.SYSTEM_REMAINDER
+            ),
+        )
+
+    def create_skill_prompt_chat(self, content: str) -> Chat:
+        """创建技能提示对话"""
+        return Chat(
+            type=ChatType.SKILL_PROMPT.type,
+            id=self._create_chat_id(),
+            message=self.create_message(
+                content=content, role=MessageRole.USER, chat_type=ChatType.SKILL_PROMPT
+            ),
+        )
+
+    def create_schedule_prompt_chat(self, content: str) -> Chat:
+        """创建日程提示对话"""
+        return Chat(
+            type=ChatType.SCHEDULE.type,
+            id=self._create_chat_id(),
+            message=self.create_message(
+                content=content, role=MessageRole.USER, chat_type=ChatType.SCHEDULE
+            ),
+        )
+
+    def create_schedule_remainder_chat(self, content: str) -> Chat:
+        """创建日程提醒对话"""
+        return Chat(
+            type=ChatType.SCHEDULE_REMINDER.type,
+            id=self._create_chat_id(),
+            message=self.create_message(
+                content=content, role=MessageRole.USER, chat_type=ChatType.SCHEDULE_REMINDER
+            ),
         )
 
     def create_conversation_chat(self, content: str) -> Chat:
@@ -133,7 +163,9 @@ class _ChatFactory:
         return Chat(
             type=ChatType.CONVERSATION.type,
             id=self._create_chat_id(),
-            message=self.create_conversation_message(content=content),
+            message=self.create_message(
+                content=content, role=MessageRole.USER, chat_type=ChatType.CONVERSATION
+            ),
         )
 
     def create_error_chat(self, content: str) -> Chat:
@@ -141,7 +173,9 @@ class _ChatFactory:
         return Chat(
             type=ChatType.ERROR.type,
             id=self._create_chat_id(),
-            message=self.create_system_remainder_message(content=content),
+            message=self.create_message(
+                content=content, role=MessageRole.USER, chat_type=ChatType.SYSTEM_REMAINDER
+            ),
         )
 
     def create_stop_chat(self) -> Chat:
@@ -149,7 +183,11 @@ class _ChatFactory:
         return Chat(
             type=ChatType.STOP.type,
             id=self._create_chat_id(),
-            message=self.create_system_remainder_message(content="用户请求中断执行"),
+            message=self.create_message(
+                content="用户请求中断执行",
+                role=MessageRole.USER,
+                chat_type=ChatType.SYSTEM_REMAINDER,
+            ),
         )
 
     # 根据大模型返回的响应，创建响应的 Chat 对象

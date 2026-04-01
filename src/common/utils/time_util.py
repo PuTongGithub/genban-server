@@ -12,6 +12,7 @@ STR_FORMATTER_NO_MARKS = "%Y%m%d%H%M%S"
 STR_FORMATTER_WITH_MARKS = "%Y-%m-%d %H:%M:%S"
 STR_FORMATTER_DATE_NO_MARKS = "%Y%m%d"
 STR_FORMATTER_DATE_WITH_MARKS = "%Y-%m-%d"
+STR_FORMATTER_DATE_TIME = "%m-%d %H:%M:%S"
 
 
 def get_now() -> datetime:
@@ -29,6 +30,11 @@ def get_yesterday_timestamp() -> int:
     return get_timestamp() - ONE_DAY_SECOND
 
 
+def get_today_start_timestamp() -> int:
+    """获取今天开始时间戳（00:00:00）"""
+    return int(datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+
+
 def get_now_str(formatter: str) -> str:
     """获取当前时间字符串"""
     return get_now().strftime(formatter)
@@ -42,6 +48,11 @@ def timestamp_to_str(timestamp: int, formatter: str) -> str:
 def timestamp_to_date_str(timestamp: int) -> str:
     """时间戳转日期字符串（YYYYMMDD）"""
     return datetime.fromtimestamp(timestamp).strftime(STR_FORMATTER_DATE_NO_MARKS)
+
+
+def timestamp_to_date_time_str(timestamp: int) -> str:
+    """时间戳转月-日 时:分:秒字符串"""
+    return datetime.fromtimestamp(timestamp).strftime(STR_FORMATTER_WITH_MARKS)
 
 
 def date_str_to_datetime(date_str: str) -> datetime:

@@ -84,6 +84,27 @@ class ConversationMemory(Base):
 
 
 # =============================================================================
+# 日程相关模型
+# =============================================================================
+
+
+class Schedule(Base):
+    """日程模型 - 存储用户日程安排"""
+
+    __tablename__ = "schedules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cron_expression: Mapped[str] = mapped_column(String, nullable=False)
+    remind_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[int] = mapped_column(Integer, nullable=False)
+    updated_at: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+# =============================================================================
 # 创建所有表
 # =============================================================================
 

@@ -1,12 +1,15 @@
 """提示词加载模块"""
 
 from src.common.utils import path_util, sys_util, time_util
-from src.config.prompts.assistant_prompt import (
-    ASSISTANT_PROMPT,
-    ENV_PROMPT_TEMPLATE,
-    SKILL_PROMPT_TEMPLATE,
-)
+from src.config.prompts.assistant_prompt import ASSISTANT_PROMPT
+from src.config.prompts.env_prompt import ENV_PROMPT_TEMPLATE
 from src.config.prompts.memory_prompt import CONTEXT_COMPRESSION_PROMPT_TEMPLATE
+from src.config.prompts.schedule_prompt import (
+    EXPIRED_SCHEDULES_PROMPT,
+    FUTURE_SCHEDULES_PROMPT,
+    SCHEDULE_PROMPT,
+)
+from src.config.prompts.skill_prompt import SKILL_PROMPT_TEMPLATE
 from src.config.prompts.web_search_prompt import SEARCH_RESULT_COMPRESSION_PROMPT_TEMPLATE
 
 
@@ -34,6 +37,20 @@ class PromptsLoader:
             user_dir=str(path_util.get_user_dir(user_id)),
             today_date=time_util.get_now_str(time_util.STR_FORMATTER_DATE_WITH_MARKS),
         )
+
+    def get_schedule_prompt(
+        self,
+        schedule_list: str,
+        expired_schedules: str | None = None,
+        future_schedules: str | None = None,
+    ) -> str:
+        """获取日程提示词"""
+        prompt = SCHEDULE_PROMPT.format(schedule_list=schedule_list)
+        if expired_schedules:
+            prompt += EXPIRED_SCHEDULES_PROMPT.format(expired_schedules=expired_schedules)
+        if future_schedules:
+            prompt += FUTURE_SCHEDULES_PROMPT.format(future_schedules=future_schedules)
+        return prompt
 
     def get_conversation_compression_prompt(
         self,

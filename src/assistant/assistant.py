@@ -7,6 +7,7 @@ from src.common.logger import get_logger
 from src.common.thread_executor import ThreadExecutor
 from src.common.utils import time_util
 from src.config.config import app_config
+from src.modules.schedule.scheduler.scheduler import scheduler
 
 logger = get_logger(__name__)
 
@@ -24,6 +25,9 @@ class Assistant:
         )
         self._last_active_time = time_util.get_timestamp()
         self._executor.start()
+
+        # 向调度器注册用户上线
+        scheduler.user_online(user_id)
 
     def send_chat(self, chat: Chat) -> None:
         """发送消息给 Agent"""

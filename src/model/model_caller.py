@@ -71,7 +71,7 @@ class ModelCaller:
                 response_format_type=response_format_type,
             )
             self._validate_response(response)
-            logger.debug(f"模型调用成功，model_key: {model_key}，response: {str(response)}")
+            logger.info(f"模型调用成功，model_key: {model_key}，response: {str(response)}")
             return response
         except Exception:
             logger.exception(f"模型调用失败，model_key: {model_key}")
@@ -103,7 +103,7 @@ class ModelCaller:
                 self._validate_response(response)
                 last_response = response
                 yield response
-            logger.debug(f"流式调用完成，model_key: {model_key}，response: {str(last_response)}")
+            logger.info(f"流式调用完成，model_key: {model_key}，response: {str(last_response)}")
         except Exception:
             logger.exception(f"流式调用失败，model_key: {model_key}")
             raise
