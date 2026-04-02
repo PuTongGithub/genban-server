@@ -23,15 +23,16 @@ class User(Base):
     created_at: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
-class UserState(Base):
-    """用户状态模型"""
+class UserToken(Base):
+    """用户Token模型 - 支持多端同时在线"""
 
-    __tablename__ = "user_states"
+    __tablename__ = "user_tokens"
 
-    user_id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
-    updated_at: Mapped[int] = mapped_column(Integer, nullable=False)
-    token: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    token_expires_at: Mapped[int] = mapped_column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    token: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    expires_at: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
 class UserConfig(Base):

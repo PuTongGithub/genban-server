@@ -83,18 +83,6 @@ WantedBy=multi-user.target
 sudo nano /var/genban/genban-server/.env
 ```
 
-示例内容：
-
-```bash
-# 应用环境配置: dev 或 prod
-APP_ENV=prod
-
-# AI 模型 API 密钥
-DASHSCOPE_API_KEY=your_dashscope_key_here
-ZHIPU_API_KEY=your_zhipu_key_here
-JINA_API_KEY=your_jina_key_here
-```
-
 **安全设置**：
 
 ```bash
@@ -175,93 +163,6 @@ sudo nano /etc/logrotate.d/genban
     endscript
 }
 ```
-
----
-
-### 7. Nginx 反向代理（可选）
-
-如果需要通过域名访问：
-
-```bash
-sudo nano /etc/nginx/sites-available/genban
-```
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-启用：
-
-```bash
-sudo ln -s /etc/nginx/sites-available/genban /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
----
-
-### 8. 防火墙配置
-
-```bash
-# 如果使用 Nginx，只需开放 80/443
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-
-# 如果直接访问，开放 8000
-sudo ufw allow 8000/tcp
-
-sudo ufw reload
-```
-
----
-
-### 9. 健康检查
-
-```bash
-# 检查服务是否运行
-curl http://localhost:8000/health
-
-# 或查看进程
-ps aux | grep genban
-
-# 查看端口监听
-ss -tlnp | grep 8000
-```
-
----
-
-### 10. 故障排查
-
-```bash
-# 服务启动失败
-sudo journalctl -u genban -n 50 --no-pager
-
-# 检查权限
-sudo ls -la /var/genban/genban-server/
-sudo ls -la /var/genban/genban-server/.env
-
-# 检查环境变量是否正确加载
-sudo cat /proc/$(pgrep -f 'python main.py')/environ | tr '\0' '\n'
-
-# 手动测试启动（切换到 genban 用户）
-sudo -u genban bash
-cd /var/genban/genban-server
-source .venv/bin/activate
-python main.py
-```
-
----
 
 ## 文件清单
 

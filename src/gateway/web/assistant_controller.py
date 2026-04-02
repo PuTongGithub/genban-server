@@ -17,7 +17,8 @@ from src.gateway.web.entities import (
 from src.gateway.web.sse_formatter import sse_formatter
 from src.gateway.web.stream_manager import stream_manager
 from src.modules.conversation.chat.chat_repository import chat_repository
-from src.user.auth import get_current_user_id
+from src.user.auth import get_current_user_id, get_current_user_id_and_token
+from src.user.user_manager import user_manager
 
 logger = get_logger(__name__)
 
@@ -26,19 +27,27 @@ router = APIRouter(prefix="/api/assistant", tags=["assistant"])
 
 @router.post("/submit")
 async def submit(
-    request: SubmitRequest, current_user_id: str = Depends(get_current_user_id)
+    request: SubmitRequest,
+    auth_result: tuple[str, str] = Depends(get_current_user_id_and_token),
 ) -> SubmitResponse:
     """提交用户消息到处理队列
 
     Args:
         request: 包含用户输入消息
-        current_user_id: 当前用户ID（通过鉴权依赖注入）
+        auth_result: (当前用户ID, 原始token)（通过鉴权依赖注入）
 
     Returns:
         SubmitResponse: 提交结果
     """
+    current_user_id, token = auth_result
     logger.info(f"收到消息提交请求，user_id: {current_user_id}")
     try:
+        # 刷新token过期时间（失败不影响正常业务流程）
+        try:
+            user_manager.refresh_token(token)
+        except Exception:
+            logger.exception(f"Token刷新失败，user_id: {current_user_id}")
+
         # 创建用户输入 Chat
         input_chat = chat_factory.create_user_chat(
             user_id=current_user_id, user_input=request.message

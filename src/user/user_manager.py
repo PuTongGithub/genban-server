@@ -1,10 +1,12 @@
+"""用户管理模块"""
+
 import secrets
 
 from src.common.utils import time_util
 from src.common.utils.rsa_util import RsaUtil
 from src.config.config import app_config, file_config
 from src.modules.skills.skills_manager import skills_manager
-from src.storage.sqlite.models import UserState
+from src.storage.sqlite.models import UserToken
 from src.user.components.user_validate_util import (
     hash_password,
     validate_password,
@@ -12,12 +14,11 @@ from src.user.components.user_validate_util import (
     verify_password,
 )
 from src.user.db.user_db import user_db
-from src.user.db.user_state_db import user_state_db
+from src.user.db.user_token_db import user_token_db
 from src.user.exceptions import (
     InvalidPasswordException,
     UnauthorizedException,
     UserNotAllowedException,
-    UserNotFoundException,
 )
 from src.user.user_config_manager import user_config_manager
 
@@ -25,7 +26,8 @@ from src.user.user_config_manager import user_config_manager
 class _UserManager:
     # 用户管理器 - 状态管理和认证
 
-    TOKEN_EXPIRE_SECONDS = 7 * time_util.ONE_DAY_SECOND  # 7天
+    TOKEN_EXPIRE_SECONDS = 2 * time_util.ONE_DAY_SECOND  # 48小时
+    MAX_TOKENS_PER_USER = 3  # 每个用户最多3个token
 
     def __init__(self):
         # 初始化RSA工具，从文件加载私钥用于解密
@@ -40,78 +42,94 @@ class _UserManager:
             return True
         return user_id in allowed_user_ids
 
-    def login_or_register(self, userId: str, encrypted_password: str) -> UserState:
-        # 登录或自动注册，成功返回用户状态，encrypted_password为RSA加密后的密文
+    def login_or_register(self, user_id: str, encrypted_password: str) -> UserToken:
+        # 登录或自动注册，成功返回用户token信息，encrypted_password为RSA加密后的密文
         # 检查用户是否在白名单中
-        if not self._is_user_allowed(userId):
-            raise UserNotAllowedException(userId)
+        if not self._is_user_allowed(user_id):
+            raise UserNotAllowedException(user_id)
 
         password = self._rsa.decrypt(encrypted_password)
-        user = user_db.get_user_by_id(userId)
+        user = user_db.get_user_by_id(user_id)
 
         if user is None:
             # 用户不存在，自动注册
-            return self._do_register(userId, password)
+            return self._do_register(user_id, password)
         else:
             # 用户存在，执行登录验证
             return self._do_login(user, password)
 
     def validate_token(self, token: str) -> str:
         # 校验token，返回user_id
-        state = user_state_db.get_by_token(token)
-        if state is None:
+        user_token = user_token_db.get_by_token(token)
+        if user_token is None:
             raise UnauthorizedException()
 
-        if state.token_expires_at < time_util.get_timestamp():
+        if user_token.expires_at < time_util.get_timestamp():
             # token过期
             raise UnauthorizedException()
 
-        return state.user_id
+        return user_token.user_id
 
-    def _do_register(self, userId: str, password: str) -> UserState:
+    def refresh_token(self, token: str) -> bool:
+        # 刷新token过期时间，返回是否成功
+        user_token = user_token_db.get_by_token(token)
+        if user_token is None:
+            return False
+
+        new_expires_at = time_util.get_timestamp() + self.TOKEN_EXPIRE_SECONDS
+        return user_token_db.refresh_token(token, new_expires_at)
+
+    def _do_register(self, user_id: str, password: str) -> UserToken:
         # 注册新用户
-        validate_username(userId)
+        validate_username(user_id)
         validate_password(password)
 
         password_hash = hash_password(password)
-        if not user_db.create(userId, password_hash):
+        if not user_db.create(user_id, password_hash):
             raise RuntimeError("用户创建失败")
-
-        if not user_state_db.create(userId):
-            raise RuntimeError("用户状态初始化失败")
 
         # 初始化用户 Skills（从项目根目录复制默认 Skills）
         # 失败不影响注册流程
-        skills_manager.init_user_skills(userId)
+        skills_manager.init_user_skills(user_id)
 
         # 初始化用户配置
         # 失败不影响注册流程
         user_config_manager.update_config(
-            user_id=userId,
+            user_id=user_id,
             model_key=app_config.get_default_model(),
             enable_thinking=False,
         )
 
-        return self._create_token(userId)
+        return self._create_token(user_id)
 
-    def _do_login(self, user, password: str) -> UserState:
+    def _do_login(self, user, password: str) -> UserToken:
         # 登录验证
         if not verify_password(password, user.password_hash):
             raise InvalidPasswordException()
 
         return self._create_token(user.user_id)
 
-    def _create_token(self, user_id: str) -> UserState:
-        # 创建token并设置过期时间，返回用户状态
-        state = user_state_db.get_by_user_id(user_id)
-        if state is None:
-            raise UserNotFoundException(user_id)
+    def _create_token(self, user_id: str) -> UserToken:
+        # 创建token并设置过期时间，返回token信息
+        # 先清理过期token
+        user_token_db.delete_expired_tokens(user_id)
 
-        state.token = secrets.token_urlsafe(32)
-        state.token_expires_at = time_util.get_timestamp() + self.TOKEN_EXPIRE_SECONDS
+        # 获取当前用户的token数量,如果超过最大限制，删除最老的token
+        tokens = user_token_db.get_tokens_by_user_id(user_id)
+        len_tokens = len(tokens)
+        while len_tokens >= self.MAX_TOKENS_PER_USER:
+            user_token_db.delete_oldest_token(user_id)
+            len_tokens -= 1
 
-        user_state_db.update(state)
-        return state
+        # 创建新token
+        new_token = secrets.token_urlsafe(32)
+        expires_at = time_util.get_timestamp() + self.TOKEN_EXPIRE_SECONDS
+
+        if not user_token_db.create_token(user_id, new_token, expires_at):
+            raise RuntimeError("Token创建失败")
+
+        # 返回创建的token信息
+        return user_token_db.get_by_token(new_token)
 
 
 user_manager = _UserManager()
