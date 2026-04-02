@@ -38,7 +38,7 @@
     "zhipu_search_engine": "search-pro"
   },
   "auth": {
-    "allowed_user_ids": ["test", "pt"]
+    "allowed_user_ids": ["test", "pt", "liyuhang"]
   },
   "assistant": {
     "inactive_timeout": 300
