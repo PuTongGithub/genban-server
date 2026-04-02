@@ -1,12 +1,12 @@
 """路径工具函数"""
 
 from pathlib import Path
+
 from platformdirs import (
+    user_cache_dir,
     user_config_dir,
     user_data_dir,
-    user_cache_dir,
 )
-
 
 APP_NAME = "server"
 APP_AUTHOR = "genban"
@@ -72,9 +72,30 @@ def get_user_chat_dir(user_id: str) -> Path:
     return get_path(get_memory_data_dir() / user_id / "chat")
 
 
+def get_project_root() -> Path:
+    """获取项目根目录"""
+    return Path(__file__).parent.parent.parent.parent
+
+
 def get_project_skills_dir() -> Path:
     """获取项目根目录下的 Skills 目录（用于初始化用户 Skills）"""
-    return Path(__file__).parent.parent.parent.parent / "skills"
+    return get_project_root() / "skills"
+
+
+def get_env_config_dir(env: str | None = None) -> Path:
+    """获取环境配置目录
+
+    Args:
+        env: 环境名称，如 dev/prod，为 None 时从 APP_ENV 环境变量获取，默认为 dev
+
+    Returns:
+        配置目录路径
+    """
+    import os
+
+    if env is None:
+        env = os.getenv("APP_ENV", "dev")
+    return get_project_root() / "config" / env
 
 
 def validate_path(path: str, user_id: str) -> Path:

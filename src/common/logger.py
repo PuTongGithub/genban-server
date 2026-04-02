@@ -9,6 +9,7 @@ import logging.handlers
 from pathlib import Path
 from typing import Any
 
+from src.common.utils.path_util import get_env_config_dir
 
 # 默认日志格式
 DEFAULT_LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -28,10 +29,10 @@ def setup_logging(config_path: Path | None = None) -> None:
     """初始化日志系统
 
     Args:
-        config_path: 日志配置文件路径，默认为 src/config/jsons/logging_config.json
+        config_path: 日志配置文件路径，默认根据 APP_ENV 环境变量从 config/{APP_ENV}/logging_config.json 加载
     """
     if config_path is None:
-        config_path = Path(__file__).parent.parent / "config" / "jsons" / "logging_config.json"
+        config_path = get_env_config_dir() / "logging_config.json"
 
     # 加载配置
     config = _load_config(config_path)

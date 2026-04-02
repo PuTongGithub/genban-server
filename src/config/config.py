@@ -6,7 +6,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from src.common.utils.path_util import get_env_config_dir
 from src.config.exceptions import (
+    ConfigNotFoundException,
     EnvConfigNotFoundException,
     ModelConfigNotFoundException,
 )
@@ -32,8 +34,16 @@ class AppConfig:
     """应用配置管理器"""
 
     def __init__(self):
-        """初始化应用配置"""
-        app_config_path = Path(__file__).parent / "jsons/app_config.json"
+        """初始化应用配置，根据APP_ENV环境变量加载对应环境配置"""
+        config_dir = get_env_config_dir()
+
+        if not config_dir.exists():
+            raise ConfigNotFoundException(str(config_dir))
+
+        app_config_path = config_dir / "app_config.json"
+        if not app_config_path.exists():
+            raise ConfigNotFoundException(str(app_config_path))
+
         with open(app_config_path, "r", encoding="utf-8") as file:
             self.config = json.load(file)
 

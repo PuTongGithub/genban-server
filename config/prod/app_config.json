@@ -1,0 +1,49 @@
+{
+  "models": {
+    "qwen-flash": {
+      "id": "qwen3.5-flash",
+      "max_tokens": 1000000,
+      "api": "dashscope_multi",
+      "light_model": true
+    },
+    "qwen-plus": {
+      "id": "qwen3.5-plus",
+      "max_tokens": 1000000,
+      "api": "dashscope_multi",
+      "default": true
+    },
+    "glm-5": {
+      "id": "glm-5",
+      "max_tokens": 202752,
+      "api": "dashscope"
+    },
+    "kimi-k2.5": {
+      "id": "kimi-k2.5",
+      "max_tokens": 262144,
+      "api": "dashscope"
+    },
+    "MiniMax-M2.5": {
+      "id": "MiniMax-M2.5",
+      "max_tokens": 196608,
+      "api": "dashscope"
+    },
+    "deepseek-v3.2": {
+      "id": "deepseek-v3.2",
+      "max_tokens": 131072,
+      "api": "dashscope"
+    }
+  },
+  "tools": {
+    "shell_timeout": 20,
+    "zhipu_search_engine": "search_std"
+  },
+  "auth": {
+    "allowed_user_ids": ["test", "pt"]
+  },
+  "assistant": {
+    "inactive_timeout": 300
+  },
+  "conversation_memory": {
+    "max_token": 30000
+  }
+}
