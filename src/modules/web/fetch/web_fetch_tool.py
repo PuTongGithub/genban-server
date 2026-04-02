@@ -2,12 +2,12 @@
 
 from typing import Any
 
+from src.agent.chat_factory import chat_factory
+from src.agent.entities import AgentContext
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.entities import ToolParameter
-from src.agent.entities import AgentContext
-from src.provider.api.api_jina import fetch_webpage
 from src.common.logger import get_logger
-from src.agent.chat_factory import chat_factory
+from src.modules.web.fetch.web_fetch_util import fetch_webpage
 
 logger = get_logger(__name__)
 
@@ -46,16 +46,10 @@ class WebFetchTool(BaseTool):
             if content:
                 return content
             else:
-                logger.warning(
-                    f"网页内容获取失败，user_id: {context.user_id}, url: {url}"
-                )
+                logger.warning(f"网页内容获取失败，user_id: {context.user_id}, url: {url}")
                 return chat_factory.create_system_remainder_str(
                     f"错误：无法获取网页内容，请检查URL是否正确: {url}"
                 )
         except Exception as e:
-            logger.exception(
-                f"网页获取过程发生异常，user_id: {context.user_id}, url: {url}"
-            )
-            return chat_factory.create_system_remainder_str(
-                f"错误：获取网页时发生异常: {e}"
-            )
+            logger.exception(f"网页获取过程发生异常，user_id: {context.user_id}, url: {url}")
+            return chat_factory.create_system_remainder_str(f"错误：获取网页时发生异常: {e}")

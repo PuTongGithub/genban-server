@@ -75,13 +75,9 @@ def check_system_dependencies() -> None:
         )
 
     # 检查 LibreOffice
-    libreoffice_cmd = (
-        ["soffice", "--version"] if is_windows else ["libreoffice", "--version"]
-    )
+    libreoffice_cmd = ["soffice", "--version"] if is_windows else ["libreoffice", "--version"]
     if not check_command(libreoffice_cmd):
-        install_cmd = (
-            "winget install --id TheDocumentFoundation.LibreOffice -e --silent"
-        )
+        install_cmd = "winget install --id TheDocumentFoundation.LibreOffice -e --silent"
         missing_deps.append(("LibreOffice", install_cmd))
 
     # 检查 Node.js
@@ -149,6 +145,36 @@ def install_node_dependencies() -> None:
         print(f"  请手动安装: npm install -g {' '.join(failed_packages)}")
 
 
+def install_playwright_browsers() -> None:
+    """安装 Playwright 浏览器"""
+    try:
+        # 检查 playwright 是否已安装
+        subprocess.run(
+            [sys.executable, "-c", "import playwright"],
+            check=True,
+            capture_output=True,
+        )
+
+        # 安装浏览器
+        print("正在安装 Playwright 浏览器...")
+        result = subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode == 0:
+            print("✓ Playwright 浏览器安装完成")
+        else:
+            print("✗ Playwright 浏览器安装失败")
+            print(f"  错误信息: {result.stderr}")
+            print("  请手动运行: playwright install chromium")
+
+    except subprocess.CalledProcessError:
+        print("✗ playwright 未安装，跳过浏览器安装")
+        print("  提示: 安装 playwright 后请手动运行: playwright install chromium")
+
+
 def check_env_file() -> None:
     """检查 .env 文件是否存在"""
     env_file = project_root / ".env"
@@ -168,6 +194,7 @@ def main() -> None:
     install_python_dependencies()
     check_system_dependencies()
     install_node_dependencies()
+    install_playwright_browsers()
 
     print("\n✓ 项目初始化完成")
 

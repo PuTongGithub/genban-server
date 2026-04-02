@@ -35,7 +35,7 @@
   },
   "tools": {
     "shell_timeout": 20,
-    "zhipu_search_engine": "search_std"
+    "zhipu_search_engine": "search-pro"
   },
   "auth": {
     "allowed_user_ids": ["test", "pt"]

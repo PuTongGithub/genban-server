@@ -12,7 +12,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.common.utils.path_util import get_user_dir
+from src.common.utils.path_util import get_memory_data_dir, get_user_dir
 from src.user.db.user_db import user_db
 from src.user.db.user_state_db import user_state_db
 
@@ -33,9 +33,7 @@ def delete_user():
         return
 
     # 确认删除
-    confirm = input(
-        f"确定要删除用户 {user_id} 吗？此操作不可恢复！请输入 'yes' 确认: "
-    ).strip()
+    confirm = input(f"确定要删除用户 {user_id} 吗？此操作不可恢复！请输入 'yes' 确认: ").strip()
     if confirm != "yes":
         print("已取消删除操作")
         return
@@ -61,6 +59,17 @@ def delete_user():
             print(f"⚠ 用户目录删除失败: {e}")
     else:
         print(f"ℹ 用户目录不存在: {user_dir}")
+
+    # 删除用户记忆数据
+    memory_dir = get_memory_data_dir() / user_id
+    if memory_dir.exists():
+        try:
+            shutil.rmtree(memory_dir)
+            print(f"✓ 用户记忆数据已删除: {memory_dir}")
+        except Exception as e:
+            print(f"⚠ 用户记忆数据删除失败: {e}")
+    else:
+        print(f"ℹ 用户记忆数据目录不存在: {memory_dir}")
 
     print(f"\n✓ 用户 {user_id} 删除成功！")
 
