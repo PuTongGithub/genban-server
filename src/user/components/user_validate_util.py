@@ -1,9 +1,10 @@
 """用户验证工具（包含用户名和密码校验）"""
 
 import re
+
 import bcrypt
 
-from src.user.exceptions import WeakPasswordException, InvalidUsernameException
+from src.user.exceptions import InvalidUsernameException, WeakPasswordException
 
 
 def hash_password(password: str) -> str:

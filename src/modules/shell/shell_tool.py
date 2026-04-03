@@ -11,9 +11,9 @@ from src.common.logger import get_logger
 from src.common.utils.path_util import (
     PathNotAllowedException,
     get_user_dir,
-    validate_path,
 )
 from src.config.config import app_config
+from src.user.auth import validate_path
 
 logger = get_logger(__name__)
 
@@ -47,7 +47,7 @@ class ShellTool(BaseTool):
         self.system_encoding = locale.getpreferredencoding(False)
         self.description = """使用该工具可以执行shell命令。
 重要提示：
-- 在执行破坏性操作（例如 git reset --hard、git push --force、rm -rf）之前，请考虑是否有更安全的替代方案可以达到相同的目标。仅在破坏性操作确实是最佳方法时才使用它们
+- 在执行破坏性操作（例如rm -rf）之前，请考虑是否有更安全的替代方案可以达到相同的目标。仅在破坏性操作确实是最佳方法时才使用它们
 - 尽量在整个会话期间使用绝对路径，避免使用相对路径
 - 始终在命令中使用双引号引用包含空格的文件路径
 - 不要使用换行符来分隔命令（在引号字符串中可以使用换行符）

@@ -3,8 +3,8 @@
 from typing import Any
 
 from src.agent.entities import AgentContext
-from src.agent.tools.entities import ToolParameter
 from src.agent.tools.base_tool import BaseTool
+from src.agent.tools.entities import ToolParameter
 from src.modules.skills.skills_manager import skills_manager
 
 
@@ -14,9 +14,9 @@ class SkillTool(BaseTool):
     name = "skill"
     description = """获取指定 Skill 的目录路径和 SKILL.md 内容。
 重要提示：
-- 当用户要求你执行任务时，检查是否有任何可用技能匹配。技能提供了专业能力和领域知识
+- 当用户要求你执行任务时，检查是否有任何可用技能与之匹配
 - 当技能匹配用户请求时，这是阻塞性要求：在生成关于该任务的任何其他响应之前，先调用skill工具获得技能信息
-- 切勿在不实际调用此工具的情况下提及技能
+- 不要在没有实际调用此工具的情况下，想当然的去使用技能
 - 不要调用已加载的技能：如果你在当前对话中看到 <SKILL:${skill_id}> 标签，表示该技能已加载。直接遵循指令，无需再次调用此工具
 - 当你需要执行技能中包含的脚本时，请参照skill工具返回的技能所在目录路径，用绝对路径来执行。例如：Skill目录路径: /home/user/skills/skill1，脚本路径: /home/user/skills/skill1/scripts/script.sh
 """

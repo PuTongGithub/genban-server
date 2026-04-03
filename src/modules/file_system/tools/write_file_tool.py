@@ -2,11 +2,11 @@
 
 from typing import Any
 
+from src.agent.entities import AgentContext
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.entities import ToolParameter
-from src.agent.entities import AgentContext
-from src.common.utils.path_util import validate_path
 from src.storage.file.file_storage import file_storage
+from src.user.auth import validate_path
 
 
 class WriteFileTool(BaseTool):

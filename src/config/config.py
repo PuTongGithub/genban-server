@@ -72,6 +72,11 @@ class AppConfig:
             raise ModelConfigNotFoundException(model_key)
         return models[model_key]
 
+    def get_admin_user_ids(self) -> list[str]:
+        """获取管理员用户ID列表"""
+        auth_config = self.config.get("auth", {})
+        return auth_config.get("admin_user_ids", [])
+
 
 class FileConfig:
     """文件配置管理器 - 从文件读取配置，初始化时加载到内存"""

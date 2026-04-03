@@ -1,10 +1,12 @@
 """用户鉴权模块"""
 
-from functools import wraps
+from pathlib import Path
 from typing import Optional
 
 from fastapi import Header
 
+from src.common.utils.path_util import PathNotAllowedException, get_user_dir
+from src.config.config import app_config
 from src.user.exceptions import UnauthorizedException
 from src.user.user_manager import user_manager
 
@@ -80,28 +82,36 @@ async def get_current_user_id_and_token(
         raise UnauthorizedException("Token 无效或已过期")
 
 
-def require_auth(func):
-    """装饰器：用于非路由函数的鉴权（可选）
+def validate_path(path: str, user_id: str) -> Path:
+    """验证路径是否在用户允许的范围内，返回绝对路径
 
-    注意：此装饰器适用于普通函数，FastAPI 路由函数建议使用 get_current_user_id 依赖注入
+    允许访问的目录：
+    - 用户目录下所有内容: {data_dir}/user_data/{user_id}
+    - 管理员用户可访问任意路径
 
-    Usage:
-        @require_auth
-        async def some_protected_function(token: str):
-            # 函数逻辑
-            pass
+    Args:
+        path: 相对路径或绝对路径
+        user_id: 用户ID
+
+    Returns:
+        验证通过的绝对路径
+
+    Raises:
+        PathNotAllowedException: 路径不在允许范围内
     """
+    user_dir = get_user_dir(user_id)
 
-    @wraps(func)
-    async def wrapper(*args, token: Optional[str] = None, **kwargs):
-        if not token:
-            raise UnauthorizedException("缺少 token 参数")
+    user_dir.mkdir(parents=True, exist_ok=True)
 
-        try:
-            user_id = user_manager.validate_token(token)
-            kwargs["current_user_id"] = user_id
-            return await func(*args, **kwargs)
-        except Exception:
-            raise UnauthorizedException("Token 无效或已过期")
+    if Path(path).is_absolute():
+        target_path = Path(path).resolve()
+    else:
+        target_path = (user_dir / path).resolve()
 
-    return wrapper
+    if user_id in app_config.get_admin_user_ids():
+        return target_path
+    try:
+        target_path.relative_to(user_dir)
+        return target_path
+    except ValueError:
+        raise PathNotAllowedException(str(path))

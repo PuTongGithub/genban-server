@@ -3,7 +3,7 @@
 import threading
 from typing import Callable
 
-from src.agent.entities import Chat
+from src.agent.entities import Chat, MessagePipeContent
 from src.assistant.assistant import Assistant
 from src.common.logger import get_logger
 
@@ -36,7 +36,7 @@ class AssistantManager:
         self,
         user_id: str,
         listener_name: str,
-        listener: Callable[[Chat], None],
+        listener: Callable[[MessagePipeContent], None],
     ) -> None:
         """注册用户 Assistant 监听器"""
         self._get_assistant(user_id).register_listener(listener_name, listener)

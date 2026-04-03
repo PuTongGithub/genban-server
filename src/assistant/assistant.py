@@ -1,7 +1,7 @@
 from typing import Callable
 
 from src.agent.agent import Agent
-from src.agent.entities import Chat, chat_type_map
+from src.agent.entities import Chat, ContentType, MessagePipeContent, chat_type_map
 from src.assistant.modules import ASSISTANT_MODULES
 from src.common.logger import get_logger
 from src.common.thread_executor import ThreadExecutor
@@ -18,7 +18,7 @@ class Assistant:
     def __init__(self, user_id: str) -> None:
         self.user_id = user_id
         self.agent = Agent(user_id=user_id, modules=ASSISTANT_MODULES)
-        self.listeners: dict[str, Callable[[Chat], None]] = {}
+        self.listeners: dict[str, Callable[[MessagePipeContent], None]] = {}
         self._executor = ThreadExecutor(
             name=f"Assistant-{self.user_id}",
             target=self._distribute_chat,
@@ -36,7 +36,9 @@ class Assistant:
             self._executor.start()
         self.agent.send_chat(chat)
 
-    def register_listener(self, listener_name: str, listener: Callable[[Chat], None]) -> None:
+    def register_listener(
+        self, listener_name: str, listener: Callable[[MessagePipeContent], None]
+    ) -> None:
         """注册消息监听器"""
         self._last_active_time = time_util.get_timestamp()
         if not self._executor.is_running():
@@ -62,28 +64,25 @@ class Assistant:
         """分发消息给所有监听器"""
         while True:
             try:
-                # 检查是否已停止
                 if not self._executor.is_running():
                     break
 
-                # 每轮检查是否需要停止
                 if self._should_stop():
                     self._executor.stop()
                     break
 
-                # 等待新消息
-                chat = self.agent.recv_chat()
-                if chat is None:
+                pipe_content = self.agent.recv_content()
+                if pipe_content is None:
                     continue
 
-                # 检查消息类型是否用户可见
-                chat_type = chat_type_map[chat.type]
-                if not chat_type.user_visible:
-                    continue
+                if pipe_content.type == ContentType.CHAT:
+                    chat_type = chat_type_map[pipe_content.chat.type]
+                    if not chat_type.user_visible:
+                        continue
 
                 for listener_name, listener in self.listeners.items():
                     try:
-                        listener(chat)
+                        listener(pipe_content)
                     except Exception as e:
                         logger.exception(f"助手监听器 {listener_name} 分发消息时出错: {e}")
             except Exception as e:

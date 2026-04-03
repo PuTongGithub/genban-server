@@ -127,8 +127,17 @@ class AgentContext:
     process_result: bool = False  # _process_contents 的返回值，表示本轮对话是否完成
 
 
+@unique
+class ContentType(StrEnum):
+    """消息管道内容类型"""
+
+    CHAT = "chat"
+    COMPLETE = "complete"
+
+
 @dataclass
 class MessagePipeContent:
     """消息管道实体"""
 
-    chat: Chat
+    chat: Chat | None = None
+    type: ContentType = ContentType.CHAT

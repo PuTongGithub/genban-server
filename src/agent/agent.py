@@ -1,7 +1,7 @@
 """Agent 主流程控制器"""
 
 from src.agent.chat_factory import chat_factory
-from src.agent.entities import AgentContext, Chat, ChatType, MessagePipeContent
+from src.agent.entities import AgentContext, Chat, ChatType, ContentType, MessagePipeContent
 from src.agent.exceptions import ModelCallException, ModelHookException
 from src.agent.hooks.base_hook import (
     BaseHook,
@@ -95,10 +95,9 @@ class Agent:
         """发送消息到输入管道"""
         self._in_message_pipe.push(MessagePipeContent(chat=chat))
 
-    def recv_chat(self) -> Chat | None:
+    def recv_content(self) -> MessagePipeContent | None:
         """从输出管道接收消息"""
-        content = self._out_message_pipe.pull()
-        return content.chat if content else None
+        return self._out_message_pipe.pull()
 
     def stop(self) -> None:
         """停止 Agent 主流程"""
@@ -165,14 +164,16 @@ class Agent:
             context.process_result = True
             return True
         finally:
-            # 在 finally 中批量执行 ConfirmedChatHook
             if context.new_chats:
+                self._send_to_output_pipe(type=ContentType.COMPLETE)
                 self._hook_manager.execute(ConfirmedChatHook, context.new_chats, context)
 
     def _handle_new_chat(self, context: AgentContext, contents: list[MessagePipeContent]) -> None:
         """处理新增的 Chat，收集到 context.new_chats 并发送到输出管道"""
         for content in contents:
             new_chat = content.chat
+            if new_chat is None:
+                continue
             context.new_chats.append(new_chat)
             self._send_to_output_pipe(new_chat)
 
@@ -261,6 +262,8 @@ class Agent:
             context.new_chats.append(tool_chat)
         return False
 
-    def _send_to_output_pipe(self, chat: Chat) -> None:
+    def _send_to_output_pipe(
+        self, chat: Chat | None = None, type: ContentType = ContentType.CHAT
+    ) -> None:
         """发送消息到输出管道"""
-        self._out_message_pipe.push(MessagePipeContent(chat=chat))
+        self._out_message_pipe.push(MessagePipeContent(chat=chat, type=type))

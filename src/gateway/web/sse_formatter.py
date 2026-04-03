@@ -12,8 +12,8 @@ class SSEFormatter:
 
     def _clean_content(self, type: str, content: list) -> list:
         """根据类型清理内容，移除文本项开头的 [] 包裹内容"""
-        chatType: ChatType = chat_type_map[type]
-        if not chatType.message_with_tag:
+        chat_type: ChatType = chat_type_map[type]
+        if not chat_type.message_with_tag:
             return content
 
         # 处理列表中的文本项
@@ -56,6 +56,14 @@ class SSEFormatter:
             SSE 关闭信号格式的字符串
         """
         return "event: close\ndata: {}\n\n"
+
+    def format_complete_signal(self) -> str:
+        """格式化 SSE 完成信号
+
+        Returns:
+            SSE 完成信号格式的字符串
+        """
+        return "event: complete\ndata: {}\n\n"
 
 
 # 全局单例（模块加载时初始化）

@@ -1,7 +1,8 @@
 """FileSystem 模块实体类"""
 
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
 
 
 class FileSystemItem(BaseModel):

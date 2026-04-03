@@ -12,7 +12,7 @@ class SkillsModule(BaseModule):
 
     id = "skills"
     name = "技能模块"
-    description = "提供了专业技能和领域知识。详细说明请参考对话中 skill_prompt_prompt 部分的内容"
+    description = "提供了专业技能和领域知识。详细说明请参考对话中 skill_prompt 部分的内容"
 
     def __init__(self) -> None:
         """初始化技能模块，创建工具实例"""

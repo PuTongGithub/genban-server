@@ -1,7 +1,6 @@
 """自定义异常类"""
 
-from fastapi import HTTPException
-from fastapi import status
+from fastapi import HTTPException, status
 
 
 class UserNotFoundException(Exception):

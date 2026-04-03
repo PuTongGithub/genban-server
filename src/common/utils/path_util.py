@@ -96,38 +96,3 @@ def get_env_config_dir(env: str | None = None) -> Path:
     if env is None:
         env = os.getenv("APP_ENV", "dev")
     return get_project_root() / "config" / env
-
-
-def validate_path(path: str, user_id: str) -> Path:
-    """验证路径是否在用户允许的范围内，返回绝对路径
-
-    允许访问的目录：
-    - 用户目录下所有内容: {data_dir}/user_data/{user_id}
-
-    Args:
-        path: 相对路径或绝对路径
-        user_id: 用户ID
-
-    Returns:
-        验证通过的绝对路径
-
-    Raises:
-        PathNotAllowedException: 路径不在允许范围内
-    """
-    user_dir = get_user_dir(user_id)
-
-    # 确保目录存在
-    user_dir.mkdir(parents=True, exist_ok=True)
-
-    # 处理路径：如果是相对路径，则基于 user_dir 解析
-    if Path(path).is_absolute():
-        target_path = Path(path).resolve()
-    else:
-        target_path = (user_dir / path).resolve()
-
-    # 验证路径是否在用户目录下
-    try:
-        target_path.relative_to(user_dir)
-        return target_path
-    except ValueError:
-        raise PathNotAllowedException(str(path))

@@ -50,10 +50,11 @@
   },
   "tools": {
     "shell_timeout": 20,
-    "zhipu_search_engine": "search_std"
+    "zhipu_search_engine": "search-std"
   },
   "auth": {
-    "allowed_user_ids": ["test", "pt"]
+    "allowed_user_ids": ["test", "pt"],
+    "admin_user_ids": ["pt"]
   },
   "assistant": {
     "inactive_timeout": 300

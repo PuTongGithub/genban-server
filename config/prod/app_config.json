@@ -38,12 +38,13 @@
     "zhipu_search_engine": "search-pro"
   },
   "auth": {
-    "allowed_user_ids": ["test", "pt", "liyuhang"]
+    "allowed_user_ids": ["test", "pt", "liyuhang"],
+    "admin_user_ids": ["pt"]
   },
   "assistant": {
     "inactive_timeout": 300
   },
   "conversation_memory": {
-    "max_token": 30000
+    "max_token": 26000
   }
 }

@@ -3,12 +3,12 @@
 import asyncio
 from typing import AsyncGenerator
 
-from src.agent.entities import chat_type_map
-from src.gateway.web.sse_formatter import sse_formatter
+from src.agent.entities import ContentType, chat_type_map
 from src.assistant.assistant_manager import assistant_manager
+from src.common.logger import get_logger
 from src.common.message.message_pipe import MessagePipe
 from src.common.message.message_pipe_factory import MessagePipeFactory
-from src.common.logger import get_logger
+from src.gateway.web.sse_formatter import sse_formatter
 
 logger = get_logger(__name__)
 LISTENER_NAME = "stream_listener"
@@ -36,7 +36,7 @@ class StreamManager:
         assistant_manager.register_listener(
             user_id=user_id,
             listener_name=LISTENER_NAME,
-            listener=lambda chat: pipe.push(chat),
+            listener=lambda content: pipe.push(content),
         )
         return pipe
 
@@ -51,8 +51,8 @@ class StreamManager:
             count_none = 0
             while True:
                 # 等待新消息（使用 to_thread 避免阻塞事件循环）
-                chat = await asyncio.to_thread(pipe.pull)
-                if chat is None:
+                content = await asyncio.to_thread(pipe.pull)
+                if content is None:
                     if count_none >= 5:
                         yield sse_formatter.format_close_signal()
                         break
@@ -61,14 +61,19 @@ class StreamManager:
                         continue
 
                 count_none = 0
-                # 检查消息类型是否用户可见
-                chatType = chat_type_map[chat.type]
-                if not chatType.user_visible:
-                    continue
-
-                # 格式化为 SSE 格式
-                event_data = sse_formatter.format_chat_to_sse(chat)
-                yield event_data
+                # 检查消息类型
+                if content.type == ContentType.COMPLETE:
+                    # complete 事件直接输出
+                    yield sse_formatter.format_complete_signal()
+                elif content.type == ContentType.CHAT:
+                    # chat 事件需要检查 user_visible
+                    chat = content.chat
+                    chat_type = chat_type_map[chat.type]
+                    if not chat_type.user_visible:
+                        continue
+                    # 格式化为 SSE 格式
+                    event_data = sse_formatter.format_chat_to_sse(chat)
+                    yield event_data
 
         except asyncio.CancelledError:
             # 客户端断开连接
