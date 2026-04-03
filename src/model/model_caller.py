@@ -57,7 +57,7 @@ class ModelCaller:
         response_format_type: str = "text",
     ) -> CallResponse:
         """调用模型"""
-        logger.info(f"调用模型，model_key: {model_key}")
+        logger.info(f"模型调用请求，model_key: {model_key}，chats: {str(chats)}")
         messages = self._convert_chats_to_messages(chats)
         model_config = app_config.get_model_config(model_key)
         provider = self._get_provider(model_config["api"])
@@ -86,7 +86,7 @@ class ModelCaller:
         response_format_type: str = "text",
     ):
         """流式调用模型"""
-        logger.info(f"流式调用模型，model_key: {model_key}")
+        logger.info(f"调用流式模型，model_key: {model_key}，chats: {str(chats)}")
         messages = self._convert_chats_to_messages(chats)
         model_config = app_config.get_model_config(model_key)
         provider = self._get_provider(model_config["api"])
