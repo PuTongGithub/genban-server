@@ -34,5 +34,14 @@ class _UserConfigDb:
         except Exception:
             return False
 
+    @db_execute
+    def delete_config(self, db, user_id: str) -> bool:
+        # 删除用户配置，返回是否成功
+        config = db.query(UserConfig).filter(UserConfig.user_id == user_id).first()
+        if config:
+            db.delete(config)
+            return True
+        return False
+
 
 user_config_db = _UserConfigDb()

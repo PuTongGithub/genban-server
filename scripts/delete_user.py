@@ -14,7 +14,11 @@ sys.path.insert(0, str(project_root))
 
 from src.common.utils.path_util import get_memory_data_dir, get_user_dir
 from src.user.db.user_db import user_db
-from src.user.db.user_state_db import user_state_db
+from src.user.db.user_token_db import user_token_db
+from src.user.db.user_config_db import user_config_db
+from src.modules.conversation.components.conversation_memory_repository import (
+    conversation_memory_repository,
+)
 
 
 def delete_user():
@@ -38,10 +42,20 @@ def delete_user():
         print("已取消删除操作")
         return
 
-    # 删除用户状态
-    state_deleted = user_state_db.delete(user_id)
-    if not state_deleted:
-        print(f"⚠ 用户 {user_id} 的状态删除失败或不存在")
+    # 删除用户令牌
+    token_deleted = user_token_db.delete_all_tokens(user_id)
+    if not token_deleted:
+        print(f"⚠ 用户 {user_id} 的token删除失败或不存在")
+
+    # 删除用户配置
+    config_deleted = user_config_db.delete_config(user_id)
+    if not config_deleted:
+        print(f"⚠ 用户 {user_id} 的配置删除失败或不存在")
+
+    # 删除用户记忆
+    memory_deleted = conversation_memory_repository.delete_memory(user_id)
+    if not memory_deleted:
+        print(f"⚠ 用户 {user_id} 的记忆删除失败或不存在")
 
     # 删除用户
     user_deleted = user_db.delete(user_id)

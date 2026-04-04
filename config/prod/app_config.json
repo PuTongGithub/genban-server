@@ -9,13 +9,22 @@
     "qwen-plus": {
       "id": "qwen3.5-plus",
       "max_tokens": 1000000,
-      "api": "dashscope_multi",
-      "default": true
+      "api": "dashscope_multi"
     },
     "glm-5": {
       "id": "glm-5",
-      "max_tokens": 202752,
-      "api": "dashscope"
+      "max_tokens": 200000,
+      "api": "openai",
+      "base_url": "https://open.bigmodel.cn/api/paas/v4/",
+      "api_env_key": "ZHIPU_API_KEY",
+      "default": true
+    },
+    "glm-4.7": {
+      "id": "glm-4.7",
+      "max_tokens": 200000,
+      "api": "openai",
+      "base_url": "https://open.bigmodel.cn/api/paas/v4/",
+      "api_env_key": "ZHIPU_API_KEY"
     },
     "kimi-k2.5": {
       "id": "kimi-k2.5",
@@ -45,6 +54,6 @@
     "inactive_timeout": 300
   },
   "conversation_memory": {
-    "max_token": 26000
+    "max_token": 28000
   }
 }

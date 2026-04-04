@@ -42,6 +42,12 @@ class WebSearchTool(BaseTool):
             required=False,
             enum=search_recency_filter_enum,
         ),
+        ToolParameter(
+            name="compress",
+            type="boolean",
+            description="是否压缩搜索结果，默认值：true。若需要返回原始搜索结果时，设置为false。",
+            required=False,
+        ),
     ]
 
     def execute(self, context: AgentContext, **kwargs: Any) -> str:
@@ -59,6 +65,7 @@ class WebSearchTool(BaseTool):
         search_query = kwargs.get("search_query", "")
         count = kwargs.get("count", 10)
         search_recency_filter = kwargs.get("search_recency_filter", "noLimit")
+        compress = kwargs.get("compress", True)
 
         if not search_query.strip():
             return chat_factory.create_system_remainder_str(content="错误：搜索关键词不能为空")
@@ -83,24 +90,30 @@ class WebSearchTool(BaseTool):
                     content=f"搜索失败：{result['error']}"
                 )
 
-            return self._format_result(context, search_query, result)
+            return self._format_result(context, search_query, result, compress)
         except Exception as e:
             logger.exception(f"网络搜索执行异常，user_id: {context.user_id}, query: {search_query}")
             return chat_factory.create_system_remainder_str(content=f"搜索执行异常：{str(e)}")
 
-    def _format_result(self, context: AgentContext, search_query: str, result: list) -> str:
+    def _format_result(
+        self, context: AgentContext, search_query: str, result: list, compress: bool = True
+    ) -> str:
         """格式化搜索结果为易读字符串，并使用LLM进行压缩
 
         Args:
             context: Agent 执行上下文
             search_query: 搜索查询
             result: 搜索结果数据
+            compress: 是否压缩搜索结果，默认True
 
         Returns:
             格式化后的字符串
         """
         if not result:
             return "未找到相关搜索结果"
+
+        if not compress:
+            return self._format_result_original(result)
 
         try:
             compressed = search_result_compressor.compress(
@@ -113,7 +126,6 @@ class WebSearchTool(BaseTool):
             logger.exception(
                 f"搜索结果压缩失败，使用原始格式，user_id: {context.user_id}, query: {search_query}"
             )
-            # 压缩失败时返回原始格式化结果
             return self._format_result_original(result)
 
     def _format_result_original(self, items: list) -> str:

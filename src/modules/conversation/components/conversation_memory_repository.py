@@ -78,6 +78,24 @@ class ConversationMemoryRepository:
             logger.info(f"已创建 Conversation Memory: user_id={user_id}")
             return memory
 
+    @db_execute
+    def delete_memory(self, db, user_id: str) -> bool:
+        """删除用户的 Conversation Memory
+
+        Args:
+            db: 数据库会话
+            user_id: 用户 ID
+
+        Returns:
+            是否删除成功
+        """
+        memory = db.query(ConversationMemory).filter(ConversationMemory.user_id == user_id).first()
+        if memory:
+            db.delete(memory)
+            logger.info(f"已删除 Conversation Memory: user_id={user_id}")
+            return True
+        return False
+
 
 # 全局单例
 conversation_memory_repository = ConversationMemoryRepository()

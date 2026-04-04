@@ -17,6 +17,8 @@ class ModelProvider(ABC):
         tools: list | None = None,
         enable_thinking: bool = True,
         response_format_type: str = "text",
+        base_url: str | None = None,
+        api_key: str | None = None,
     ) -> CallResponse:
         """同步调用模型
 
@@ -26,6 +28,8 @@ class ModelProvider(ABC):
             tools: 工具列表
             enable_thinking: 是否启用思考模式
             response_format_type: 响应格式类型，默认为"text"
+            base_url: API 服务端点地址
+            api_key: API 密钥
 
         Returns:
             模型调用响应
@@ -40,6 +44,8 @@ class ModelProvider(ABC):
         tools: list | None = None,
         enable_thinking: bool = True,
         response_format_type: str = "text",
+        base_url: str | None = None,
+        api_key: str | None = None,
     ):
         """流式调用模型
 
@@ -49,6 +55,8 @@ class ModelProvider(ABC):
             tools: 工具列表
             enable_thinking: 是否启用思考模式
             response_format_type: 响应格式类型，默认为"text"
+            base_url: API 服务端点地址
+            api_key: API 密钥
 
         Returns:
             流式响应迭代器

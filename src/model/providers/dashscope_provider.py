@@ -2,10 +2,9 @@
 
 from src.agent.entities import Message
 from src.model.entities import CallResponse
-from src.model.message_formatter import (
+from src.model.formatter.message_formatter import (
+    convert_dashscope_to_call_response,
     convert_messages_for_text_model,
-    convert_to_call_response,
-    format_text_content,
 )
 from src.model.model_provider import ModelProvider
 from src.provider.api import api_dashscope
@@ -21,9 +20,10 @@ class DashScopeProvider(ModelProvider):
         tools: list | None = None,
         enable_thinking: bool = True,
         response_format_type: str = "text",
+        base_url: str | None = None,
+        api_key: str | None = None,
     ) -> CallResponse:
         """同步调用模型"""
-        # 将 Message 列表转换为纯文本模型所需的字典格式
         converted_messages = convert_messages_for_text_model(messages)
         response = api_dashscope.call(
             model=model,
@@ -32,7 +32,7 @@ class DashScopeProvider(ModelProvider):
             enable_thinking=enable_thinking,
             response_format_type=response_format_type,
         )
-        return convert_to_call_response(response, content_formatter=format_text_content)
+        return convert_dashscope_to_call_response(response)
 
     def stream_call(
         self,
@@ -41,9 +41,10 @@ class DashScopeProvider(ModelProvider):
         tools: list | None = None,
         enable_thinking: bool = True,
         response_format_type: str = "text",
+        base_url: str | None = None,
+        api_key: str | None = None,
     ):
         """流式调用模型"""
-        # 将 Message 列表转换为纯文本模型所需的字典格式
         converted_messages = convert_messages_for_text_model(messages)
         for response in api_dashscope.stream_call(
             model=model,
@@ -52,6 +53,4 @@ class DashScopeProvider(ModelProvider):
             enable_thinking=enable_thinking,
             response_format_type=response_format_type,
         ):
-            yield convert_to_call_response(
-                response, content_formatter=format_text_content
-            )
+            yield convert_dashscope_to_call_response(response)

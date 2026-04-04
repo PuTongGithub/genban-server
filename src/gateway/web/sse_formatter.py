@@ -37,13 +37,17 @@ class SSEFormatter:
         Returns:
             SSE 格式的字符串
         """
+        tool_calls = None
+        if chat.message.tool_calls:
+            tool_calls = [tc.to_dict() for tc in chat.message.tool_calls]
+
         data: dict[str, Any] = {
             "id": chat.id,
             "type": chat.type,
             "time": chat.time,
             "content": self._clean_content(chat.type, chat.message.content),
             "reasoning_content": chat.message.reasoning_content,
-            "tool_calls": chat.message.tool_calls,
+            "tool_calls": tool_calls,
         }
 
         # SSE 格式: event: message\ndata: {...}\n\n

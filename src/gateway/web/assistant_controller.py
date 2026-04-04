@@ -151,6 +151,9 @@ async def get_history(
         history_chats: list[HistoryChatItem] = []
         for chat in chats:
             cleaned_content = sse_formatter._clean_content(chat.type, chat.message.content)
+            tool_calls = None
+            if chat.message.tool_calls:
+                tool_calls = [tc.to_dict() for tc in chat.message.tool_calls]
             history_chats.append(
                 HistoryChatItem(
                     id=chat.id,
@@ -158,7 +161,7 @@ async def get_history(
                     time=chat.time,
                     content=cleaned_content,
                     reasoning_content=chat.message.reasoning_content or "",
-                    tool_calls=chat.message.tool_calls,
+                    tool_calls=tool_calls,
                 )
             )
 

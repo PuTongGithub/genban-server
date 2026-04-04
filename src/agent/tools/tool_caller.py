@@ -4,6 +4,7 @@ import json
 
 from src.agent.chat_factory import chat_factory
 from src.agent.entities import AgentContext
+from src.agent.entities import ToolCall as ModelToolCall
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.entities import ToolCall, ToolResult
 from src.agent.tools.tool_registry import ToolRegistry
@@ -26,9 +27,7 @@ class ToolCaller:
         """批量注册工具"""
         self.registry.register_many(tools)
 
-    def execute(
-        self, tool_calls: list[ToolCall], context: AgentContext
-    ) -> list[ToolResult]:
+    def execute(self, tool_calls: list[ToolCall], context: AgentContext) -> list[ToolResult]:
         """执行工具调用
 
         Args:
@@ -53,7 +52,7 @@ class ToolCaller:
         return results
 
     def execute_from_model_response(
-        self, tool_calls_data: list[dict], context: AgentContext
+        self, tool_calls_data: list[ModelToolCall], context: AgentContext
     ) -> list[ToolResult]:
         """从模型响应中解析并执行工具调用
 
@@ -75,26 +74,20 @@ class ToolCaller:
         schemas = self.registry.get_all_schemas()
         return len(schemas) > 0 and schemas or None
 
-    def _parse_tool_calls(self, tool_calls_data: list[dict]) -> list[ToolCall]:
+    def _parse_tool_calls(self, tool_calls_data: list[ModelToolCall]) -> list[ToolCall]:
         """解析工具调用数据"""
         tool_calls: list[ToolCall] = []
         for call_data in tool_calls_data:
             try:
                 arguments: dict = {}
-                if "function" in call_data:
-                    func_data = call_data["function"]
-                    arguments_str = func_data.get("arguments", "{}")
-                    if isinstance(arguments_str, str):
-                        arguments = json.loads(arguments_str)
-                    else:
-                        arguments = arguments_str
-                    name = func_data.get("name", "")
+                arguments_str = call_data.function.arguments or "{}"
+                if isinstance(arguments_str, str):
+                    arguments = json.loads(arguments_str)
                 else:
-                    name = call_data.get("name", "")
-                    arguments = call_data.get("arguments", {})
+                    arguments = arguments_str
 
                 tool_calls.append(
-                    ToolCall(id=call_data.get("id", ""), name=name, arguments=arguments)
+                    ToolCall(id=call_data.id, name=call_data.function.name, arguments=arguments)
                 )
             except Exception:
                 logger.exception("解析工具调用数据失败")

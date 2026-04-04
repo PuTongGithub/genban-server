@@ -43,7 +43,7 @@ def stream_call(model, messages, tools, enable_thinking, response_format_type="t
         "result_format": "message",
         "stream": True,
         "parallel_tool_calls": True,
-        "incremental_output": False,
+        "incremental_output": True,
     }
     if response_format_type != "text":
         kwargs["response_format"] = {"type": response_format_type}
@@ -89,7 +89,7 @@ def stream_call_multimodal(model, messages, tools, enable_thinking, response_for
         "result_format": "message",
         "stream": True,
         "parallel_tool_calls": True,
-        "incremental_output": False,
+        "incremental_output": True,
     }
     if response_format_type != "text":
         kwargs["response_format"] = {"type": response_format_type}

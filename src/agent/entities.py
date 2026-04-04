@@ -7,14 +7,67 @@ from src.agent.hooks.entities import ModelConfig
 from src.common.utils import time_util
 
 
+@dataclass
+class ToolCallFunction:
+    """工具调用函数定义"""
+
+    name: str = ""
+    arguments: str = ""
+
+    def to_dict(self) -> dict:
+        """将 ToolCallFunction 对象转换为字典"""
+        return {
+            "name": self.name,
+            "arguments": self.arguments,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> ToolCallFunction:
+        """从字典创建 ToolCallFunction 对象"""
+        return cls(
+            name=data.get("name", ""),
+            arguments=data.get("arguments", ""),
+        )
+
+
+@dataclass
+class ToolCall:
+    """工具调用定义"""
+
+    index: int = 0
+    id: str = ""
+    type: str = "function"
+    function: ToolCallFunction = field(default_factory=ToolCallFunction)
+
+    def to_dict(self) -> dict:
+        """将 ToolCall 对象转换为字典"""
+        return {
+            "index": self.index,
+            "id": self.id,
+            "type": self.type,
+            "function": self.function.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> ToolCall:
+        """从字典创建 ToolCall 对象"""
+        func_data = data.get("function", {})
+        return cls(
+            index=data.get("index", 0),
+            id=data.get("id", ""),
+            type=data.get("type", "function"),
+            function=ToolCallFunction.from_dict(func_data),
+        )
+
+
 # 大模型消息实体
 @dataclass
 class Message:
     role: str = ""  # 角色类型，参考 MessageRole 枚举
     content: list = field(default_factory=list)  # 内容统一为列表格式，纯文本为 [{"text": "内容"}]
     reasoning_content: str = ""
-    tool_calls: list | None = None
-    tool_call_id: str | None = None
+    tool_calls: list[ToolCall] | None = None
+    tool_call_id: str | None = None  # 工具调用id，仅作为大模型调用入参时使用
 
     def to_dict(self) -> dict:
         """将 Message 对象转换为字典"""
@@ -22,7 +75,7 @@ class Message:
             "role": self.role,
             "content": self.content,
             "reasoning_content": self.reasoning_content,
-            "tool_calls": self.tool_calls,
+            "tool_calls": [tc.to_dict() for tc in self.tool_calls] if self.tool_calls else None,
             "tool_call_id": self.tool_call_id,
         }
 
@@ -42,11 +95,15 @@ class Message:
     @classmethod
     def from_dict(cls, data: dict) -> Message:
         """从字典创建 Message 对象"""
+        tool_calls_data = data.get("tool_calls")
+        tool_calls = None
+        if tool_calls_data:
+            tool_calls = [ToolCall.from_dict(tc) for tc in tool_calls_data]
         return cls(
             role=data.get("role", ""),
             content=data.get("content", []),
             reasoning_content=data.get("reasoning_content", ""),
-            tool_calls=data.get("tool_calls"),
+            tool_calls=tool_calls,
             tool_call_id=data.get("tool_call_id"),
         )
 
