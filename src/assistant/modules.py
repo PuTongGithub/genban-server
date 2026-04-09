@@ -5,6 +5,7 @@
 
 from src.modules.conversation.conversation_module import ConversationModule
 from src.modules.file_system.file_system_module import FileSystemModule
+from src.modules.im.im_module import IMModule
 from src.modules.memory.memory_module import MemoryModule
 from src.modules.schedule.schedule_module import ScheduleModule
 from src.modules.settings.settings_module import SettingsModule
@@ -14,15 +15,23 @@ from src.modules.system_remainder.system_remainder_module import SystemRemainder
 from src.modules.user_message.user_message_module import UserMessageModule
 from src.modules.web.web_module import WebModule
 
-ASSISTANT_MODULES = [
-    UserMessageModule(),
-    SystemRemainderModule(),
-    FileSystemModule(),
-    ShellModule(),
-    SettingsModule(),
-    SkillsModule(),
-    WebModule(),
-    ConversationModule(),
-    ScheduleModule(),
-    MemoryModule(),
-]
+ASSISTANT_MODULES = []
+
+
+def init() -> None:
+    global ASSISTANT_MODULES
+    ASSISTANT_MODULES.extend(
+        [
+            UserMessageModule(),
+            SystemRemainderModule(),
+            FileSystemModule(),
+            ShellModule(),
+            SettingsModule(),
+            SkillsModule(),
+            WebModule(),
+            ConversationModule(),
+            ScheduleModule(),
+            MemoryModule(),
+            IMModule(),
+        ]
+    )

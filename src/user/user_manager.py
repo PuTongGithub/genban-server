@@ -2,6 +2,7 @@
 
 import secrets
 
+from src.agent.chat_factory import chat_factory
 from src.common.utils import time_util
 from src.common.utils.rsa_util import RsaUtil
 from src.config.config import app_config, file_config
@@ -80,6 +81,8 @@ class _UserManager:
         return user_token_db.refresh_token(token, new_expires_at)
 
     def _do_register(self, user_id: str, password: str) -> UserToken:
+        from src.assistant.assistant_manager import assistant_manager
+
         # 注册新用户
         validate_username(user_id)
         validate_password(password)
@@ -98,6 +101,14 @@ class _UserManager:
             user_id=user_id,
             model_key=app_config.get_default_model(),
             enable_thinking=False,
+        )
+
+        # 初始化助手并发送打招呼消息
+        assistant_manager.submit_chat(
+            user_id=user_id,
+            chat=chat_factory.create_system_remainder_chat(
+                "这是你与用户的首次聊天，请向用户做个自我介绍吧。"
+            ),
         )
 
         return self._create_token(user_id)

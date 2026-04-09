@@ -1,6 +1,6 @@
 """Chat 工厂类，用于创建各种 Chat 和 Message 对象"""
 
-from src.agent.entities import Chat, ChatType, Message, MessageRole
+from src.agent.entities import Chat, ChatExtra, ChatType, Message, MessageRole
 from src.common.utils import time_util
 from src.model.entities import CallResponse
 
@@ -50,11 +50,11 @@ class _ChatFactory:
             return [{"text": content}]
         return content
 
-    def create_user_content(self, user_id: str, user_input: str) -> list:
+    def create_user_content(self, user_id: str, user_input: str, channel_type: str) -> list:
         """创建用户消息内容"""
         time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
         text_content = self.create_str_with_tag(
-            user_input, f"{ChatType.USER.type}:{user_id}:{time_str}"
+            user_input, f"{ChatType.USER.type}:{user_id}:{channel_type}:{time_str}"
         )
         return self._normalize_content(text_content)
 
@@ -75,11 +75,11 @@ class _ChatFactory:
             content=self.create_content_with_tag(content, chat_type),
         )
 
-    def create_user_message(self, user_id: str, user_input: str) -> Message:
+    def create_user_message(self, user_id: str, user_input: str, channel_type: str) -> Message:
         """创建用户消息"""
         return Message(
             role=MessageRole.USER.value,
-            content=self.create_user_content(user_id, user_input),
+            content=self.create_user_content(user_id, user_input, channel_type),
         )
 
     def create_tool_message(self, tool_call_id: str, tool_result: str) -> Message:
@@ -102,12 +102,15 @@ class _ChatFactory:
             ),
         )
 
-    def create_user_chat(self, user_id: str, user_input: str) -> Chat:
+    def create_user_chat(self, user_id: str, user_input: str, channel_type: str = "web") -> Chat:
         """创建用户对话"""
         return Chat(
             type=ChatType.USER.type,
             id=self._create_chat_id(),
-            message=self.create_user_message(user_id=user_id, user_input=user_input),
+            message=self.create_user_message(
+                user_id=user_id, user_input=user_input, channel_type=channel_type
+            ),
+            extra=ChatExtra(channel_type=channel_type),
         )
 
     def create_tool_chat(self, tool_call_id: str, tool_result: str) -> Chat:

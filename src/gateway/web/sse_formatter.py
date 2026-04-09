@@ -1,32 +1,13 @@
 """SSE 格式化工具类"""
 
 import json
-import re
 from typing import Any
 
-from src.agent.entities import Chat, ChatType, chat_type_map
+from src.agent.entities import Chat
 
 
 class SSEFormatter:
     """将内部对象格式化为 SSE 格式的工具类（单例模式）"""
-
-    def _clean_content(self, type: str, content: list) -> list:
-        """根据类型清理内容，移除文本项开头的 [] 包裹内容"""
-        chat_type: ChatType = chat_type_map[type]
-        if not chat_type.message_with_tag:
-            return content
-
-        # 处理列表中的文本项
-        cleaned_content = []
-        for item in content:
-            if isinstance(item, dict) and "text" in item:
-                text = item["text"]
-                # 移除开头的 [] 包裹内容
-                cleaned_text = re.sub(r"^\[[^\]]*\]", "", text)
-                cleaned_content.append({"text": cleaned_text})
-            else:
-                cleaned_content.append(item)
-        return cleaned_content
 
     def format_chat_to_sse(self, chat: Chat) -> str:
         """将 Chat 格式化为 SSE 格式
@@ -45,9 +26,10 @@ class SSEFormatter:
             "id": chat.id,
             "type": chat.type,
             "time": chat.time,
-            "content": self._clean_content(chat.type, chat.message.content),
+            "content": chat.get_cleaned_message_content(),
             "reasoning_content": chat.message.reasoning_content,
             "tool_calls": tool_calls,
+            "channel_type": chat.extra.channel_type if chat.extra else "",
         }
 
         # SSE 格式: event: message\ndata: {...}\n\n

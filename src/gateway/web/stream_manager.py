@@ -17,6 +17,15 @@ LISTENER_NAME = "stream_listener"
 class StreamManager:
     """管理用户 SSE 连接和消息推送"""
 
+    stream_manager = None
+
+    @classmethod
+    def get_instance(cls) -> "StreamManager":
+        """获取 StreamManager 实例"""
+        if cls.stream_manager is None:
+            cls.stream_manager = StreamManager()
+        return cls.stream_manager
+
     def __init__(self):
         """初始化流管理器"""
         self._stop_flag = False
@@ -78,6 +87,3 @@ class StreamManager:
         except asyncio.CancelledError:
             # 客户端断开连接
             logger.info(f"用户 {user_id} 已断开 SSE 连接")
-
-
-stream_manager = StreamManager()

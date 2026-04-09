@@ -13,12 +13,10 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.common.utils.path_util import get_memory_data_dir, get_user_dir
+from src.modules.conversation.components.conversation_repository import conversation_repository
+from src.user.db.user_config_db import user_config_db
 from src.user.db.user_db import user_db
 from src.user.db.user_token_db import user_token_db
-from src.user.db.user_config_db import user_config_db
-from src.modules.conversation.components.conversation_memory_repository import (
-    conversation_memory_repository,
-)
 
 
 def delete_user():
@@ -53,7 +51,7 @@ def delete_user():
         print(f"⚠ 用户 {user_id} 的配置删除失败或不存在")
 
     # 删除用户记忆
-    memory_deleted = conversation_memory_repository.delete_memory(user_id)
+    memory_deleted = conversation_repository.delete_memory(user_id)
     if not memory_deleted:
         print(f"⚠ 用户 {user_id} 的记忆删除失败或不存在")
 

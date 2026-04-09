@@ -4,7 +4,7 @@ from typing import List
 
 from src.common.logger import get_logger
 from src.modules.schedule.db.schedule_repository import schedule_repository
-from src.modules.schedule.scheduler.scheduler import scheduler
+from src.modules.schedule.scheduler.scheduler import Scheduler
 from src.storage.sqlite.models import Schedule
 
 logger = get_logger(__name__)
@@ -44,7 +44,7 @@ class ScheduleManager:
         created = schedule_repository.create(schedule)
 
         # 通知调度器添加任务
-        scheduler.add_schedule(user_id, created)
+        Scheduler.get_instance().add_schedule(user_id, created)
 
         logger.info(f"创建日程成功: user_id={user_id}, schedule_id={created.id}")
         return created
@@ -88,7 +88,7 @@ class ScheduleManager:
         updated = schedule_repository.update(schedule)
 
         # 通知调度器更新任务
-        scheduler.update_schedule(user_id, updated)
+        Scheduler.get_instance().update_schedule(user_id, updated)
 
         logger.info(f"更新日程成功: user_id={user_id}, schedule_id={schedule_id}")
         return updated
@@ -107,7 +107,7 @@ class ScheduleManager:
 
         if success:
             # 通知调度器移除任务
-            scheduler.remove_schedule(user_id, schedule_id)
+            Scheduler.get_instance().remove_schedule(user_id, schedule_id)
             logger.info(f"删除日程成功: user_id={user_id}, schedule_id={schedule_id}")
 
         return success

@@ -85,6 +85,26 @@ class ConversationMemory(Base):
 
 
 # =============================================================================
+# IM 凭证相关模型
+# =============================================================================
+
+
+class IMCredential(Base):
+    """IM 凭证模型 - 存储 IM 渠道凭证"""
+
+    __tablename__ = "im_credentials"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    channel_type: Mapped[str] = mapped_column(String, nullable=False)
+    credential_data: Mapped[str] = mapped_column(Text, nullable=False)
+    identity_data: Mapped[str | None] = mapped_column(Text, nullable=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[int] = mapped_column(Integer, nullable=False)
+    updated_at: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+# =============================================================================
 # 日程相关模型
 # =============================================================================
 

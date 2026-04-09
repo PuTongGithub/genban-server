@@ -22,6 +22,10 @@ router = APIRouter(prefix="/api/file_system", tags=["file_system"])
 
 def get_path(path: str, user_id: str):
     """获取路径对象，接口可操作的文件均为用户目录下的文件"""
+    from pathlib import Path
+
+    if Path(path).is_absolute():
+        raise PathNotAllowedException("路径不能为绝对路径")
     return validate_path(path, user_id)
 
 

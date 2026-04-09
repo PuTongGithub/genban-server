@@ -3,7 +3,7 @@
 import asyncio
 import threading
 import weakref
-from typing import Optional, Callable, Any, List
+from typing import Any, Callable, List, Optional
 
 from src.common.logger import get_logger
 
@@ -31,15 +31,11 @@ class AsyncExecutor:
             except Exception:
                 logger.exception(f"停止 AsyncExecutor 失败: {executor._name}")
 
-    def __init__(
-        self, name: Optional[str] = None, on_stop: Optional[Callable[[], None]] = None
-    ):
+    def __init__(self, name: Optional[str] = None, on_stop: Optional[Callable[[], None]] = None):
         """创建并启动执行器"""
         self._name = name or "AsyncExecutor"
         self._loop = asyncio.new_event_loop()
-        self._thread = threading.Thread(
-            target=self._run_loop, name=self._name, daemon=True
-        )
+        self._thread = threading.Thread(target=self._run_loop, name=self._name, daemon=True)
         self._stop_handlers: List[Callable[[], None]] = []
 
         if on_stop:
@@ -72,11 +68,29 @@ class AsyncExecutor:
             return
         logger.debug(f"正在停止 AsyncExecutor: {self._name}")
         self._running = False
+
+        # 先执行停止处理器（让任务有机会正常退出）
         for handler in self._stop_handlers:
             try:
                 handler()
             except Exception:
                 logger.exception(f"执行停止处理器失败: {self._name}")
+
+        # 取消所有待处理的任务
+        def cancel_all_tasks():
+            """取消事件循环中的所有任务"""
+            tasks = [t for t in asyncio.all_tasks(self._loop) if not t.done()]
+            if tasks:
+                logger.debug(f"取消 {len(tasks)} 个待处理任务")
+                for task in tasks:
+                    task.cancel()
+
+        # 在事件循环中执行取消操作
+        self._loop.call_soon_threadsafe(cancel_all_tasks)
+
+        # 给任务一点时间响应取消
+        import time
+        time.sleep(0.1)
 
         self._loop.call_soon_threadsafe(self._loop.stop)
         self._thread.join(timeout=timeout)

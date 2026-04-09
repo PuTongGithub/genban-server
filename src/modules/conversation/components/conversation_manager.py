@@ -12,9 +12,7 @@ from src.common.logger import get_logger
 from src.config.config import app_config
 from src.modules.conversation.chat.chat_repository import chat_repository
 from src.modules.conversation.components.context_compressor import context_compressor
-from src.modules.conversation.components.conversation_memory_repository import (
-    conversation_memory_repository,
-)
+from src.modules.conversation.components.conversation_repository import conversation_repository
 
 logger = get_logger(__name__)
 
@@ -48,7 +46,7 @@ class ConversationManager:
         result = context_compressor.compress(context.user_id, chats)
 
         # 保存到数据库
-        conversation_memory_repository.save_memory(
+        conversation_repository.save_memory(
             user_id=context.user_id,
             end_chat_id=result.end_chat_id,
             end_chat_time=result.end_chat_time,
@@ -66,7 +64,7 @@ class ConversationManager:
         Returns:
             Chat 列表，按时间升序排列
         """
-        memory = conversation_memory_repository.get_memory(user_id)
+        memory = conversation_repository.get_memory(user_id)
 
         if memory:
             recent_chats = chat_repository.get_chats_after(

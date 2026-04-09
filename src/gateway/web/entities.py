@@ -44,6 +44,7 @@ class HistoryChatItem(BaseModel):
     content: list[dict[str, Any]]
     reasoning_content: str = ""
     tool_calls: list[dict[str, Any]] | None = None
+    channel_type: str = ""  # 消息渠道类型
 
 
 class HistoryResponse(BaseModel):

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from src.agent.chat_factory import chat_factory
+from src.agent.entities import chat_type_map
 from src.assistant.assistant_manager import assistant_manager
 from src.common.logger import get_logger
 from src.gateway.web.entities import (
@@ -14,8 +15,7 @@ from src.gateway.web.entities import (
     SubmitRequest,
     SubmitResponse,
 )
-from src.gateway.web.sse_formatter import sse_formatter
-from src.gateway.web.stream_manager import stream_manager
+from src.gateway.web.stream_manager import StreamManager
 from src.modules.conversation.chat.chat_repository import chat_repository
 from src.user.auth import get_current_user_id, get_current_user_id_and_token
 from src.user.user_manager import user_manager
@@ -106,7 +106,7 @@ async def stream(
     """
     logger.info(f"建立 SSE 连接，user_id: {current_user_id}")
     return StreamingResponse(
-        stream_manager.subscribe(current_user_id),
+        StreamManager.get_instance().subscribe(current_user_id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -150,7 +150,10 @@ async def get_history(
         # 转换为响应格式（使用 SSE formatter 的清理逻辑）
         history_chats: list[HistoryChatItem] = []
         for chat in chats:
-            cleaned_content = sse_formatter._clean_content(chat.type, chat.message.content)
+            chat_type = chat_type_map[chat.type]
+            if not chat_type.user_visible:
+                continue
+            cleaned_content = chat.get_cleaned_message_content()
             tool_calls = None
             if chat.message.tool_calls:
                 tool_calls = [tc.to_dict() for tc in chat.message.tool_calls]
@@ -162,6 +165,7 @@ async def get_history(
                     content=cleaned_content,
                     reasoning_content=chat.message.reasoning_content or "",
                     tool_calls=tool_calls,
+                    channel_type=chat.extra.channel_type if chat.extra else "",
                 )
             )
 

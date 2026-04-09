@@ -114,7 +114,7 @@ class ContextCompressor:
         """
         try:
             # 提取文本内容
-            text = response.message.get_text_content()
+            text = response.message.get_text_content().strip()
 
             # 解析 JSON
             result = json.loads(text)

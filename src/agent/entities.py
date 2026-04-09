@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, unique
+from modulefinder import test
 
 from src.agent.hooks.entities import ModelConfig
 from src.common.utils import time_util
@@ -90,7 +92,7 @@ class Message:
     def get_text_content(self) -> str:
         """提取消息中的文本内容"""
         text_parts = self.get_text_contents()
-        return "".join(text_parts).strip()
+        return "".join(text_parts)
 
     @classmethod
     def from_dict(cls, data: dict) -> Message:
@@ -116,6 +118,27 @@ class MessageRole(StrEnum):
     TOOL = "tool"
 
 
+@dataclass
+class ChatExtra:
+    channel_type: str | None = None  # 渠道类型，参考 BaseIMChannel.channel_type
+
+    def to_dict(self) -> dict:
+        """将 ChatExtra 对象转换为字典"""
+        result = {}
+        if self.channel_type:
+            result["channel_type"] = self.channel_type
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> ChatExtra | None:
+        """从字典创建 ChatExtraData 对象"""
+        if data is None:
+            return None
+        return cls(
+            channel_type=data.get("channel_type"),
+        )
+
+
 # agent模块针对对话内容的封装
 @dataclass
 class Chat:
@@ -123,25 +146,65 @@ class Chat:
     id: str = ""  # 对话id，唯一键，升序排列
     time: int = field(default_factory=time_util.get_timestamp)  # 对话时间，秒级时间戳
     message: Message = field(default_factory=Message)  # 对话内容
+    extra: ChatExtra | None = None  # 额外数据，用于存储额外信息
 
     def to_dict(self) -> dict:
         """将 Chat 对象转换为字典"""
-        return {
+        result = {
             "id": self.id,
             "type": self.type,
             "time": self.time,
             "message": self.message.to_dict(),
         }
+        if self.extra:
+            result["extra"] = self.extra.to_dict()
+        return result
+
+    def get_cleaned_message_content_text(self) -> str:
+        """获取清理后的消息文本，移除文本项开头的 [] 包裹内容
+
+        Returns:
+            清理后的文本内容
+        """
+        cleaned_content = self.get_cleaned_message_content()
+        text = ""
+        for item in cleaned_content:
+            if isinstance(item, dict) and "text" in item:
+                text += item["text"]
+        return text
+
+    def get_cleaned_message_content(self) -> list:
+        """获取清理后的消息内容，移除文本项开头的 [] 包裹内容
+
+        Returns:
+            清理后的内容列表
+        """
+        chat_type = chat_type_map[self.type]
+        if not chat_type.message_with_tag:
+            return self.message.content
+
+        cleaned_content = []
+        for item in self.message.content:
+            if isinstance(item, dict) and "text" in item:
+                text = item["text"]
+                if text and text.startswith("["):
+                    cleaned_text = re.sub(r"^\[[^\]]*\]", "", text)
+                    cleaned_content.append({"text": cleaned_text})
+            else:
+                cleaned_content.append(item)
+        return cleaned_content
 
     @classmethod
     def from_dict(cls, data: dict) -> Chat:
         """从字典创建 Chat 对象"""
         message_data = data.get("message", {})
+        extra_data = data.get("extra")
         return cls(
-            id=data.get("id", ""),
             type=data.get("type", ""),
+            id=data.get("id", ""),
             time=data.get("time", 0),
             message=Message.from_dict(message_data),
+            extra=ChatExtra.from_dict(extra_data),
         )
 
 

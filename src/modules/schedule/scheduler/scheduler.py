@@ -19,6 +19,15 @@ logger = get_logger(__name__)
 class Scheduler:
     """日程调度器，统一管理所有用户的日程提醒任务"""
 
+    scheduler = None
+
+    @classmethod
+    def get_instance(cls) -> "Scheduler":
+        """获取 Scheduler 实例"""
+        if cls.scheduler is None:
+            cls.scheduler = Scheduler()
+        return cls.scheduler
+
     def __init__(self) -> None:
         self._scheduler = BackgroundScheduler()
         self._scheduler.start()
@@ -169,7 +178,3 @@ class Scheduler:
             logger.debug("日程调度器未运行，无需关闭")
         except Exception:
             logger.exception("关闭日程调度器异常")
-
-
-# 单例实例
-scheduler = Scheduler()

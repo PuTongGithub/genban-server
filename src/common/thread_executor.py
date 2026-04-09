@@ -2,7 +2,7 @@
 
 import threading
 import weakref
-from typing import Optional, Callable, List
+from typing import Callable, List, Optional
 
 from src.common.logger import get_logger
 
@@ -22,9 +22,7 @@ class ThreadExecutor:
     @classmethod
     def stop_all(cls, timeout: Optional[float] = None) -> None:
         """停止所有执行器（全局优雅停机）"""
-        logger.info(
-            f"正在停止所有 ThreadExecutor，数量: {len(cls.get_all_executors())}"
-        )
+        logger.info(f"正在停止所有 ThreadExecutor，数量: {len(cls.get_all_executors())}")
         for executor in cls.get_all_executors():
             try:
                 executor.stop(timeout)

@@ -1,13 +1,13 @@
 from typing import Callable
 
 from src.agent.agent import Agent
-from src.agent.entities import Chat, ContentType, MessagePipeContent, chat_type_map
+from src.agent.entities import Chat, MessagePipeContent
 from src.assistant.modules import ASSISTANT_MODULES
 from src.common.logger import get_logger
 from src.common.thread_executor import ThreadExecutor
 from src.common.utils import time_util
 from src.config.config import app_config
-from src.modules.schedule.scheduler.scheduler import scheduler
+from src.modules.schedule.scheduler.scheduler import Scheduler
 
 logger = get_logger(__name__)
 
@@ -27,7 +27,7 @@ class Assistant:
         self._executor.start()
 
         # 向调度器注册用户上线
-        scheduler.user_online(user_id)
+        Scheduler.get_instance().user_online(user_id)
 
     def send_chat(self, chat: Chat) -> None:
         """发送消息给 Agent"""
@@ -74,11 +74,6 @@ class Assistant:
                 pipe_content = self.agent.recv_content()
                 if pipe_content is None:
                     continue
-
-                if pipe_content.type == ContentType.CHAT:
-                    chat_type = chat_type_map[pipe_content.chat.type]
-                    if not chat_type.user_visible:
-                        continue
 
                 for listener_name, listener in self.listeners.items():
                     try:
