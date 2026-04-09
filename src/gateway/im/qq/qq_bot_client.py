@@ -6,6 +6,7 @@ from typing import Callable
 import botpy
 from botpy.manage import C2CManageEvent
 from botpy.message import C2CMessage
+from botpy.types.message import MarkdownPayload
 
 from src.common.logger import get_logger
 from src.gateway.im.qq.entities import QQMessageSendError
@@ -61,7 +62,9 @@ class QQBotClient(botpy.Client):
         Args:
             message: QQ 消息对象
         """
-        logger.info(f"收到 QQ 消息: openid={message.author.user_openid}, content={message.content}")
+        logger.info(
+            f"收到 QQ 消息: openid={message.author.user_openid}, content={message.content}, attachments={str(message.attachments)}"
+        )
 
         self._get_user_openid(message.author.user_openid)
 
@@ -79,7 +82,8 @@ class QQBotClient(botpy.Client):
         try:
             user_openid = self._get_user_openid()
             for content in contents:
-                await self.api.post_c2c_message(user_openid, content=content)
+                markdown = MarkdownPayload(content=content)
+                await self.api.post_c2c_message(user_openid, msg_type=2, markdown=markdown)
         except Exception as e:
             logger.exception(f"发送 QQ 消息失败: user_openid={user_openid}, error={e}")
             raise

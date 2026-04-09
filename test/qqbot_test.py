@@ -9,6 +9,7 @@ from pathlib import Path
 
 import botpy
 from botpy.message import C2CMessage
+from botpy.types.message import MarkdownPayload
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -51,8 +52,9 @@ class QQBotClient(botpy.Client):
             print("尚未记录 user_openid，无法发送消息")
             return
 
+        markdown = MarkdownPayload(content=content)
         try:
-            await self.api.post_c2c_message(openid=self._user_openid, content=content)
+            await self.api.post_c2c_message(openid=self._user_openid, msg_type=2, markdown=markdown)
             print(f"消息发送成功: {content}")
         except Exception as e:
             print(f"消息发送失败: {e}")
