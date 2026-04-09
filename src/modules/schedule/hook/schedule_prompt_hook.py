@@ -50,8 +50,6 @@ class SchedulePromptHook(PromptHook):
         if schedule_with_next_time.next_trigger_time:
             next_time_str = timestamp_to_date_time_str(schedule_with_next_time.next_trigger_time)
             content += f" | 下次触发: {next_time_str}"
-        else:
-            content += " | 下次触发: 无"
         return content
 
     def _format_schedule_time(self, schedule_with_next_time: ScheduleWithNextTime, ts: int) -> str:
@@ -85,7 +83,7 @@ class SchedulePromptHook(PromptHook):
         schedule_list_lines = []
         for schedule in schedules:
             schedule_with_time = schedule_map.get(schedule.id)
-            if schedule_with_time:
+            if schedule_with_time and schedule_with_time.next_trigger_time is not None:
                 schedule_list_lines.append(self._format_schedule_info(schedule_with_time))
         schedule_list = "\n".join(schedule_list_lines) if schedule_list_lines else "无"
 

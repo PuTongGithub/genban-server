@@ -16,38 +16,31 @@ Genban 是一个以「应用可视化、模块化」为核心架构的 AI 个人
 
 ### 安装环境
 
-- python
+- python >= 3.12
 - nodejs
 - npm
+- uv
 
-### 虚拟环境设置
+### 安装 UV
 
 ```bash
-python -m venv .venv
-```
-激活虚拟环境：
-```bash
-source .venv/bin/activate
-```
-或在 Windows 上使用：
-```bash
-.venv\Scripts\activate
+pip install uv
 ```
 
-### 安装依赖
+### 创建虚拟环境并安装依赖
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### 执行初始化脚本
 
 ```bash
-python scripts/init_project.py
+uv run scripts/init_project.py
 ```
 
-## 打包指令
+### 运行服务
 
 ```bash
-pip freeze > requirements.txt
+uv run main.py
 ```

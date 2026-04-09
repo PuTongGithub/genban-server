@@ -1,5 +1,6 @@
 """QQ 机器人客户端封装"""
 
+import logging
 from typing import Callable
 
 import botpy
@@ -23,7 +24,7 @@ class QQBotClient(botpy.Client):
         identity: dict,
     ) -> None:
         """初始化 QQ 机器人客户端"""
-        super().__init__(intents=intents, is_sandbox=True)
+        super().__init__(intents=intents, is_sandbox=True, bot_log=None, log_level=logging.INFO)
         self._message_handler: Callable[[C2CMessage], None] = message_handler
         self._identity_update_handler: Callable[[dict], None] = identity_update_handler
         self._identity: dict = identity

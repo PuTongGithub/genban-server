@@ -55,7 +55,7 @@
     "zhipu_search_engine": "search-std"
   },
   "auth": {
-    "allowed_user_ids": ["test", "pt"],
+    "allowed_user_ids": ["test", "pt", "test1"],
     "admin_user_ids": ["pt"]
   },
   "assistant": {
