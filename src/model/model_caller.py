@@ -45,7 +45,7 @@ class ModelCaller:
 
     def _validate_response(self, response: CallResponse) -> None:
         """验证模型响应是否有效"""
-        if response.status_code != 200:
+        if response.status_code != 200 or response.finish_reason == "network_error":
             raise ModelCallException(str(response))
         if response.finish_reason == "length":
             raise ModelCallLengthLimitedException()
