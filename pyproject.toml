@@ -81,6 +81,7 @@ dependencies = [
     "python-multipart>=0.0.22",
     "PyYAML>=6.0.3",
     "qq-botpy>=1.2.1",
+    "reportlab>=4.4.10",
     "requests>=2.32.5",
     "scrapling>=0.4.3",
     "six>=1.17.0",
@@ -114,6 +115,11 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[[tool.uv.index]]
+name = "tencent"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+default = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
@@ -140,8 +146,3 @@ indent-style = "space"
 
 [tool.uv]
 python-preference = "only-system"
-
-[[tool.uv.index]]
-name = "tencent"
-url = "https://mirrors.cloud.tencent.com/pypi/simple/"
-default = true

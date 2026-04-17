@@ -8,19 +8,24 @@
     "qwen-flash": {
       "id": "qwen3.5-flash",
       "max_tokens": 1000000,
-      "api": "dashscope_multi",
-      "light_model": true
+      "api": "dashscope_multi"
     },
     "qwen-plus": {
       "id": "qwen3.5-plus-2026-02-15",
       "max_tokens": 1000000,
       "api": "dashscope_multi"
     },
+    "deepseek-v3.2": {
+      "id": "deepseek-v3.2-exp",
+      "max_tokens": 131072,
+      "api": "dashscope",
+      "default": true
+    },
     "deepseek-v3.1": {
       "id": "deepseek-v3.1",
       "max_tokens": 131072,
       "api": "dashscope",
-      "default": true
+      "light_model": true
     },
     "deepseek-r1": {
       "id": "deepseek-r1",
@@ -55,7 +60,7 @@
     "zhipu_search_engine": "search-std"
   },
   "auth": {
-    "allowed_user_ids": ["test", "pt", "test1"],
+    "invite_codes": ["test"],
     "admin_user_ids": ["pt"]
   },
   "assistant": {

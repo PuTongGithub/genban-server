@@ -17,7 +17,9 @@ async def login(request: LoginRequest) -> LoginResponse:
     # 用户登录/自动注册接口，password字段为RSA加密后的密文
     # 若用户不存在则自动注册，存在则验证登录
     try:
-        user_token = user_manager.login_or_register(request.user_id, request.password)
+        user_token = user_manager.login_or_register(
+            request.user_id, request.password, request.invite_code
+        )
         logger.info(f"用户登录成功，user_id: {request.user_id}")
         return LoginResponse(token=user_token.token, expires_at=user_token.expires_at)
     except Exception as e:

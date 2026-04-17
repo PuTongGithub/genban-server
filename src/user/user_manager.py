@@ -35,28 +35,28 @@ class _UserManager:
         private_key = file_config.get_private_key()
         self._rsa = RsaUtil(private_key_content=private_key) if private_key else None
 
-    def _is_user_allowed(self, user_id: str) -> bool:
-        # 检查用户是否在白名单中
-        allowed_user_ids = app_config.get("auth").get("allowed_user_ids", [])
-        # 如果白名单为空，允许所有用户
-        if not allowed_user_ids:
+    def _is_invite_code_valid(self, invite_code: str) -> bool:
+        # 检查邀请码是否在白名单中
+        invite_codes = app_config.get("auth").get("invite_codes", [])
+        # 如果邀请码列表为空，允许所有注册
+        if not invite_codes:
             return True
-        return user_id in allowed_user_ids
+        return invite_code in invite_codes
 
-    def login_or_register(self, user_id: str, encrypted_password: str) -> UserToken:
+    def login_or_register(
+        self, user_id: str, encrypted_password: str, invite_code: str = ""
+    ) -> UserToken:
         # 登录或自动注册，成功返回用户token信息，encrypted_password为RSA加密后的密文
-        # 检查用户是否在白名单中
-        if not self._is_user_allowed(user_id):
-            raise UserNotAllowedException(user_id)
-
         password = self._rsa.decrypt(encrypted_password)
         user = user_db.get_user_by_id(user_id)
 
         if user is None:
-            # 用户不存在，自动注册
+            # 用户不存在，自动注册，需要校验邀请码
+            if not self._is_invite_code_valid(invite_code):
+                raise UserNotAllowedException()
             return self._do_register(user_id, password)
         else:
-            # 用户存在，执行登录验证
+            # 用户存在，执行登录验证，不校验邀请码
             return self._do_login(user, password)
 
     def validate_token(self, token: str) -> str:

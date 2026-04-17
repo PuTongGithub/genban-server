@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 项目初始化脚本
-用法: python scripts/init_project.py
+用法: uv run scripts/init_project.py
 功能:
-  1. 生成 RSA 密钥对
-  2. 检查并安装系统依赖（Pandoc、LibreOffice）
-  3. 安装 Python 依赖
-  4. 安装 Node.js 依赖
+  1. 检查环境变量是否配置
+  2. 生成 RSA 密钥对
+  3. 检查并安装系统依赖（Pandoc、LibreOffice、Node.js）
+  4. 安装 Playwright 浏览器
 """
 
 import subprocess
@@ -97,54 +97,6 @@ def check_system_dependencies() -> None:
             print(f"  安装命令: {cmd}")
         print("\n提示：安装完成后请重启终端")
 
-
-def install_python_dependencies() -> None:
-    """安装 Python 系统依赖（供 subprocess 调用）"""
-    packages = [
-        "defusedxml",
-        "pypdf",
-        "pdfplumber",
-        "pypdfium2",
-        "reportlab",
-    ]
-
-    for package in packages:
-        try:
-            subprocess.run(
-                [sys.executable, "-m", "pip", "install", package],
-                check=True,
-                capture_output=True,
-            )
-        except subprocess.CalledProcessError:
-            print(f"✗ {package} 安装失败，请手动安装: pip install {package}")
-
-
-def install_node_dependencies() -> None:
-    """安装 Node.js 依赖"""
-    # 检查 npm 是否可用
-    if not check_command(["npm", "--version"]):
-        return
-
-    packages = ["docx", "pptxgenjs"]
-    failed_packages = []
-
-    for package in packages:
-        try:
-            use_shell = sys.platform == "win32"
-            subprocess.run(
-                ["npm", "install", "-g", package],
-                check=True,
-                capture_output=True,
-                shell=use_shell,
-            )
-        except subprocess.CalledProcessError:
-            failed_packages.append(package)
-
-    if failed_packages:
-        print(f"\n✗ Node.js 包安装失败: {', '.join(failed_packages)}")
-        print(f"  请手动安装: npm install -g {' '.join(failed_packages)}")
-
-
 def install_playwright_browsers() -> None:
     """安装 Playwright 浏览器"""
     try:
@@ -158,7 +110,7 @@ def install_playwright_browsers() -> None:
         # 安装浏览器
         print("正在安装 Playwright 浏览器...")
         result = subprocess.run(
-            [sys.executable, "-m", "playwright", "install", "chromium"],
+            ["uv", "run", "playwright", "install", "chromium"],
             capture_output=True,
             text=True,
         )
@@ -168,11 +120,11 @@ def install_playwright_browsers() -> None:
         else:
             print("✗ Playwright 浏览器安装失败")
             print(f"  错误信息: {result.stderr}")
-            print("  请手动运行: playwright install chromium")
+            print("  请手动运行: uv run playwright install chromium")
 
     except subprocess.CalledProcessError:
         print("✗ playwright 未安装，跳过浏览器安装")
-        print("  提示: 安装 playwright 后请手动运行: playwright install chromium")
+        print("  提示: 安装 playwright 后请手动运行: uv run playwright install chromium")
 
 
 def check_env_file() -> None:
@@ -191,9 +143,7 @@ def main() -> None:
 
     check_env_file()
     init_rsa_keys()
-    install_python_dependencies()
     check_system_dependencies()
-    install_node_dependencies()
     install_playwright_browsers()
 
     print("\n✓ 项目初始化完成")

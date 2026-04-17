@@ -6,21 +6,20 @@
       "api": "dashscope_multi"
     },
     "qwen-plus": {
-      "id": "qwen3.5-397b-a17b",
+      "id": "qwen3.6-plus-2026-04-02",
       "max_tokens": 1000000,
-      "api": "dashscope_multi"
+      "api": "dashscope_multi",
+      "default": true
     },
     "kimi-k2.5": {
       "id": "kimi-k2.5",
       "max_tokens": 262144,
-      "api": "dashscope_multi",
-      "default": true
+      "api": "dashscope_multi"
     },
     "MiniMax-M2.5": {
       "id": "MiniMax-M2.5",
       "max_tokens": 196608,
-      "api": "dashscope",
-      "light_model": true
+      "api": "dashscope"
     },
     "deepseek-v3.2": {
       "id": "deepseek-v3.2",
@@ -32,7 +31,8 @@
       "max_tokens": 200000,
       "api": "openai",
       "base_url": "https://open.bigmodel.cn/api/paas/v4/",
-      "api_env_key": "ZHIPU_API_KEY"
+      "api_env_key": "ZHIPU_API_KEY",
+      "light_model": true
     },
     "glm-5": {
       "id": "glm-5",
@@ -47,7 +47,7 @@
     "zhipu_search_engine": "search-pro"
   },
   "auth": {
-    "allowed_user_ids": ["test", "pt", "liyuhang"],
+    "invite_codes": ["pt-invite", "invite-2026"],
     "admin_user_ids": ["pt"]
   },
   "assistant": {

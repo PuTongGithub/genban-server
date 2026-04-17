@@ -25,10 +25,10 @@ class WeakPasswordException(Exception):
 
 
 class UserNotAllowedException(Exception):
-    """用户不在白名单异常"""
+    """邀请码无效异常"""
 
-    def __init__(self, user_id: str):
-        super().__init__(f"user:{user_id} not in allowed list")
+    def __init__(self):
+        super().__init__("邀请码无效")
 
 
 class InvalidUsernameException(Exception):
