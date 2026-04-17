@@ -6,6 +6,8 @@ from src.agent.entities import AgentContext
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.entities import ToolParameter
 from src.common.logger import get_logger
+from src.common.utils.time_util import get_timestamp, timestamp_to_date_time_str
+from src.modules.schedule.component.schedule_calculator import schedule_calculator
 from src.modules.schedule.component.schedule_manager import schedule_manager
 
 logger = get_logger(__name__)
@@ -76,8 +78,17 @@ class ScheduleCreateTool(BaseTool):
                 content=content,
                 remind_enabled=remind_enabled,
             )
+
+            # 计算下次触发时间
+            next_trigger_times = schedule_calculator.get_next_trigger_times(
+                created, get_timestamp(), 1
+            )
+            next_trigger_str = "未知"
+            if next_trigger_times:
+                next_trigger_str = timestamp_to_date_time_str(next_trigger_times[0])
+
             logger.info(f"创建日程成功，user_id: {user_id}, schedule_id: {created.id}")
-            return f"日程创建成功！日程ID: {created.id}，标题: {title}"
+            return f"日程创建成功！日程ID: {created.id}，标题: {title}，下次触发时间: {next_trigger_str}"
 
         except Exception as e:
             logger.exception(f"创建日程失败，user_id: {context.user_id}")

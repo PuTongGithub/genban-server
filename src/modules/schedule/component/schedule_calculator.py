@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from apscheduler.triggers.cron import CronTrigger
 
 from src.common.logger import get_logger
+from src.modules.schedule.exceptions import InvalidCronExpressionException
 from src.storage.sqlite.models import Schedule
 
 logger = get_logger(__name__)
@@ -22,7 +23,7 @@ class ScheduleWithNextTime:
 class ScheduleCalculator:
     """日程计算组件，提供日程触发时间计算能力"""
 
-    def _parse_cron_expression(self, cron_expression: str) -> dict[str, str]:
+    def parse_cron_expression(self, cron_expression: str) -> dict[str, str]:
         """解析cron表达式为APScheduler CronTrigger参数
 
         Args:
@@ -32,9 +33,10 @@ class ScheduleCalculator:
             CronTrigger参数字典
         """
         parts = cron_expression.split()
+        len_parts = len(parts)
 
         # 支持7字段格式（秒 分 时 日 月 周 年）或6字段格式（秒 分 时 日 月 周）
-        if len(parts) == 7:
+        if len_parts == 7:
             return {
                 "second": parts[0],
                 "minute": parts[1],
@@ -44,7 +46,7 @@ class ScheduleCalculator:
                 "day_of_week": parts[5],
                 "year": parts[6],
             }
-        elif len(parts) == 6:
+        elif len_parts == 6:
             return {
                 "second": parts[0],
                 "minute": parts[1],
@@ -53,18 +55,16 @@ class ScheduleCalculator:
                 "month": parts[4],
                 "day_of_week": parts[5],
             }
-        else:
-            # 尝试标准5字段格式（分 时 日 月 周），秒默认为0
-            if len(parts) == 5:
-                return {
-                    "second": "0",
-                    "minute": parts[0],
-                    "hour": parts[1],
-                    "day": parts[2],
-                    "month": parts[3],
-                    "day_of_week": parts[4],
-                }
-            raise ValueError(f"不支持的cron表达式格式: {cron_expression}")
+        elif len_parts == 5:
+            return {
+                "second": "0",
+                "minute": parts[0],
+                "hour": parts[1],
+                "day": parts[2],
+                "month": parts[3],
+                "day_of_week": parts[4],
+            }
+        raise InvalidCronExpressionException(f"不支持的cron表达式格式: {cron_expression}")
 
     def get_trigger_times_in_range(
         self,
@@ -93,7 +93,7 @@ class ScheduleCalculator:
 
         for schedule in schedules:
             try:
-                cron_params = self._parse_cron_expression(schedule.cron_expression)
+                cron_params = self.parse_cron_expression(schedule.cron_expression)
                 trigger = CronTrigger(**cron_params)
 
                 # 获取第一个触发时间（用于记录下次触发时间）
@@ -153,7 +153,7 @@ class ScheduleCalculator:
 
         try:
             from_dt = datetime.fromtimestamp(from_timestamp, tz=timezone.utc)
-            cron_params = self._parse_cron_expression(schedule.cron_expression)
+            cron_params = self.parse_cron_expression(schedule.cron_expression)
             trigger = CronTrigger(**cron_params)
 
             # 获取第一次触发时间

@@ -87,24 +87,11 @@ class Scheduler:
         job_id = self._get_job_id(user_id, schedule.id)
 
         try:
-            # 解析 cron 表达式 (秒 分 时 日 月 周 年)
-            cron_parts = schedule.cron_expression.split()
-            if len(cron_parts) < 6:
-                logger.warning(
-                    f"日程 {schedule.id} 的 cron 表达式格式不正确: {schedule.cron_expression}"
-                )
-                return False
+            # 使用 schedule_calculator 解析 cron 表达式
+            cron_params = schedule_calculator.parse_cron_expression(schedule.cron_expression)
 
             # 构建 CronTrigger
-            trigger = CronTrigger(
-                second=cron_parts[0],
-                minute=cron_parts[1],
-                hour=cron_parts[2],
-                day=cron_parts[3],
-                month=cron_parts[4],
-                day_of_week=cron_parts[5],
-                year=cron_parts[6] if len(cron_parts) > 6 else None,
-            )
+            trigger = CronTrigger(**cron_params)
 
             self._scheduler.add_job(
                 func=self._on_schedule_trigger,

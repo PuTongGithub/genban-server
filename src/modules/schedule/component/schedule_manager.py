@@ -3,6 +3,7 @@
 from typing import List
 
 from src.common.logger import get_logger
+from src.modules.schedule.component.schedule_calculator import schedule_calculator
 from src.modules.schedule.db.schedule_repository import schedule_repository
 from src.modules.schedule.scheduler.scheduler import Scheduler
 from src.storage.sqlite.models import Schedule
@@ -32,7 +33,13 @@ class ScheduleManager:
 
         Returns:
             创建的日程对象
+
+        Raises:
+            InvalidCronExpressionException: cron 表达式格式无效
         """
+        # 校验 cron 表达式格式（直接调用 schedule_calculator，会抛出 InvalidCronExpressionException）
+        schedule_calculator.parse_cron_expression(cron_expression)
+
         schedule = Schedule(
             user_id=user_id,
             title=title,
