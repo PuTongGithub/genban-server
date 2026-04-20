@@ -1,5 +1,12 @@
 {
   "models": {
+    "local-qwen3.6-35B": {
+      "id": "RedHatAI/Qwen3.6-35B-A3B-NVFP4",
+      "max_tokens": 110000,
+      "api": "openai",
+      "base_url": "http://1.15.20.110:8500/v1",
+      "api_env_key": "LOCAL_API_KEY"
+    },
     "qwen-test": {
       "id": "qwen3.5-flash-2026-02-23",
       "max_tokens": 131072,
@@ -72,6 +79,6 @@
     "inactive_timeout": 300
   },
   "conversation_memory": {
-    "max_token": 20000
+    "max_token": 50000
   }
 }

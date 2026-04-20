@@ -1,13 +1,20 @@
 {
   "models": {
+    "local-qwen3.6-35B": {
+      "id": "RedHatAI/Qwen3.6-35B-A3B-NVFP4",
+      "max_tokens": 110000,
+      "api": "openai",
+      "base_url": "http://1.15.20.110:8500/v1",
+      "api_env_key": "LOCAL_API_KEY"
+    },
     "qwen3.6-flash": {
-      "id": "qwen3.6-flash-2026-04-16",
+      "id": "qwen3.5-flash-2026-02-23",
       "max_tokens": 1000000,
       "api": "dashscope_multi",
       "light_model": true
     },
     "qwen3.6-plus": {
-      "id": "qwen3.6-plus-2026-04-02",
+      "id": "qwen3.5-plus-2026-02-15",
       "max_tokens": 1000000,
       "api": "dashscope_multi",
       "default": true
@@ -37,7 +44,7 @@
   },
   "tools": {
     "shell_timeout": 20,
-    "zhipu_search_engine": "search-pro"
+    "zhipu_search_engine": "search-pro-quark"
   },
   "auth": {
     "invite_codes": ["pt-invite", "invite-2026"],

@@ -8,7 +8,9 @@ from src.model.formatter.message_formatter import (
 )
 from src.model.model_provider import ModelProvider
 from src.provider.api import api_openai
+from src.common.logger import get_logger
 
+logger = get_logger(__name__)
 
 class OpenAIProvider(ModelProvider):
     """OpenAI 兼容模型提供者"""
@@ -67,4 +69,5 @@ class OpenAIProvider(ModelProvider):
             enable_thinking=enable_thinking,
             response_format_type=response_format_type,
         ):
+            logger.debug(chunk)
             yield convert_openai_to_call_response(chunk)

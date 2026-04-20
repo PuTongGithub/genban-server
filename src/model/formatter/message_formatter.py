@@ -128,20 +128,27 @@ def convert_openai_to_call_response(response) -> CallResponse:
         ModelResponseException: 当响应格式异常时抛出
     """
     if response.choices is None or len(response.choices) == 0:
-        raise ModelResponseException(f"响应异常：{response}", response)
+        role = MessageRole.ASSISTANT.value
+        content = ""
+        reasoning_content = ""
+        tool_calls = None
+        finish_reason = None
+    else:
+        choice = response.choices[0]
+        message_data = choice.delta
 
-    choice = response.choices[0]
-    message_data = choice.delta
-
-    content = format_text_content(message_data.content or "")
-    reasoning_content = ""
-    if hasattr(message_data, "reasoning_content") and message_data.reasoning_content:
-        reasoning_content = message_data.reasoning_content
-
-    tool_calls = convert_openai_tool_calls(message_data.tool_calls)
+        role = message_data.role or MessageRole.ASSISTANT.value
+        content = format_text_content(message_data.content or "")
+        reasoning_content = ""
+        if hasattr(message_data, "reasoning_content") and message_data.reasoning_content:
+            reasoning_content = message_data.reasoning_content
+        if hasattr(message_data, "reasoning") and message_data.reasoning:
+            reasoning_content = message_data.reasoning
+        tool_calls = convert_openai_tool_calls(message_data.tool_calls)
+        finish_reason = choice.finish_reason
 
     message = Message(
-        role=message_data.role or MessageRole.ASSISTANT.value,
+        role=role,
         content=content,
         reasoning_content=reasoning_content,
         tool_calls=tool_calls,
@@ -155,7 +162,7 @@ def convert_openai_to_call_response(response) -> CallResponse:
         total_tokens=usage.total_tokens if usage else 0,
         input_tokens=usage.prompt_tokens if usage else 0,
         output_tokens=usage.completion_tokens if usage else 0,
-        finish_reason=choice.finish_reason,
+        finish_reason=finish_reason,
         message=message,
     )
 

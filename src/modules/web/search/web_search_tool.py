@@ -41,13 +41,7 @@ class WebSearchTool(BaseTool):
             description="时间过滤，默认值：noLimit(无限制)",
             required=False,
             enum=search_recency_filter_enum,
-        ),
-        ToolParameter(
-            name="compress",
-            type="boolean",
-            description="是否压缩搜索结果，默认值：true。若需要返回原始搜索结果时，设置为false。",
-            required=False,
-        ),
+        )
     ]
 
     def execute(self, context: AgentContext, **kwargs: Any) -> str:
@@ -65,7 +59,10 @@ class WebSearchTool(BaseTool):
         search_query = kwargs.get("search_query", "")
         count = kwargs.get("count", 10)
         search_recency_filter = kwargs.get("search_recency_filter", "noLimit")
-        compress = kwargs.get("compress", True)
+
+        # 暂时屏蔽压缩功能
+        # compress = kwargs.get("compress", True)
+        compress = False
 
         if not search_query.strip():
             return chat_factory.create_system_remainder_str(content="错误：搜索关键词不能为空")
