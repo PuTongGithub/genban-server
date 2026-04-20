@@ -32,6 +32,7 @@ def _build_kwargs(
         "model": model,
         "messages": messages,
         "stream": stream,
+        "presence_penalty": 1.5,
     }
 
     if stream:
@@ -47,14 +48,22 @@ def _build_kwargs(
             "chat_template_kwargs": {"preserve_thinking": True},
             "enable_thinking": True,
             "preserve_thinking": True,
+            "top_k": 20,
+            "repetition_penalty": 1.0,
         }
+        kwargs["temperature"] = 1.0
+        kwargs["top_p"] = 0.95
     else:
         kwargs["extra_body"] = {
             "thinking": {"type": "disabled", "clear_thinking": False},
             "chat_template_kwargs": {"enable_thinking": False, "preserve_thinking": True},
             "enable_thinking": False,
             "preserve_thinking": True,
+            "top_k": 20,
+            "repetition_penalty": 1.0,
         }
+        kwargs["temperature"] = 0.7
+        kwargs["top_p"] = 0.8
 
     if response_format_type != "text":
         kwargs["response_format"] = {"type": response_format_type}

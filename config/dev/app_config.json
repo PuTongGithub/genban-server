@@ -1,7 +1,7 @@
 {
   "models": {
     "local-qwen3.6-35B": {
-      "id": "RedHatAI/Qwen3.6-35B-A3B-NVFP4",
+      "id": "local-qwen3.6",
       "max_tokens": 110000,
       "api": "openai",
       "base_url": "http://1.15.20.110:8500/v1",
