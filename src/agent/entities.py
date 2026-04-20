@@ -218,6 +218,7 @@ class ChatTypeInfo:
 
 @unique
 class ChatType(ChatTypeInfo, Enum):
+    DEFAULT = ("default", False, False, False)
     PROMPT = ("prompt", False, True, False)
     SYSTEM_REMAINDER = ("system_remainder", False, True, True)
     SKILL_PROMPT = ("skill_prompt", False, True, True)

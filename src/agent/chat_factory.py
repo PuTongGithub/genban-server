@@ -92,6 +92,14 @@ class _ChatFactory:
 
     # 创建 Chat 对象
 
+    def create_default_chat(self, content: str) -> Chat:
+        """创建 Chat 对象"""
+        return Chat(
+            type=ChatType.DEFAULT.type,
+            id=self._create_chat_id(),
+            message=self.create_message(content=content, role=MessageRole.USER, chat_type=ChatType.DEFAULT),
+        )
+
     def create_prompt_chat(self, content: str) -> Chat:
         """创建提示词对话"""
         return Chat(

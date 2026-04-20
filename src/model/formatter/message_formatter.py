@@ -135,7 +135,10 @@ def convert_openai_to_call_response(response) -> CallResponse:
         finish_reason = None
     else:
         choice = response.choices[0]
-        message_data = choice.delta
+        if hasattr(choice, "delta"):
+            message_data =  choice.delta
+        else:
+            message_data = choice.message
 
         role = message_data.role or MessageRole.ASSISTANT.value
         content = format_text_content(message_data.content or "")

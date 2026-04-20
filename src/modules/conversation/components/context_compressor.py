@@ -88,8 +88,11 @@ class ContextCompressor:
         Returns:
             模型响应对象
         """
-        # 构造简单的对话列表
-        chats = [chat_factory.create_prompt_chat(prompt)]
+        
+        prompt_chat = chat_factory.create_prompt_chat(prompt)
+        user_chat = chat_factory.create_default_chat("请输出生成结果")
+
+        chats = [prompt_chat, user_chat]
 
         return model_caller.call(
             model_key=app_config.get_light_model_key(),
