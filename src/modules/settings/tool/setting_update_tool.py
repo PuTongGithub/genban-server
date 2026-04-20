@@ -2,20 +2,20 @@
 
 from typing import Any
 
+from src.agent.entities import AgentContext
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.entities import ToolParameter
-from src.agent.entities import AgentContext
-from src.user.user_config_manager import user_config_manager
 from src.common.logger import get_logger
 from src.config.config import app_config
+from src.user.user_config_manager import user_config_manager
 
 logger = get_logger(__name__)
 
 
-class SettingTool(BaseTool):
+class SettingUpdateTool(BaseTool):
     """更新用户配置工具"""
 
-    name = "setting"
+    name = "setting_update"
     description = "更新用户配置，包括模型选择和深度思考开关"
     parameters = [
         ToolParameter(

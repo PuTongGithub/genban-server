@@ -23,8 +23,8 @@ class ScheduleGetTool(BaseTool):
         ToolParameter(
             name="schedule_id",
             type="integer",
-            description="要查询的日程ID",
-            required=True,
+            description="要查询的日程ID，不传则返回所有日程",
+            required=False,
         ),
     ]
 
@@ -33,41 +33,54 @@ class ScheduleGetTool(BaseTool):
 
         Args:
             context: Agent 执行上下文
-            schedule_id: 日程ID
+            schedule_id: 日程ID，不传则返回所有日程
 
         Returns:
-            日程详情JSON字符串
+            日程详情或列表JSON字符串
         """
         try:
             user_id = context.user_id
             schedule_id = kwargs.get("schedule_id")
 
+            # 不传ID时返回所有日程
             if not schedule_id:
-                return json.dumps({"error": "请提供日程ID"}, ensure_ascii=False)
+                return self._get_all_schedules(user_id)
 
-            schedule = schedule_manager.get_schedule(schedule_id, user_id)
-            if not schedule:
-                return json.dumps({"error": f"找不到ID为 {schedule_id} 的日程"}, ensure_ascii=False)
-
-            # 获取后3次触发时间
-            now = get_timestamp()
-            next_trigger_times = schedule_calculator.get_next_trigger_times(schedule, now, 3)
-            next_trigger_times_str = [timestamp_to_date_time_str(ts) for ts in next_trigger_times]
-
-            result = {
-                "id": schedule.id,
-                "title": schedule.title,
-                "content": schedule.content or "",
-                "cron_expression": schedule.cron_expression,
-                "remind_enabled": schedule.remind_enabled,
-                "enabled": schedule.enabled,
-                "next_trigger_times": next_trigger_times_str,
-            }
-
-            return json.dumps(result, ensure_ascii=False)
+            # 传入ID时返回单个日程详情
+            return self._get_schedule_detail(schedule_id, user_id)
 
         except Exception as e:
             logger.exception(
-                f"获取日程详情失败，user_id: {context.user_id}, schedule_id: {kwargs.get('schedule_id')}"
+                f"获取日程失败，user_id: {context.user_id}, schedule_id: {kwargs.get('schedule_id')}"
             )
-            return json.dumps({"error": f"获取日程详情失败: {str(e)}"}, ensure_ascii=False)
+            return json.dumps({"error": f"获取日程失败: {str(e)}"}, ensure_ascii=False)
+
+    def _get_all_schedules(self, user_id: str) -> str:
+        """获取用户所有日程信息"""
+        schedules = schedule_manager.list_schedules(user_id, enabled_only=True)
+        now = get_timestamp()
+        result_list = [self._build_schedule_info(s, now) for s in schedules]
+        return json.dumps(result_list, ensure_ascii=False)
+
+    def _get_schedule_detail(self, schedule_id: int, user_id: str) -> str:
+        """获取单个日程详情"""
+        schedule = schedule_manager.get_schedule(schedule_id, user_id)
+        if not schedule:
+            return json.dumps({"error": f"找不到ID为 {schedule_id} 的日程"}, ensure_ascii=False)
+        now = get_timestamp()
+        result = self._build_schedule_info(schedule, now)
+        return json.dumps(result, ensure_ascii=False)
+
+    def _build_schedule_info(self, schedule: Any, now: int) -> dict:
+        """构建日程信息字典"""
+        next_trigger_times = schedule_calculator.get_next_trigger_times(schedule, now, 3)
+        next_trigger_times_str = [timestamp_to_date_time_str(ts) for ts in next_trigger_times]
+        return {
+            "id": schedule.id,
+            "title": schedule.title,
+            "content": schedule.content or "",
+            "cron_expression": schedule.cron_expression,
+            "remind_enabled": schedule.remind_enabled,
+            "enabled": schedule.enabled,
+            "next_trigger_times": next_trigger_times_str,
+        }

@@ -10,22 +10,16 @@
 # 代码规范
 
 - 该项目是python项目，代码规范采用 PEP8 规范，不要加\_\_init\_\_.py文件
-- 注释采用中文，注释内容尽量只占一行，保持简明扼要的注释风格
+- 坚持don't repeat yourself的原则，不要重复造轮子，不要复制代码
 - 使用ruff和mypy进行代码格式化和类型检查，新增代码务必运行工具进行检查，确保代码质量
+- 注释采用中文，保持简明扼要的注释风格
 - Controller 层开发规范：
   - 不使用 dict 对象作为接口入参和返回值，应使用 Pydantic 模型定义请求/响应实体
   - 不需要定义单独的 Controller class，直接在模块级别定义路由处理函数
   - 使用类型注解明确标注返回值类型
 - 日志规范
-  - 项目使用统一的日志模块 `src/common/logger.py`，所有模块应通过以下方式获取日志记录器：
-  ```python
-  from src.common.logger import get_logger
-
-  logger = get_logger(__name__)
-  ```
+  - 项目使用统一的日志模块 `src/common/logger.py`
   - 日志消息使用中文，保持简洁明了
-  - 包含关键上下文信息（如 user\_id、操作对象等）
-  - 避免记录敏感信息（如密码、密钥等）
-  - 使用 `logger.exception()` 方法记录异常，它会自动包含异常堆栈信息
-  - 禁止使用 `traceback.print_exc()`，应统一使用日志记录器。
+  - 包含关键上下文信息（如 user\_id、操作对象等），但要注意避免记录敏感信息（如密码、密钥等）
+  - 使用 `logger.exception()` 方法记录异常，它会自动包含异常堆栈信息，禁止使用 `traceback.print_exc()`
 

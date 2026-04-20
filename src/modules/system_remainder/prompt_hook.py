@@ -20,9 +20,7 @@ class PromptSetupHook(PromptHook):
         prompt = prompts_loader.get_assistant_prompt(available_modules_prompt=modules_prompt)
         data.append(chat_factory.create_prompt_chat(prompt))
 
-        env_prompt = prompts_loader.get_env_prompt(
-            model_key=context.model_config.model_key, user_id=context.user_id
-        )
+        env_prompt = prompts_loader.get_env_prompt(user_id=context.user_id)
         data.append(chat_factory.create_system_remainder_chat(env_prompt))
 
         return data

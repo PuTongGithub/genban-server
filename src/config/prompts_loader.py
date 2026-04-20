@@ -29,11 +29,10 @@ class PromptsLoader:
             available_skills_prompt=available_skills_prompt,
         )
 
-    def get_env_prompt(self, model_key: str, user_id: str) -> str:
+    def get_env_prompt(self, user_id: str) -> str:
         """获取环境变量提示词"""
         return ENV_PROMPT_TEMPLATE.format(
             os=sys_util.get_os(),
-            model_key=model_key,
             user_dir=str(path_util.get_user_dir(user_id)),
             today_date=time_util.get_now_str(time_util.STR_FORMATTER_DATE_WITH_MARKS),
         )

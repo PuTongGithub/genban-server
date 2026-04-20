@@ -5,7 +5,8 @@
       "max_tokens": 110000,
       "api": "openai",
       "base_url": "http://1.15.20.110:8500/v1",
-      "api_env_key": "LOCAL_API_KEY"
+      "api_env_key": "LOCAL_API_KEY",
+      "light_model": true
     },
     "qwen-test": {
       "id": "qwen3.5-flash-2026-02-23",
@@ -36,18 +37,12 @@
     "deepseek-v3.1": {
       "id": "deepseek-v3.1",
       "max_tokens": 131072,
-      "api": "dashscope",
-      "light_model": true
+      "api": "dashscope"
     },
     "deepseek-r1": {
       "id": "deepseek-r1",
       "max_tokens": 131072,
       "api": "dashscope"
-    },
-    "kimi-k2.5": {
-      "id": "kimi-k2.5",
-      "max_tokens": 262144,
-      "api": "dashscope_multi"
     },
     "glm-5": {
       "id": "glm-5",
