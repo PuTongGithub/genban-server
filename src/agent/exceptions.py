@@ -38,3 +38,10 @@ class ModelResponseException(Exception):
     def __init__(self, message: str, response: object | None = None):
         super().__init__(message)
         self.response = response
+
+
+class UserStoppedException(Exception):
+    """用户主动停止生成异常"""
+
+    def __init__(self):
+        super().__init__("用户主动停止生成")

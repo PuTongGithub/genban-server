@@ -5,7 +5,9 @@ from src.agent.exceptions import (
     ModelCallException,
     ModelCallLengthLimitedException,
     ModelProviderNotFoundException,
+    UserStoppedException,
 )
+from src.agent.stop_indicator import StopIndicator
 from src.common.logger import get_logger
 from src.config.config import app_config, env_config
 from src.model.entities import CallResponse
@@ -139,6 +141,7 @@ class ModelCaller:
         tools: list | None = None,
         enable_thinking: bool = True,
         response_format_type: str = "text",
+        stop_indicator: StopIndicator | None = None,
     ):
         """流式调用模型"""
         logger.info(f"调用流式模型，model_key: {model_key}，chats: {str(chats)}")
@@ -163,6 +166,10 @@ class ModelCaller:
                 base_url=base_url,
                 api_key=api_key,
             ):
+                # 检查是否被置为停止
+                if stop_indicator is not None and stop_indicator.is_stopped():
+                    raise UserStoppedException()
+
                 self._validate_response(response)
                 last_response = response
 
@@ -196,6 +203,9 @@ class ModelCaller:
                 )
                 yield accumulated_response
             logger.info(f"流式调用完成，model_key: {model_key}，response: {str(last_response)}")
+        except UserStoppedException:
+            logger.info(f"用户主动停止生成，model_key: {model_key}")
+            raise
         except Exception:
             logger.exception(f"流式调用失败，model_key: {model_key}")
             raise

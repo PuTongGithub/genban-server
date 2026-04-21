@@ -1,8 +1,8 @@
 """Agent 主流程控制器"""
 
 from src.agent.chat_factory import chat_factory
-from src.agent.entities import AgentContext, Chat, ChatType, ContentType, MessagePipeContent
-from src.agent.exceptions import ModelCallException, ModelHookException
+from src.agent.entities import AgentContext, Chat, ContentType, MessagePipeContent
+from src.agent.exceptions import ModelCallException, ModelHookException, UserStoppedException
 from src.agent.hooks.base_hook import (
     BaseHook,
     ConfirmedChatHook,
@@ -11,6 +11,7 @@ from src.agent.hooks.base_hook import (
     PromptHook,
 )
 from src.agent.hooks.hook_manager import HookManager
+from src.agent.stop_indicator import StopIndicator
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.tool_caller import ToolCaller
 from src.common.logger import get_logger
@@ -61,6 +62,7 @@ class Agent:
             target=self._run,
             on_stop=self.stop,
         )
+        self._current_stop_indicator: StopIndicator | None = None
         self._executor.start()
 
     def register_tool(self, tool: BaseTool) -> None:
@@ -104,6 +106,12 @@ class Agent:
         self._executor.stop()
         self._hook_manager.stop()
 
+    def stop_generation(self) -> None:
+        """停止当前生成过程"""
+        if self._current_stop_indicator is not None:
+            self._current_stop_indicator.stop()
+            logger.info(f"用户 {self.user_id} 的生成过程已标记为停止")
+
     def _run(self):
         """运行 Agent 主流程"""
         logger.info(f"Agent 开始执行，user_id: {self.user_id}")
@@ -113,6 +121,9 @@ class Agent:
             if not self._executor.is_running():
                 logger.info(f"用户 {self.user_id} 服务端已关闭，退出循环")
                 break
+
+            # 每次循环创建新的停止指示器
+            self._current_stop_indicator = StopIndicator()
 
             try:
                 if block_pull:
@@ -130,6 +141,8 @@ class Agent:
             except Exception as e:
                 logger.exception(f"Agent 处理消息时出错: {e}")
                 block_pull = True
+            finally:
+                self._current_stop_indicator = None
 
     def _process_contents(
         self,
@@ -143,9 +156,6 @@ class Agent:
         try:
             self._handle_new_chat(context, contents)
 
-            if self._has_stop_signal(context):
-                context.process_result = True
-                return True
             logger.info(f"用户 {self.user_id} 的 Agent 收到 {len(contents)} 条消息")
 
             self._execute_pre_hooks(context)
@@ -156,6 +166,13 @@ class Agent:
             result = self._handle_tool_calls(context, response_chat)
             context.process_result = result
             return result
+        except UserStoppedException:
+            logger.info(f"用户 {self.user_id} 主动停止生成")
+            stop_chat = chat_factory.create_stop_chat()
+            context.new_chats.append(stop_chat)
+            self._send_to_output_pipe(stop_chat)
+            context.process_result = True
+            return True
         except Exception as e:
             logger.exception(f"Agent 处理消息时出错: {e}")
             error_chat = chat_factory.create_error_chat(f"Agent 处理消息时出错: {str(e)}")
@@ -176,14 +193,6 @@ class Agent:
                 continue
             context.new_chats.append(new_chat)
             self._send_to_output_pipe(new_chat)
-
-    def _has_stop_signal(self, context: AgentContext) -> bool:
-        """判断新增的 Chat 是否为停止信号"""
-        if not context.new_chats:
-            return False
-
-        last_chat = context.new_chats[-1]
-        return ChatType.STOP.type == last_chat.type
 
     def _execute_pre_hooks(self, context: AgentContext) -> None:
         """执行前置钩子链"""
@@ -208,23 +217,24 @@ class Agent:
         last_response = None
         response_chat: Chat | None = None
 
-        for response in model_caller.stream_call(
-            model_key=context.model_config.model_key,
-            chats=chats,
-            tools=self._tool_caller.get_tools_schemas(),
-            enable_thinking=context.model_config.enable_thinking,
-        ):
-            response_chat = chat_factory.create_assistant_chat(response)
-            self._send_to_output_pipe(response_chat)
-            last_response = response
-
-        if last_response is not None and response_chat is not None:
-            context.new_chats.append(response_chat)
-            context.total_tokens = last_response.total_tokens
-            self._record_token_cost(context, last_response)
+        try:
+            for response in model_caller.stream_call(
+                model_key=context.model_config.model_key,
+                chats=chats,
+                tools=self._tool_caller.get_tools_schemas(),
+                enable_thinking=context.model_config.enable_thinking,
+                stop_indicator=self._current_stop_indicator,
+            ):
+                response_chat = chat_factory.create_assistant_chat(response)
+                self._send_to_output_pipe(response_chat)
+                last_response = response
             return response_chat
-        else:
-            raise ModelCallException(f"uid:{self.user_id} model call failed")
+        finally:
+            if last_response is not None and response_chat is not None:
+                context.new_chats.append(response_chat)
+                context.total_tokens = last_response.total_tokens
+                self._record_token_cost(context, last_response)
+            
 
     def _record_token_cost(
         self,

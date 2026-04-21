@@ -36,6 +36,10 @@ class Assistant:
             self._executor.start()
         self.agent.send_chat(chat)
 
+    def stop_generation(self) -> None:
+        """停止当前生成过程"""
+        self.agent.stop_generation()
+
     def register_listener(
         self, listener_name: str, listener: Callable[[MessagePipeContent], None]
     ) -> None:

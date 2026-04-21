@@ -76,18 +76,15 @@ async def stop(current_user_id: str = Depends(get_current_user_id)) -> StopRespo
     """
     logger.info(f"收到停止请求，user_id: {current_user_id}")
     try:
-        # 创建停止 Chat
-        stop_chat = chat_factory.create_stop_chat()
+        # 直接调用停止生成方法
+        assistant_manager.stop_generation(user_id=current_user_id)
 
-        # 提交到处理队列
-        assistant_manager.submit_chat(user_id=current_user_id, chat=stop_chat)
-
-        logger.info(f"停止请求已提交，user_id: {current_user_id}, chat_id: {stop_chat.id}")
-        return StopResponse(success=True, chat_id=stop_chat.id)
+        logger.info(f"停止请求已处理，user_id: {current_user_id}")
+        return StopResponse(success=True)
 
     except Exception:
-        logger.exception(f"停止请求提交失败，user_id: {current_user_id}")
-        return StopResponse(success=False, chat_id="", error="停止请求提交失败")
+        logger.exception(f"停止请求处理失败，user_id: {current_user_id}")
+        return StopResponse(success=False, error="停止请求处理失败")
 
 
 @router.get("/stream")

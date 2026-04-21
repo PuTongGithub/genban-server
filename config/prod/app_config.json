@@ -8,19 +8,19 @@
       "api_env_key": "LOCAL_API_KEY"
     },
     "qwen3.6-flash": {
-      "id": "qwen3.5-flash-2026-02-23",
+      "id": "qwen3.5-flash",
       "max_tokens": 1000000,
       "api": "dashscope_multi",
       "light_model": true
     },
     "qwen3.6-plus": {
-      "id": "qwen3.5-plus-2026-02-15",
+      "id": "qwen3.5-397b-a17b",
       "max_tokens": 1000000,
       "api": "dashscope_multi",
       "default": true
     },
     "deepseek-v3.2": {
-      "id": "deepseek-v3.2",
+      "id": "deepseek-v3.2-exp",
       "max_tokens": 131072,
       "api": "dashscope"
     },

@@ -23,7 +23,6 @@ class StopResponse(BaseModel):
     """停止响应"""
 
     success: bool = False
-    chat_id: str = ""  # 本次停止消息的 Chat ID
     error: str = ""
 
 
