@@ -3,83 +3,129 @@
 from pathlib import Path
 from typing import Optional
 
-from fastapi import Header
+from fastapi import Header, Request
 
 from src.common.utils.path_util import PathNotAllowedException, get_user_dir
 from src.config.config import app_config
 from src.user.exceptions import UnauthorizedException
 from src.user.user_manager import user_manager
 
+# Cookie 名称常量
+SESSION_COOKIE_NAME = "session"
 
-def _parse_token(authorization: Optional[str]) -> str:
+
+def _get_token_from_cookie(request: Request) -> Optional[str]:
+    """从 Cookie 中获取 session token
+
+    Args:
+        request: FastAPI 请求对象
+
+    Returns:
+        Optional[str]: Cookie 中的 session token，如果没有则返回 None
+    """
+    return request.cookies.get(SESSION_COOKIE_NAME)
+
+
+def _parse_token(authorization: Optional[str]) -> Optional[str]:
     """解析并验证Authorization头，返回token
 
     Args:
         authorization: 请求头中的 Authorization 字段
 
     Returns:
-        str: 解析出的token
-
-    Raises:
-        UnauthorizedException: 格式错误或缺少token时抛出
+        Optional[str]: 解析出的token，如果格式错误则返回 None
     """
     if not authorization:
-        raise UnauthorizedException("缺少 Authorization 请求头")
+        return None
 
     scheme, _, token = authorization.partition(" ")
     if scheme.lower() != "bearer" or not token:
-        raise UnauthorizedException("Authorization 格式错误，应为 Bearer <token>")
+        return None
 
     return token
 
 
-async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
-    """FastAPI 依赖函数：获取当前用户ID
-
-    从请求头中读取 Authorization: Bearer <token>，验证 token 并返回 user_id
+def _get_token_from_request(request: Request, authorization: Optional[str]) -> str:
+    """从请求中获取 token，优先从 Cookie 获取，其次从 Authorization Header 获取
 
     Args:
+        request: FastAPI 请求对象
+        authorization: 请求头中的 Authorization 字段
+
+    Returns:
+        str: 获取到的 token
+
+    Raises:
+        UnauthorizedException: 无法获取有效 token 时抛出
+    """
+    # 优先从 Cookie 获取
+    cookie_token = _get_token_from_cookie(request)
+    if cookie_token:
+        return cookie_token
+
+    # 其次从 Authorization Header 获取
+    header_token = _parse_token(authorization)
+    if header_token:
+        return header_token
+
+    raise UnauthorizedException("未提供有效的认证信息")
+
+
+async def get_current_user_id(
+    request: Request,
+    authorization: Optional[str] = Header(None),
+) -> str:
+    """FastAPI 依赖函数：获取当前用户ID
+
+    优先从 Cookie 中获取 session，其次从 Authorization Header 获取 token
+    验证 token/session 并返回 user_id
+
+    Args:
+        request: FastAPI 请求对象
         authorization: 请求头中的 Authorization 字段
 
     Returns:
         str: 验证通过的用户ID
 
     Raises:
-        UnauthorizedException: token 无效或过期时抛出 401 异常
+        UnauthorizedException: token/session 无效或过期时抛出 401 异常
     """
-    token = _parse_token(authorization)
+    token = _get_token_from_request(request, authorization)
 
     try:
         user_id = user_manager.validate_token(token)
         return user_id
     except Exception:
-        raise UnauthorizedException("Token 无效或已过期")
+        raise UnauthorizedException("认证信息无效或已过期")
 
 
 async def get_current_user_id_and_token(
+    request: Request,
     authorization: Optional[str] = Header(None),
 ) -> tuple[str, str]:
     """FastAPI 依赖函数：获取当前用户ID和token
 
-    从请求头中读取 Authorization: Bearer <token>，验证 token 并返回 user_id 和原始 token
+    优先从 Cookie 中获取 session，其次从 Authorization Header 获取 token
+    验证 token/session 并返回 user_id 和原始 token
     用于需要刷新token过期时间的场景
 
     Args:
+        request: FastAPI 请求对象
         authorization: 请求头中的 Authorization 字段
 
     Returns:
         tuple[str, str]: (验证通过的用户ID, 原始token字符串)
 
     Raises:
-        UnauthorizedException: token 无效或过期时抛出 401 异常
+        UnauthorizedException: token/session 无效或过期时抛出 401 异常
     """
-    token = _parse_token(authorization)
+    token = _get_token_from_request(request, authorization)
 
     try:
         user_id = user_manager.validate_token(token)
         return user_id, token
     except Exception:
-        raise UnauthorizedException("Token 无效或已过期")
+        raise UnauthorizedException("认证信息无效或已过期")
 
 
 def validate_path(path: str, user_id: str) -> Path:

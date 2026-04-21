@@ -59,7 +59,7 @@ app.add_middleware(
     allow_origins=["*"],  # 允许所有来源，生产环境应指定具体域名
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "Cookie"],
 )
 
 for router in routers:

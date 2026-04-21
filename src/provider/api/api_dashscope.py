@@ -21,6 +21,7 @@ def call(model, messages, tools, enable_thinking, response_format_type="text"):
         "result_format": "message",
         "stream": False,
         "parallel_tool_calls": True,
+        "max_tokens": 16384,
     }
     if response_format_type != "text":
         kwargs["response_format"] = {"type": response_format_type}
@@ -44,6 +45,7 @@ def stream_call(model, messages, tools, enable_thinking, response_format_type="t
         "stream": True,
         "parallel_tool_calls": True,
         "incremental_output": True,
+        "max_tokens": 16384,
     }
     if response_format_type != "text":
         kwargs["response_format"] = {"type": response_format_type}
@@ -67,6 +69,7 @@ def call_multimodal(model, messages, tools, enable_thinking, response_format_typ
         "result_format": "message",
         "stream": False,
         "parallel_tool_calls": True,
+        "max_tokens": 16384,
     }
     if response_format_type != "text":
         kwargs["response_format"] = {"type": response_format_type}
@@ -90,6 +93,7 @@ def stream_call_multimodal(model, messages, tools, enable_thinking, response_for
         "stream": True,
         "parallel_tool_calls": True,
         "incremental_output": True,
+        "max_tokens": 16384,
     }
     if response_format_type != "text":
         kwargs["response_format"] = {"type": response_format_type}

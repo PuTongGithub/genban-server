@@ -142,5 +142,17 @@ class _UserManager:
         # 返回创建的token信息
         return user_token_db.get_by_token(new_token)
 
+    def validate_session(self, session_id: str) -> str:
+        # 验证session，返回user_id
+        return self.validate_token(session_id)
+
+    def logout(self, session_id: str) -> bool:
+        # 根据session_id删除token记录，使session失效
+        return user_token_db.delete_by_token(session_id)
+
+    def create_web_session(self, user_id: str) -> UserToken:
+        # 创建web session，返回token信息（session_id就是token字段）
+        return self._create_token(user_id)
+
 
 user_manager = _UserManager()

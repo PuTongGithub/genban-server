@@ -89,5 +89,14 @@ class _UserTokenDb:
             db.delete(token)
         return count
 
+    @db_execute
+    def delete_by_token(self, db, token: str) -> bool:
+        # 根据token删除记录，返回是否成功
+        user_token = db.query(UserToken).filter(UserToken.token == token).first()
+        if user_token:
+            db.delete(user_token)
+            return True
+        return False
+
 
 user_token_db = _UserTokenDb()

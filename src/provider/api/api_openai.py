@@ -33,6 +33,7 @@ def _build_kwargs(
         "messages": messages,
         "stream": stream,
         "presence_penalty": 1.5,
+        "max_tokens": 16384,
     }
 
     if stream:
