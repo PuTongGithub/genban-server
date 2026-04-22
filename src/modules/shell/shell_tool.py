@@ -71,7 +71,7 @@ class ShellTool(BaseTool):
 
         command = kwargs.get("command", "")
         cwd_param = kwargs.get("cwd", "")
-        timeout = app_config.get("tools")["shell_timeout"]
+        timeout = app_config.get("tools", {}).get("shell_timeout", 60)
 
         # 确定工作目录
         if cwd_param:

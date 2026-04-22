@@ -65,7 +65,7 @@ async def get_models(
 ) -> GetModelsResponse:
     # 获取可用模型列表接口
     try:
-        models_config = app_config.get("models")
+        models_config = app_config.get("models", {})
         models = list(models_config.keys())
         return GetModelsResponse(models=models)
     except Exception as e:

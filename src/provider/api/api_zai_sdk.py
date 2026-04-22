@@ -12,7 +12,7 @@ client = ZhipuAiClient(api_key=env_config.get("ZHIPU_API_KEY"))
 
 def web_search(search_query: str, count: int = 10, search_recency_filter: str = "noLimit"):
     """执行网络搜索"""
-    search_engine = app_config.get("tools")["zhipu_search_engine"]
+    search_engine = app_config.get("tools", {}).get("zhipu_search_engine", "search-std")
     try:
         response = client.web_search.web_search(
             search_engine=search_engine,

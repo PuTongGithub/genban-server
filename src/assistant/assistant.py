@@ -59,8 +59,8 @@ class Assistant:
         # 快速失败：有监听器时不停止
         if len(self.listeners) > 0:
             return False
-
-        inactive_timeout = app_config.get("assistant")["inactive_timeout"]
+        # 检查是否超过 inactive_timeout 秒未活动
+        inactive_timeout = app_config.get("assistant", {}).get("inactive_timeout", 60)
         inactive_time = time_util.get_timestamp() - self._last_active_time
         return inactive_time > inactive_timeout
 

@@ -47,9 +47,9 @@ class AppConfig:
         with open(app_config_path, "r", encoding="utf-8") as file:
             self.config = json.load(file)
 
-    def get(self, key: str):
+    def get(self, key: str, default: any = None):
         """获取配置项"""
-        return self.config.get(key)
+        return self.config.get(key, default)
 
     def get_default_model(self) -> str:
         """获取默认模型"""

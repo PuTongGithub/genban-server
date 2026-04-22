@@ -22,7 +22,7 @@ class SettingUpdateTool(BaseTool):
             name="model_key",
             type="string",
             description="要使用的模型 key",
-            enum=list(app_config.get("models").keys()),
+            enum=list(app_config.get("models", {}).keys()),
             required=False,
         ),
         ToolParameter(

@@ -10,7 +10,7 @@ from src.agent.exceptions import (
 from src.agent.stop_indicator import StopIndicator
 from src.common.logger import get_logger
 from src.config.config import app_config, env_config
-from src.model.entities import CallResponse
+from src.model.entities import CallResponse, ModelCallOptions
 from src.model.model_provider import ModelProvider
 from src.model.providers.dashscope_multi_provider import DashScopeMultiProvider
 from src.model.providers.dashscope_provider import DashScopeProvider
@@ -65,7 +65,7 @@ class ModelCaller:
         chats: list[Chat],
         tools: list | None = None,
         enable_thinking: bool = True,
-        response_format_type: str = "text",
+        options: ModelCallOptions | None = None,
     ) -> CallResponse:
         """调用模型"""
         logger.info(f"模型调用请求，model_key: {model_key}，chats: {str(chats)}")
@@ -81,9 +81,9 @@ class ModelCaller:
                 messages=messages,
                 tools=tools,
                 enable_thinking=enable_thinking,
-                response_format_type=response_format_type,
                 base_url=base_url,
                 api_key=api_key,
+                options=options,
             )
             self._validate_response(response)
             logger.info(f"模型调用成功，model_key: {model_key}，response: {str(response)}")
@@ -140,8 +140,8 @@ class ModelCaller:
         chats: list[Chat],
         tools: list | None = None,
         enable_thinking: bool = True,
-        response_format_type: str = "text",
         stop_indicator: StopIndicator | None = None,
+        options: ModelCallOptions | None = None,
     ):
         """流式调用模型"""
         logger.info(f"调用流式模型，model_key: {model_key}，chats: {str(chats)}")
@@ -162,9 +162,9 @@ class ModelCaller:
                 messages=messages,
                 tools=tools,
                 enable_thinking=enable_thinking,
-                response_format_type=response_format_type,
                 base_url=base_url,
                 api_key=api_key,
+                options=options,
             ):
                 # 检查是否被置为停止
                 if stop_indicator is not None and stop_indicator.is_stopped():

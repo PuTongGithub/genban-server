@@ -29,7 +29,7 @@ class ConversationManager:
         Returns:
             是否应该压缩（超过 max_token）
         """
-        max_token = app_config.get("conversation_memory")["max_token"]
+        max_token = app_config.get("conversation_memory", {}).get("max_token", 10000)
 
         return total_tokens >= max_token
 

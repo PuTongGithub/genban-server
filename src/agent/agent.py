@@ -17,7 +17,8 @@ from src.agent.tools.tool_caller import ToolCaller
 from src.common.logger import get_logger
 from src.common.message.message_pipe_factory import MessagePipeFactory
 from src.common.thread_executor import ThreadExecutor
-from src.model.entities import CallResponse
+from src.config.config import app_config
+from src.model.entities import CallResponse, ModelCallOptions
 from src.model.model_caller import model_caller
 from src.modules.base_module import BaseModule
 from src.user.user_cost.user_cost_manager import user_cost_manager
@@ -217,6 +218,15 @@ class Agent:
         last_response = None
         response_chat: Chat | None = None
 
+        # 构造模型调用参数选项
+        options = ModelCallOptions(max_tokens=16384, presence_penalty=1.5, repetition_penalty=1.0, top_k=20)
+        if context.model_config.enable_thinking:
+            options.top_p = 0.95
+            options.temperature = 1.0
+        else:
+            options.top_p = 0.8
+            options.temperature = 0.7
+
         try:
             for response in model_caller.stream_call(
                 model_key=context.model_config.model_key,
@@ -224,6 +234,7 @@ class Agent:
                 tools=self._tool_caller.get_tools_schemas(),
                 enable_thinking=context.model_config.enable_thinking,
                 stop_indicator=self._current_stop_indicator,
+                options=options,
             ):
                 response_chat = chat_factory.create_assistant_chat(response)
                 self._send_to_output_pipe(response_chat)
@@ -234,7 +245,7 @@ class Agent:
                 context.new_chats.append(response_chat)
                 context.total_tokens = last_response.total_tokens
                 self._record_token_cost(context, last_response)
-            
+
 
     def _record_token_cost(
         self,
@@ -259,14 +270,23 @@ class Agent:
             # 没有工具调用，返回阻塞拉取消息
             return True
 
+        # 获取工具返回的最大字符串长度（conversation_memory.max_token / 2）
+        max_token = app_config.get("conversation_memory", {}).get("max_token", 10000)
+        max_tool_result_length = max_token // 2
+
         # 处理工具调用
         tool_results = self._tool_caller.execute_from_model_response(
             response_chat.message.tool_calls, context
         )
         for tool_result in tool_results:
+            # 截断过长的工具返回结果
+            tool_content = tool_result.content
+            if len(tool_content) > max_tool_result_length:
+                tool_content = tool_content[:max_tool_result_length] + "\n\n[系统提醒：工具返回数据过长，已被截断]"
+
             tool_chat = chat_factory.create_tool_chat(
                 tool_call_id=tool_result.tool_call_id,
-                tool_result=tool_result.content,
+                tool_result=tool_content,
             )
             self._send_to_output_pipe(tool_chat)
             context.new_chats.append(tool_chat)

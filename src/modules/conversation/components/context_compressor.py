@@ -7,7 +7,7 @@ from src.agent.entities import Chat
 from src.common.logger import get_logger
 from src.config.config import app_config
 from src.config.prompts_loader import prompts_loader
-from src.model.entities import CallResponse
+from src.model.entities import CallResponse, ModelCallOptions
 from src.model.model_caller import model_caller
 from src.modules.conversation.entities import CompressionResult
 from src.modules.conversation.exceptions import ContextCompressionError

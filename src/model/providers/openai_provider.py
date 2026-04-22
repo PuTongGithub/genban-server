@@ -1,16 +1,17 @@
 """OpenAI 兼容模型提供者实现"""
 
 from src.agent.entities import Message
-from src.model.entities import CallResponse
+from src.common.logger import get_logger
+from src.model.entities import CallResponse, ModelCallOptions
 from src.model.formatter.message_formatter import (
     convert_messages_for_text_model,
     convert_openai_to_call_response,
 )
 from src.model.model_provider import ModelProvider
 from src.provider.api import api_openai
-from src.common.logger import get_logger
 
 logger = get_logger(__name__)
+
 
 class OpenAIProvider(ModelProvider):
     """OpenAI 兼容模型提供者"""
@@ -21,9 +22,9 @@ class OpenAIProvider(ModelProvider):
         messages: list[Message],
         tools: list | None = None,
         enable_thinking: bool = True,
-        response_format_type: str = "text",
         base_url: str | None = None,
         api_key: str | None = None,
+        options: ModelCallOptions | None = None,
     ) -> CallResponse:
         """同步调用模型"""
         if base_url is None:
@@ -39,7 +40,7 @@ class OpenAIProvider(ModelProvider):
             base_url=base_url,
             tools=tools,
             enable_thinking=enable_thinking,
-            response_format_type=response_format_type,
+            options=options,
         )
         return convert_openai_to_call_response(response)
 
@@ -49,9 +50,9 @@ class OpenAIProvider(ModelProvider):
         messages: list[Message],
         tools: list | None = None,
         enable_thinking: bool = True,
-        response_format_type: str = "text",
         base_url: str | None = None,
         api_key: str | None = None,
+        options: ModelCallOptions | None = None,
     ):
         """流式调用模型"""
         if base_url is None:
@@ -67,7 +68,7 @@ class OpenAIProvider(ModelProvider):
             base_url=base_url,
             tools=tools,
             enable_thinking=enable_thinking,
-            response_format_type=response_format_type,
+            options=options,
         ):
             logger.debug(chunk)
             yield convert_openai_to_call_response(chunk)

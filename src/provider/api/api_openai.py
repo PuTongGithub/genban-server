@@ -3,6 +3,7 @@
 from openai import OpenAI
 
 from src.common.logger import get_logger
+from src.model.entities import ModelCallOptions
 
 logger = get_logger(__name__)
 
@@ -13,7 +14,7 @@ def _build_kwargs(
     stream: bool,
     tools: list | None,
     enable_thinking: bool,
-    response_format_type: str,
+    options: ModelCallOptions | None = None
 ) -> dict:
     """构建 OpenAI API 调用参数
 
@@ -23,17 +24,24 @@ def _build_kwargs(
         stream: 是否流式
         tools: 工具列表
         enable_thinking: 是否启用思考模式
-        response_format_type: 响应格式类型
+        options: 模型调用选项参数
 
     Returns:
         API 调用参数字典
     """
+    opts = options or ModelCallOptions()
+
+    extra_body: dict = {
+        "preserve_thinking": True,
+        "chat_template_kwargs": {"preserve_thinking": True},
+        "thinking": {"clear_thinking": False},
+    }
+
     kwargs: dict = {
         "model": model,
         "messages": messages,
         "stream": stream,
-        "presence_penalty": 1.5,
-        "max_tokens": 16384,
+        "extra_body": extra_body,
     }
 
     if stream:
@@ -44,33 +52,29 @@ def _build_kwargs(
         kwargs["parallel_tool_calls"] = True
 
     if enable_thinking:
-        kwargs["extra_body"] = {
-            "thinking": {"type": "enabled", "clear_thinking": False},
-            "chat_template_kwargs": {"preserve_thinking": True},
-            "enable_thinking": True,
-            "preserve_thinking": True,
-            "top_k": 20,
-            "repetition_penalty": 1.0,
-        }
-        kwargs["temperature"] = 1.0
-        kwargs["top_p"] = 0.95
+        extra_body["enable_thinking"] = True
+        extra_body["thinking"]["type"] = "enabled"
     else:
-        kwargs["extra_body"] = {
-            "thinking": {"type": "disabled", "clear_thinking": False},
-            "chat_template_kwargs": {"enable_thinking": False, "preserve_thinking": True},
-            "enable_thinking": False,
-            "preserve_thinking": True,
-            "top_k": 20,
-            "repetition_penalty": 1.0,
-        }
-        kwargs["temperature"] = 0.7
-        kwargs["top_p"] = 0.8
+        extra_body["enable_thinking"] = False
+        extra_body["thinking"]["type"] = "disabled"
+        extra_body["chat_template_kwargs"]["enable_thinking"] = False
 
-    if response_format_type != "text":
-        kwargs["response_format"] = {"type": response_format_type}
+    if opts.max_tokens is not None:
+        kwargs["max_tokens"] = opts.max_tokens
+    if opts.presence_penalty is not None:
+        kwargs["presence_penalty"] = opts.presence_penalty
+    if opts.top_p is not None:
+        kwargs["top_p"] = opts.top_p
+    if opts.temperature is not None:
+        kwargs["temperature"] = opts.temperature
+    if opts.response_format_type is not None:
+        kwargs["response_format"] = {"type": opts.response_format_type}
+    if opts.top_k is not None:
+        extra_body["top_k"] = opts.top_k
+    if opts.repetition_penalty is not None:
+        extra_body['repetition_penalty'] = opts.repetition_penalty
 
     return kwargs
-
 
 def _create_client(api_key: str, base_url: str) -> OpenAI:
     """创建 OpenAI 客户端
@@ -95,7 +99,7 @@ def call(
     base_url: str,
     tools: list | None = None,
     enable_thinking: bool = True,
-    response_format_type: str = "text",
+    options: ModelCallOptions | None = None,
 ):
     """调用 OpenAI 兼容 API（非流式）
 
@@ -106,7 +110,7 @@ def call(
         base_url: API 服务端点地址
         tools: 工具列表
         enable_thinking: 是否启用思考模式
-        response_format_type: 响应格式类型
+        options: 模型调用选项参数
 
     Returns:
         OpenAI ChatCompletion 响应对象
@@ -118,7 +122,7 @@ def call(
         stream=False,
         tools=tools,
         enable_thinking=enable_thinking,
-        response_format_type=response_format_type,
+        options=options,
     )
 
     try:
@@ -136,7 +140,7 @@ def stream_call(
     base_url: str,
     tools: list | None = None,
     enable_thinking: bool = True,
-    response_format_type: str = "text",
+    options: ModelCallOptions | None = None,
 ):
     """调用 OpenAI 兼容 API（流式）
 
@@ -147,7 +151,7 @@ def stream_call(
         base_url: API 服务端点地址
         tools: 工具列表
         enable_thinking: 是否启用思考模式
-        response_format_type: 响应格式类型
+        options: 模型调用选项参数
 
     Yields:
         OpenAI ChatCompletionChunk 响应块
@@ -159,7 +163,7 @@ def stream_call(
         stream=True,
         tools=tools,
         enable_thinking=enable_thinking,
-        response_format_type=response_format_type,
+        options=options,
     )
 
     try:

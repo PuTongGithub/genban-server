@@ -37,7 +37,7 @@ class _UserManager:
 
     def _is_invite_code_valid(self, invite_code: str) -> bool:
         # 检查邀请码是否在白名单中
-        invite_codes = app_config.get("auth").get("invite_codes", [])
+        invite_codes = app_config.get("auth", {}).get("invite_codes", [])
         # 如果邀请码列表为空，允许所有注册
         if not invite_codes:
             return True

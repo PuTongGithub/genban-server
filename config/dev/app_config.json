@@ -6,7 +6,8 @@
       "api": "openai",
       "base_url": "http://1.15.20.110:8500/v1",
       "api_env_key": "LOCAL_API_KEY",
-      "light_model": true
+      "light_model": true,
+      "default": true
     },
     "qwen-flash": {
       "id": "qwen3.5-flash",
@@ -60,6 +61,6 @@
     "inactive_timeout": 300
   },
   "conversation_memory": {
-    "max_token": 50000
+    "max_token": 30000
   }
 }

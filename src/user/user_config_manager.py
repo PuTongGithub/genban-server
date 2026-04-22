@@ -8,7 +8,7 @@ class _UserConfigManager:
 
     def _is_valid_model_key(self, model_key: str) -> bool:
         # 检查 model_key 是否在配置中有效
-        models = app_config.get("models")
+        models = app_config.get("models", {})
         return model_key in models
 
     def get_config(self, user_id: str) -> ModelConfig:
