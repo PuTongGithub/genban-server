@@ -107,12 +107,13 @@ class IMManager:
                     + chat.get_cleaned_message_content_text()
                 )
             elif chat.type == ChatType.ASSISTANT.type:
-                text = chat.message.get_text_content()
-                if not text or text.startswith("[no_reply]"):
+                text = chat.message.get_text_content().lstrip()
+                if text.startswith("[no_reply]"):
                     continue
+                if text:
+                    assistant_contents.append(text)
                 if chat.message.reasoning_content:
                     assistant_contents.append(f"思考过程：\n{chat.message.reasoning_content}")
-                assistant_contents.append(text)
 
         channels = list(self._channels.values())
         for channel in channels:
