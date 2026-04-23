@@ -123,20 +123,20 @@ class Scheduler:
             # 构建提醒消息
             now = get_timestamp()
             current_time = timestamp_to_date_time_str(now)
-            remind_content = f"""
-- 当前时间：{current_time}
-- ID:{schedule.id} | {schedule.title}
-"""
-
+            remind_content = f"- 当前时间：{current_time}"
+            remind_content += f"\n- ID:{schedule.id} | {schedule.title}"
             if schedule.content:
-                remind_content += f"- 内容: {schedule.content}"
-
-            next_trigger_times = schedule_calculator.get_next_trigger_times(schedule, now + 1, 1)
-            if next_trigger_times:
-                next_trigger_time = timestamp_to_date_time_str(next_trigger_times[0])
+                remind_content += f"\n- 内容: {schedule.content}"
+                
+            if schedule.onetime:
+                remind_content += f"\n- 一次性日程，无下次触发时间"
             else:
-                next_trigger_time = "无"
-            remind_content += f"\n- 下次触发时间：{next_trigger_time}"
+                next_trigger_times = schedule_calculator.get_next_trigger_times(schedule, now + 1, 1)
+                if next_trigger_times:
+                    next_trigger_time = timestamp_to_date_time_str(next_trigger_times[0])
+                else:
+                    next_trigger_time = "无"
+                remind_content += f"\n- 下次触发时间：{next_trigger_time}"
 
             chat: Chat = chat_factory.create_schedule_remainder_chat(remind_content)
             assistant_manager.submit_chat(user_id, chat)
