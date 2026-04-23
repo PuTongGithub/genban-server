@@ -219,13 +219,15 @@ class Agent:
         response_chat: Chat | None = None
 
         # 构造模型调用参数选项
-        options = ModelCallOptions(max_tokens=16384, presence_penalty=1.5, repetition_penalty=1.0, top_k=20)
+        options = ModelCallOptions(max_tokens=16384, repetition_penalty=1.0, top_k=20)
         if context.model_config.enable_thinking:
             options.top_p = 0.95
             options.temperature = 1.0
+            options.presence_penalty = 0.3
         else:
             options.top_p = 0.8
             options.temperature = 0.7
+            options.presence_penalty = 1.5
 
         try:
             for response in model_caller.stream_call(

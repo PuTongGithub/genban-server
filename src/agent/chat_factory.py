@@ -1,5 +1,7 @@
 """Chat 工厂类，用于创建各种 Chat 和 Message 对象"""
 
+import threading
+
 from src.agent.entities import Chat, ChatExtra, ChatType, Message, MessageRole
 from src.common.utils import time_util
 from src.model.entities import CallResponse
@@ -11,16 +13,18 @@ class _ChatFactory:
     def __init__(self) -> None:
         self.current_time = time_util.get_timestamp()
         self.index = 0
+        self._lock = threading.Lock()
 
     def _create_chat_id(self) -> str:
         """创建对话 ID"""
-        current = time_util.get_timestamp()
-        if current != self.current_time:
-            self.current_time = current
-            self.index = 0
+        with self._lock:
+            current = time_util.get_timestamp()
+            if current != self.current_time:
+                self.current_time = current
+                self.index = 0
 
-        self.index += 1
-        return f"{self.current_time}{self.index:04d}"
+            self.index += 1
+            return f"{self.current_time}{self.index:04d}"
 
     # 创建消息字符串
 

@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from botpy.message import C2CMessage
+from pt_botpy.message import C2CMessage
 
 from src.common.logger import get_logger
 from src.gateway.im.manager.base_channel import BaseIMChannel
@@ -131,10 +131,16 @@ class QQChannel(BaseIMChannel):
             message: QQ 消息对象
         """
         try:
+            content = message.content
+            if len(message.attachments) > 0:
+                for attachment in message.attachments:
+                    if attachment.content_type == "voice":
+                        content = "（来自QQ语音转文字：" + attachment.asr_refer_text + "）"
+
             im_message = IMMessage(
                 user_id=user_id,
                 channel_type=self.channel_type,
-                content=message.content,
+                content=content,
                 message_type=IMMessageType.TEXT,
             )
 

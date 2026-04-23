@@ -1,15 +1,15 @@
 """QQ 机器人测试程序
 
-使用 ThreadExecutor 运行 botpy 客户端
+使用 ThreadExecutor 运行 pt_botpy 客户端
 支持接收消息、记录 user_openid、发送消息
 """
 
 import sys
 from pathlib import Path
 
-import botpy
-from botpy.message import C2CMessage
-from botpy.types.message import MarkdownPayload
+import pt_botpy
+from pt_botpy.message import C2CMessage
+from pt_botpy.types.message import MarkdownPayload
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -17,10 +17,10 @@ from src.common.async_executor import AsyncExecutor
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
-intents = botpy.Intents(public_messages=True)
+intents = pt_botpy.Intents(public_messages=True)
 
 
-class QQBotClient(botpy.Client):
+class QQBotClient(pt_botpy.Client):
     """QQ 机器人客户端"""
 
     def __init__(self) -> None:

@@ -35,6 +35,7 @@ async def list_schedules(
                 cron_expression=s.cron_expression,
                 remind_enabled=s.remind_enabled,
                 enabled=s.enabled,
+                onetime=s.onetime,
                 created_at=s.created_at,
                 updated_at=s.updated_at,
             )
@@ -59,6 +60,7 @@ async def create_schedule(
             cron_expression=request.cron_expression,
             content=request.content,
             remind_enabled=request.remind_enabled,
+            onetime=request.onetime,
         )
         return ScheduleCreateResponse(success=True, schedule_id=created.id)
     except Exception as e:
@@ -80,6 +82,7 @@ async def update_schedule(
             content=request.content,
             cron_expression=request.cron_expression,
             remind_enabled=request.remind_enabled,
+            onetime=request.onetime,
         )
         if updated:
             return ScheduleUpdateResponse(success=True)

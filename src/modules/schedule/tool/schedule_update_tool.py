@@ -47,6 +47,12 @@ class ScheduleUpdateTool(BaseTool):
             description="是否开启提醒",
             required=False,
         ),
+        ToolParameter(
+            name="onetime",
+            type="boolean",
+            description="是否为一次性日程，触发后自动删除",
+            required=False,
+        ),
     ]
 
     def execute(self, context: AgentContext, **kwargs: Any) -> str:
@@ -83,6 +89,7 @@ class ScheduleUpdateTool(BaseTool):
                 content=kwargs.get("content"),
                 cron_expression=kwargs.get("cron_expression"),
                 remind_enabled=kwargs.get("remind_enabled"),
+                onetime=kwargs.get("onetime"),
             )
 
             if updated:

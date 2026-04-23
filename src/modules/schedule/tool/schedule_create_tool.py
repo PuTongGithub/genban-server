@@ -43,6 +43,12 @@ class ScheduleCreateTool(BaseTool):
             description="是否开启主动提醒，默认为 true",
             required=False,
         ),
+        ToolParameter(
+            name="onetime",
+            type="boolean",
+            description="是否为一次性日程，触发后自动删除，默认为 false",
+            required=False,
+        ),
     ]
 
     def execute(self, context: AgentContext, **kwargs: Any) -> str:
@@ -64,6 +70,7 @@ class ScheduleCreateTool(BaseTool):
             content = kwargs.get("content", "")
             cron_expression = kwargs.get("cron_expression", "")
             remind_enabled = kwargs.get("remind_enabled", True)
+            onetime = kwargs.get("onetime", False)
 
             if not title:
                 return "错误：请提供日程标题"
@@ -77,6 +84,7 @@ class ScheduleCreateTool(BaseTool):
                 cron_expression=cron_expression,
                 content=content,
                 remind_enabled=remind_enabled,
+                onetime=onetime,
             )
 
             # 计算下次触发时间

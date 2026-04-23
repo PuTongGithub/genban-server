@@ -775,6 +775,7 @@ dependencies = [
     { name = "playwright" },
     { name = "propcache" },
     { name = "protobuf" },
+    { name = "pt-qq-botpy" },
     { name = "pycparser" },
     { name = "pycryptodome" },
     { name = "pydantic" },
@@ -788,7 +789,6 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "pyyaml" },
-    { name = "qq-botpy" },
     { name = "reportlab" },
     { name = "requests" },
     { name = "scrapling" },
@@ -885,6 +885,7 @@ requires-dist = [
     { name = "playwright", specifier = ">=1.58.0" },
     { name = "propcache", specifier = ">=0.4.1" },
     { name = "protobuf", specifier = ">=7.34.0" },
+    { name = "pt-qq-botpy", specifier = ">=0.0.4" },
     { name = "pycparser", specifier = ">=3.0" },
     { name = "pycryptodome", specifier = ">=3.23.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
@@ -898,7 +899,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "python-multipart", specifier = ">=0.0.22" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "qq-botpy", specifier = ">=1.2.1" },
     { name = "reportlab", specifier = ">=4.4.10" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.0" },
@@ -2021,6 +2021,20 @@ wheels = [
 ]
 
 [[package]]
+name = "pt-qq-botpy"
+version = "0.0.5"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "apscheduler" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/9d/52/1da30b1129b1df00825a4881c2af7eda6f396850ea5367055ab3d09db75e/pt_qq_botpy-0.0.5.tar.gz", hash = "sha256:d276fd13d96bce2e2f395e6ef93005ac95f48ddf78f46939c9b3e7ac58673d45", size = 42888, upload-time = "2026-04-23T08:28:56.465Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/90/a2/da579da0c24ca7a41e660ebd949e5edf19b51af9c62d61a730f7f31d18c5/pt_qq_botpy-0.0.5-py3-none-any.whl", hash = "sha256:9733a9dd2ecb950181b7a1fffc8ad17f30417e1b7fdf0c3f7fe711d81ee80b07", size = 100052, upload-time = "2026-04-23T08:28:52.701Z" },
+]
+
+[[package]]
 name = "pycparser"
 version = "3.0"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
@@ -2300,20 +2314,6 @@ wheels = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/da/92/1446574745d74df0c92e6aa4a7b0b3130706a4142b2d1a5869f2eaa423c6/pyyaml-6.0.3-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:16249ee61e95f858e83976573de0f5b2893b3677ba71c9dd36b9cf8be9ac6d65", size = 829923, upload-time = "2025-09-25T21:32:54.537Z" },
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/f0/7a/1c7270340330e575b92f397352af856a8c06f230aa3e76f86b39d01b416a/pyyaml-6.0.3-cp314-cp314t-win_amd64.whl", hash = "sha256:4ad1906908f2f5ae4e5a8ddfce73c320c2a1429ec52eafd27138b7f1cbe341c9", size = 174062, upload-time = "2025-09-25T21:32:55.767Z" },
     { url = "https://pypi.tuna.tsinghua.edu.cn/packages/f1/12/de94a39c2ef588c7e6455cfbe7343d3b2dc9d6b6b2f40c4c6565744c873d/pyyaml-6.0.3-cp314-cp314t-win_arm64.whl", hash = "sha256:ebc55a14a21cb14062aa4162f906cd962b28e2e9ea38f9b4391244cd8de4ae0b", size = 149341, upload-time = "2025-09-25T21:32:56.828Z" },
-]
-
-[[package]]
-name = "qq-botpy"
-version = "1.2.1"
-source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple/" }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "apscheduler" },
-    { name = "pyyaml" },
-]
-sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/1f/b7/1b13569f9cf784d1d37caa2d7bc27246922fe50adb62c3dac0d53d7d38ee/qq-botpy-1.2.1.tar.gz", hash = "sha256:442172a0557a9b43d2777d1c5e072090a9d1a54d588d1c5da8d3efc014f4887f", size = 38270, upload-time = "2024-03-22T10:57:27.075Z" }
-wheels = [
-    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/94/2e/cf662566627f1c3508924ef5a0f8277ffc4ac033d6c3a05d1ead6e76f60b/qq_botpy-1.2.1-py3-none-any.whl", hash = "sha256:18b215690dfed88f711322136ec54b6760040b9b1608eb5db7a44e00f59e4f01", size = 51356, upload-time = "2024-03-22T10:57:24.695Z" },
 ]
 
 [[package]]

@@ -121,6 +121,7 @@ class Schedule(Base):
     cron_expression: Mapped[str] = mapped_column(String, nullable=False)
     remind_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    onetime: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[int] = mapped_column(Integer, nullable=False)
     updated_at: Mapped[int] = mapped_column(Integer, nullable=False)
 

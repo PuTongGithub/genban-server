@@ -3,20 +3,20 @@
 import logging
 from typing import Callable
 
-import botpy
-from botpy.manage import C2CManageEvent
-from botpy.message import C2CMessage
-from botpy.types.message import MarkdownPayload
+import pt_botpy
+from pt_botpy.manage import C2CManageEvent
+from pt_botpy.message import C2CMessage
+from pt_botpy.types.message import MarkdownPayload
 
 from src.common.logger import get_logger
 from src.gateway.im.qq.entities import QQMessageSendError
 
 logger = get_logger(__name__)
-intents = botpy.Intents(public_messages=True)
+intents = pt_botpy.Intents(public_messages=True)
 
 
-class QQBotClient(botpy.Client):
-    """QQ 机器人客户端，继承自 botpy.Client"""
+class QQBotClient(pt_botpy.Client):
+    """QQ 机器人客户端，继承自 pt_botpy.Client"""
 
     def __init__(
         self,

@@ -118,6 +118,7 @@ class Scheduler:
             from src.agent.chat_factory import chat_factory
             from src.agent.entities import Chat
             from src.assistant.assistant_manager import assistant_manager
+            from src.modules.schedule.component.schedule_manager import schedule_manager
 
             # 构建提醒消息
             now = get_timestamp()
@@ -141,6 +142,10 @@ class Scheduler:
             assistant_manager.submit_chat(user_id, chat)
 
             logger.info(f"日程提醒已发送: user_id={user_id}, schedule_id={schedule.id}")
+
+            # 一次性日程自动删除
+            if schedule.onetime:
+                schedule_manager.delete_schedule(user_id, schedule.id)
         except Exception:
             logger.exception(f"发送日程提醒失败: user_id={user_id}, schedule_id={schedule.id}")
 

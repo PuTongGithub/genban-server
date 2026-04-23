@@ -21,6 +21,7 @@ class ScheduleManager:
         cron_expression: str,
         content: str | None = None,
         remind_enabled: bool = True,
+        onetime: bool = False,
     ) -> Schedule:
         """创建日程
 
@@ -30,6 +31,7 @@ class ScheduleManager:
             cron_expression: cron表达式
             content: 日程内容
             remind_enabled: 是否开启提醒
+            onetime: 是否为一次性日程，触发后自动删除
 
         Returns:
             创建的日程对象
@@ -47,6 +49,7 @@ class ScheduleManager:
             cron_expression=cron_expression,
             remind_enabled=remind_enabled,
             enabled=True,
+            onetime=onetime,
         )
         created = schedule_repository.create(schedule)
 
@@ -64,6 +67,7 @@ class ScheduleManager:
         content: str | None = None,
         cron_expression: str | None = None,
         remind_enabled: bool | None = None,
+        onetime: bool | None = None,
     ) -> Schedule | None:
         """更新日程
 
@@ -74,6 +78,7 @@ class ScheduleManager:
             content: 新内容
             cron_expression: 新cron表达式
             remind_enabled: 是否开启提醒
+            onetime: 是否为一次性日程
 
         Returns:
             更新后的日程对象，不存在则返回None
@@ -91,6 +96,8 @@ class ScheduleManager:
             schedule.cron_expression = cron_expression
         if remind_enabled is not None:
             schedule.remind_enabled = remind_enabled
+        if onetime is not None:
+            schedule.onetime = onetime
 
         updated = schedule_repository.update(schedule)
 

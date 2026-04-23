@@ -1,6 +1,6 @@
 {
   "models": {
-    "local-qwen3.6-35B": {
+    "local-qwen": {
       "id": "local-qwen3.6",
       "max_tokens": 110000,
       "api": "openai",

@@ -6,7 +6,7 @@
 import asyncio
 from typing import Callable
 
-from botpy.message import C2CMessage
+from pt_botpy.message import C2CMessage
 
 from src.common.async_executor import AsyncExecutor
 from src.common.logger import get_logger
@@ -101,7 +101,7 @@ class QQBotClientRunner:
         """停止时的回调函数"""
         if self._client and self._executor.is_running():
             try:
-                # 关闭 botpy 客户端
+                # 关闭 pt_botpy 客户端
                 self._executor.submit(self._client.close())
             except Exception as e:
                 logger.exception(f"关闭 QQ 机器人客户端时发生异常: {e}")

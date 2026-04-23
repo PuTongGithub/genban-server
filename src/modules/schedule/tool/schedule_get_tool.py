@@ -82,5 +82,6 @@ class ScheduleGetTool(BaseTool):
             "cron_expression": schedule.cron_expression,
             "remind_enabled": schedule.remind_enabled,
             "enabled": schedule.enabled,
+            "onetime": schedule.onetime,
             "next_trigger_times": next_trigger_times_str,
         }

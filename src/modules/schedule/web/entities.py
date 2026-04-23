@@ -14,6 +14,7 @@ class ScheduleInfo(BaseModel):
     cron_expression: str
     remind_enabled: bool
     enabled: bool
+    onetime: bool
     created_at: int
     updated_at: int
 
@@ -32,6 +33,7 @@ class ScheduleCreateRequest(BaseModel):
     content: str = ""
     cron_expression: str
     remind_enabled: bool = True
+    onetime: bool = False
 
 
 class ScheduleCreateResponse(BaseModel):
@@ -50,6 +52,7 @@ class ScheduleUpdateRequest(BaseModel):
     content: Optional[str] = None
     cron_expression: Optional[str] = None
     remind_enabled: Optional[bool] = None
+    onetime: Optional[bool] = None
 
 
 class ScheduleUpdateResponse(BaseModel):
