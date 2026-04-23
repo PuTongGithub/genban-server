@@ -135,7 +135,7 @@ class QQChannel(BaseIMChannel):
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
                     if attachment.content_type == "voice":
-                        content = "（来自QQ语音转文字：" + attachment.asr_refer_text + "）"
+                        content = "（语音消息转文字：" + attachment.asr_refer_text + "）"
 
             im_message = IMMessage(
                 user_id=user_id,
