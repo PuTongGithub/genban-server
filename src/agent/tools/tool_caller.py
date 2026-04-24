@@ -2,13 +2,13 @@
 
 import json
 
-from src.agent.chat_factory import chat_factory
 from src.agent.entities import AgentContext
 from src.agent.entities import ToolCall as ModelToolCall
 from src.agent.tools.base_tool import BaseTool
-from src.agent.tools.entities import ToolCall, ToolResult
+from src.agent.tools.entities import ToolCall, ToolResult, ToolExecute
 from src.agent.tools.tool_registry import ToolRegistry
 from src.common.logger import get_logger
+from src.config.config import app_config
 
 logger = get_logger(__name__)
 
@@ -18,6 +18,9 @@ class ToolCaller:
 
     def __init__(self, registry: ToolRegistry | None = None) -> None:
         self.registry = registry or ToolRegistry()
+        # 获取工具返回的最大字符串长度（conversation_memory.max_token / 2）
+        max_token = app_config.get("conversation_memory", {}).get("max_token", 10000)
+        self._max_tool_result_length = max_token // 2
 
     def register(self, tool: BaseTool) -> None:
         """注册工具"""
@@ -42,13 +45,16 @@ class ToolCaller:
             try:
                 tool = self.registry.get(call.name)
                 result = tool.execute(context=context, **call.arguments)
-                if not isinstance(result, str):
-                    result = json.dumps(result, ensure_ascii=False)
+                if isinstance(result, str):
+                    result = self._handel_tool_result_content(result)
+                    results.append(ToolResult(tool_call_id=call.id, result=ToolExecute(result_content=result)))
+                elif isinstance(result, ToolExecute):
+                    result.result_content = self._handel_tool_result_content(result.result_content)
+                    results.append(ToolResult(tool_call_id=call.id, result=result))
             except Exception as e:
                 logger.exception("执行工具调用失败")
-                result = chat_factory.create_system_remainder_str(f"Error: {str(e)}")
-
-            results.append(ToolResult(tool_call_id=call.id, content=result))
+                result = self._handel_tool_result_content(str(e))
+                results.append(ToolResult(tool_call_id=call.id, result=ToolExecute(result_content=result, error=True)))
         return results
 
     def execute_from_model_response(
@@ -65,7 +71,7 @@ class ToolCaller:
         """
         tool_calls = self._parse_tool_calls(tool_calls_data)
         if not tool_calls:
-            return [ToolResult(tool_call_id="", content="工具调用参数解析失败")]
+            return [ToolResult(tool_call_id="", result=ToolExecute(result_content="工具调用参数解析失败", error=True))]
         else:
             return self.execute(tool_calls, context)
 
@@ -92,3 +98,9 @@ class ToolCaller:
             except Exception:
                 logger.exception("解析工具调用数据失败")
         return tool_calls
+
+    def _handel_tool_result_content(self, tool_content: str) -> str:
+        """处理工具返回结果内容"""
+        if len(tool_content) > self._max_tool_result_length:
+            tool_content = tool_content[:self._max_tool_result_length] + "\n\n[系统提醒：数据过长，已被截断]"
+        return tool_content

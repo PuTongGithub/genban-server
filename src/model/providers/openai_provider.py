@@ -4,7 +4,7 @@ from src.agent.entities import Message
 from src.common.logger import get_logger
 from src.model.entities import CallResponse, ModelCallOptions
 from src.model.formatter.message_formatter import (
-    convert_messages_for_text_model,
+    convert_messages_for_openai,
     convert_openai_to_call_response,
 )
 from src.model.model_provider import ModelProvider
@@ -32,7 +32,7 @@ class OpenAIProvider(ModelProvider):
         if api_key is None:
             raise ValueError("api_key 参数不能为空")
 
-        converted_messages = convert_messages_for_text_model(messages)
+        converted_messages = convert_messages_for_openai(messages)
         response = api_openai.call(
             model=model,
             messages=converted_messages,
@@ -60,7 +60,7 @@ class OpenAIProvider(ModelProvider):
         if api_key is None:
             raise ValueError("api_key 参数不能为空")
 
-        converted_messages = convert_messages_for_text_model(messages)
+        converted_messages = convert_messages_for_openai(messages)
         for chunk in api_openai.stream_call(
             model=model,
             messages=converted_messages,

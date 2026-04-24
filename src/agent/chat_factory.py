@@ -2,7 +2,7 @@
 
 import threading
 
-from src.agent.entities import Chat, ChatExtra, ChatType, Message, MessageRole
+from src.agent.entities import Chat, ChatExtra, ChatType, Content, Message, MessageRole
 from src.common.utils import time_util
 from src.model.entities import CallResponse
 
@@ -41,49 +41,50 @@ class _ChatFactory:
 
     # 创建消息内容
 
-    def _normalize_content(self, content: str | list) -> list:
-        """将 content 统一转换为列表格式
-
-        Args:
-            content: 字符串或列表类型的内容
-
-        Returns:
-            列表格式的内容，字符串会被包装为 [{"text": content}]
-        """
-        if isinstance(content, str):
-            return [{"text": content}]
+    def create_content(self, text: str, images: list[str] | None = None, videos: list[str] | None = None) -> list:
+        """创建消息内容"""
+        content = []
+        content.append(Content(text=text))
+        if images is not None:
+            content.extend([Content(image=image) for image in images])
+        if videos is not None:
+            content.extend([Content(video=video) for video in videos])
         return content
 
-    def create_user_content(self, user_id: str, user_input: str, channel_type: str) -> list:
+    def create_user_content(self, user_id: str, user_input: str, channel_type: str, images: list[str] | None = None, videos: list[str] | None = None) -> list:
         """创建用户消息内容"""
         time_str = time_util.get_now_str(time_util.STR_FORMATTER_WITH_MARKS)
         text_content = self.create_str_with_tag(
             user_input, f"{ChatType.USER.type}:{user_id}:{channel_type}:{time_str}"
         )
-        return self._normalize_content(text_content)
+        return self.create_content(text_content, images, videos)
 
     def create_content_with_tag(self, content: str, chat_type: ChatType) -> list:
         """创建消息内容，添加标签"""
         if chat_type.message_with_tag:
-            _str = self.create_str_with_tag(content, chat_type.type)
+            str = self.create_str_with_tag(content, chat_type.type)
         else:
-            _str = content
-        return self._normalize_content(_str)
+            str = content
+        return self.create_content(text=str)
 
     # 创建消息对象
 
-    def create_message(self, content: str, role: MessageRole, chat_type: ChatType) -> Message:
+    def create_content_message(self, role: MessageRole, content: list[Content]) -> Message:
         """创建消息对象，添加标签"""
         return Message(
             role=role.value,
-            content=self.create_content_with_tag(content, chat_type),
+            content=content,
         )
 
-    def create_user_message(self, user_id: str, user_input: str, channel_type: str) -> Message:
+    def create_message(self, content: str, role: MessageRole, chat_type: ChatType) -> Message:
+        """创建消息对象，添加标签"""
+        return self.create_content_message(role, self.create_content_with_tag(content, chat_type))
+
+    def create_user_message(self, user_id: str, user_input: str, channel_type: str, images: list[str] | None = None, videos: list[str] | None = None) -> Message:
         """创建用户消息"""
-        return Message(
-            role=MessageRole.USER.value,
-            content=self.create_user_content(user_id, user_input, channel_type),
+        return self.create_content_message(
+            role=MessageRole.USER,
+            content=self.create_user_content(user_id, user_input, channel_type, images, videos),
         )
 
     def create_tool_message(self, tool_call_id: str, tool_result: str) -> Message:
@@ -91,7 +92,7 @@ class _ChatFactory:
         return Message(
             role=MessageRole.TOOL.value,
             tool_call_id=tool_call_id,
-            content=self._normalize_content(tool_result),
+            content=self.create_content(text=tool_result),
         )
 
     # 创建 Chat 对象
@@ -114,13 +115,13 @@ class _ChatFactory:
             ),
         )
 
-    def create_user_chat(self, user_id: str, user_input: str, channel_type: str = "web") -> Chat:
+    def create_user_chat(self, user_id: str, user_input: str, channel_type: str = "web", images: list[str] | None = None, videos: list[str] | None = None) -> Chat:
         """创建用户对话"""
         return Chat(
             type=ChatType.USER.type,
             id=self._create_chat_id(),
             message=self.create_user_message(
-                user_id=user_id, user_input=user_input, channel_type=channel_type
+                user_id=user_id, user_input=user_input, channel_type=channel_type, images=images, videos=videos
             ),
             extra=ChatExtra(channel_type=channel_type),
         )
@@ -131,6 +132,17 @@ class _ChatFactory:
             type=ChatType.TOOL.type,
             id=self._create_chat_id(),
             message=self.create_tool_message(tool_call_id=tool_call_id, tool_result=tool_result),
+        )
+
+    def create_tool_result_chat(self, text: str, images: list[str] | None = None, videos: list[str] | None = None) -> Chat:
+        """创建工具结果对话"""
+        return Chat(
+            type=ChatType.TOOL_RESULT.type,
+            id=self._create_chat_id(),
+            message=self.create_content_message(
+                role=MessageRole.USER,
+                content=self.create_content(text, images, videos),
+            ),
         )
 
     def create_system_remainder_chat(self, content: str) -> Chat:

@@ -143,6 +143,37 @@ async def download_file(
     )
 
 
+@router.get("/share/{user_id}/{path:path}")
+@router.post("/share/{user_id}/{path:path}")
+async def download_shared_file(
+    user_id: str,
+    path: str,
+):
+    """分享文件下载（通过URL路径参数）
+
+    支持 GET 和 POST 两种请求方式
+
+    Args:
+        user_id: 用户ID（从URL路径获取）
+        path: 文件相对路径（从URL路径获取）
+
+    Returns:
+        文件下载流
+    """
+    file_path = get_path(path, user_id)
+
+    if not file_storage.exists(file_path):
+        raise HTTPException(status_code=404, detail="文件不存在")
+
+    if not file_storage.is_file(file_path):
+        raise HTTPException(status_code=400, detail="路径不是文件")
+
+    return FileResponse(
+        path=file_path,
+        filename=file_path.name
+    )
+
+
 @router.post("/upload")
 async def upload_file(
     path: str,

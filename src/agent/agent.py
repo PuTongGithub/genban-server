@@ -17,7 +17,6 @@ from src.agent.tools.tool_caller import ToolCaller
 from src.common.logger import get_logger
 from src.common.message.message_pipe_factory import MessagePipeFactory
 from src.common.thread_executor import ThreadExecutor
-from src.config.config import app_config
 from src.model.entities import CallResponse, ModelCallOptions
 from src.model.model_caller import model_caller
 from src.modules.base_module import BaseModule
@@ -272,26 +271,26 @@ class Agent:
             # 没有工具调用，返回阻塞拉取消息
             return True
 
-        # 获取工具返回的最大字符串长度（conversation_memory.max_token / 2）
-        max_token = app_config.get("conversation_memory", {}).get("max_token", 10000)
-        max_tool_result_length = max_token // 2
-
         # 处理工具调用
         tool_results = self._tool_caller.execute_from_model_response(
             response_chat.message.tool_calls, context
         )
         for tool_result in tool_results:
-            # 截断过长的工具返回结果
-            tool_content = tool_result.content
-            if len(tool_content) > max_tool_result_length:
-                tool_content = tool_content[:max_tool_result_length] + "\n\n[系统提醒：工具返回数据过长，已被截断]"
-
-            tool_chat = chat_factory.create_tool_chat(
+            if tool_result.result.error:
+                tool_chat_content = f"工具调用异常：{tool_result.result.result_content}"
+            else:
+                tool_chat_content = tool_result.result.result_content
+            
+            tool_chats = [chat_factory.create_tool_chat(
                 tool_call_id=tool_result.tool_call_id,
-                tool_result=tool_content,
-            )
-            self._send_to_output_pipe(tool_chat)
-            context.new_chats.append(tool_chat)
+                tool_result=tool_chat_content,
+            )]
+            if tool_result.result.tool_chats is not None:
+                tool_chats.extend(tool_result.result.tool_chats)
+
+            for chat in tool_chats:
+                self._send_to_output_pipe(chat)
+                context.new_chats.append(chat)
         return False
 
     def _send_to_output_pipe(

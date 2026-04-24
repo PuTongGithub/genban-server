@@ -4,7 +4,7 @@ from src.agent.entities import Message
 from src.model.entities import CallResponse, ModelCallOptions
 from src.model.formatter.message_formatter import (
     convert_dashscope_to_call_response,
-    convert_messages_for_multimodal_model,
+    convert_messages_for_dashscope,
 )
 from src.model.model_provider import ModelProvider
 from src.provider.api import api_dashscope
@@ -24,7 +24,7 @@ class DashScopeMultiProvider(ModelProvider):
         options: ModelCallOptions | None = None,
     ) -> CallResponse:
         """同步调用模型"""
-        converted_messages = convert_messages_for_multimodal_model(messages)
+        converted_messages = convert_messages_for_dashscope(messages)
         response = api_dashscope.call_multimodal(
             model=model,
             messages=converted_messages,
@@ -45,7 +45,7 @@ class DashScopeMultiProvider(ModelProvider):
         options: ModelCallOptions | None = None,
     ):
         """流式调用模型"""
-        converted_messages = convert_messages_for_multimodal_model(messages)
+        converted_messages = convert_messages_for_dashscope(messages)
         for response in api_dashscope.stream_call_multimodal(
             model=model,
             messages=converted_messages,

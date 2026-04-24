@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from src.agent.entities import AgentContext
-from src.agent.tools.entities import ToolParameter
+from src.agent.tools.entities import ToolParameter, ToolExecute
 
 
 class BaseTool(ABC):
@@ -15,7 +15,7 @@ class BaseTool(ABC):
     parameters: list[ToolParameter] = []
 
     @abstractmethod
-    def execute(self, context: AgentContext, **kwargs: Any) -> Any:
+    def execute(self, context: AgentContext, **kwargs: Any) -> str | ToolExecute:
         """执行工具
 
         Args:

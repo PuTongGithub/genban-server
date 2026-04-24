@@ -161,3 +161,16 @@ def validate_path(path: str, user_id: str) -> Path:
         return target_path
     except ValueError:
         raise PathNotAllowedException(str(path))
+
+def get_relative_path(path: Path, user_id: str) -> str:
+    """获取路径相对于用户目录的相对路径
+
+    Args:
+        path: 绝对路径
+        user_id: 用户ID
+
+    Returns:
+        相对路径字符串
+    """
+    user_dir = get_user_dir(user_id)
+    return str(path.relative_to(user_dir))

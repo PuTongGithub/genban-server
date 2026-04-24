@@ -1,6 +1,6 @@
 """模型调用器"""
 
-from src.agent.entities import Chat, Message, ToolCall, ToolCallFunction
+from src.agent.entities import Chat, Message, ToolCall, ToolCallFunction, Content
 from src.agent.exceptions import (
     ModelCallException,
     ModelCallLengthLimitedException,
@@ -187,7 +187,7 @@ class ModelCaller:
 
                 accumulated_message = Message(
                     role=response.message.role,
-                    content=[{"text": accumulated_content}] if accumulated_content else [],
+                    content=[Content(text=accumulated_content)] if accumulated_content else [],
                     reasoning_content=accumulated_reasoning,
                     tool_calls=accumulated_tool_calls,
                 )

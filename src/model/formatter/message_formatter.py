@@ -2,7 +2,7 @@
 
 import copy
 
-from src.agent.entities import Message, MessageRole, ToolCall, ToolCallFunction
+from src.agent.entities import Message, MessageRole, ToolCall, ToolCallFunction, Content
 from src.agent.exceptions import ModelResponseException
 from src.model.entities import CallResponse
 
@@ -90,7 +90,7 @@ def convert_dashscope_to_call_response(response) -> CallResponse:
         raise ModelResponseException(f"响应异常：{response}", response)
 
     message_data = output.choices[0].message
-    content = format_text_content(message_data.content)
+    content = format_text_content(message_data.content or "")
 
     tool_calls_data = message_data.get("tool_calls") if "tool_calls" in message_data else None
     tool_calls = convert_dashscope_tool_calls(tool_calls_data)
@@ -136,9 +136,11 @@ def convert_openai_to_call_response(response) -> CallResponse:
     else:
         choice = response.choices[0]
         if hasattr(choice, "delta"):
-            message_data =  choice.delta
-        else:
+            message_data = choice.delta
+        elif hasattr(choice, "message"):
             message_data = choice.message
+        else:
+            raise ModelResponseException(f"响应异常：{response}", response)
 
         role = message_data.role or MessageRole.ASSISTANT.value
         content = format_text_content(message_data.content or "")
@@ -170,7 +172,7 @@ def convert_openai_to_call_response(response) -> CallResponse:
     )
 
 
-def format_text_content(content: str | list) -> list:
+def format_text_content(content: str | list) -> list[Content]:
     """将纯文本 content 转换为列表格式
 
     Args:
@@ -180,16 +182,38 @@ def format_text_content(content: str | list) -> list:
         列表格式的 content，字符串会被包装为 [{"text": content}]
     """
     if isinstance(content, str):
-        return [{"text": content}]
-    return copy.deepcopy(content)
+        return [Content(text=content)]
+    else:
+        contents = []
+        for item in content:
+            if isinstance(item, str):
+                contents.append(Content(text=item))
+            elif isinstance(item, dict) and item.get("text") is not None:
+                contents.append(Content(text=item.get("text")))
+        return contents
+
+def _convert_content_for_openai(content: list[Content]) -> list:
+    """从列表格式的 content 中提取文本
+
+    Args:
+        content: 列表格式的 content [{"text": "..."}, ...]
+
+    Returns:
+        拼接后的字符串
+    """
+    list = []
+    for item in content:
+        if item.text is not None:
+            list.append({"type": "text", "text": item.text})
+        elif item.image is not None:
+            list.append({"type": "image_url", "image_url": {"url": item.image}})
+        elif item.video is not None:
+            list.append({"type": "video_url", "video_url": {"url": item.video}})
+    return list
 
 
-def convert_messages_for_text_model(messages: list[Message]) -> list[dict]:
-    """将 Message 列表转换为纯文本模型所需的字典格式
-
-    DashScope Generation API 期望 content 为字符串格式，
-    而我们的 Message.content 是列表格式 [{"text": "..."}]，
-    需要将其转换为字符串。
+def convert_messages_for_openai(messages: list[Message]) -> list[dict]:
+    """将 Message 列表转换为 OpenAI 模型调用所需的字典格式
 
     Args:
         messages: Message 对象列表
@@ -201,7 +225,7 @@ def convert_messages_for_text_model(messages: list[Message]) -> list[dict]:
     for msg in messages:
         msg_dict: dict = {
             "role": msg.role,
-            "content": _extract_text_from_content(msg.content),
+            "content": _convert_content_for_openai(msg.content),
             "reasoning_content": msg.reasoning_content,
         }
 
@@ -216,11 +240,8 @@ def convert_messages_for_text_model(messages: list[Message]) -> list[dict]:
     return converted_messages
 
 
-def convert_messages_for_multimodal_model(messages: list[Message]) -> list[dict]:
-    """将 Message 列表转换为多模态模型所需的字典格式
-
-    DashScope MultiModalConversation API 支持列表格式的 content，
-    直接使用 Message.content 的列表格式即可。
+def convert_messages_for_dashscope(messages: list[Message]) -> list[dict]:
+    """将 Message 列表转换为 DashScope 模型调用所需的字典格式
 
     Args:
         messages: Message 对象列表
@@ -228,36 +249,4 @@ def convert_messages_for_multimodal_model(messages: list[Message]) -> list[dict]
     Returns:
         转换后的消息字典列表，content 为列表格式
     """
-    converted_messages = []
-    for msg in messages:
-        msg_dict: dict = {
-            "role": msg.role,
-            "content": msg.content,
-            "reasoning_content": msg.reasoning_content,
-        }
-
-        if msg.tool_calls:
-            msg_dict["tool_calls"] = [tc.to_dict() for tc in msg.tool_calls]
-
-        if msg.tool_call_id:
-            msg_dict["tool_call_id"] = msg.tool_call_id
-
-        converted_messages.append(msg_dict)
-
-    return converted_messages
-
-
-def _extract_text_from_content(content: list) -> str:
-    """从列表格式的 content 中提取文本
-
-    Args:
-        content: 列表格式的 content [{"text": "..."}, ...]
-
-    Returns:
-        拼接后的字符串
-    """
-    text_parts = []
-    for item in content:
-        if isinstance(item, dict) and "text" in item:
-            text_parts.append(item["text"])
-    return "".join(text_parts)
+    return [msg.to_dict() for msg in messages]

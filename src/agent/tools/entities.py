@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
+from src.agent.entities import Chat
+
 
 # 工具相关的数据结构定义
 @dataclass
@@ -28,4 +30,12 @@ class ToolResult:
     """工具执行结果"""
 
     tool_call_id: str
-    content: str
+    result: ToolExecute
+
+@dataclass
+class ToolExecute:
+    """工具执行结果"""
+
+    result_content: str
+    tool_chats: list[Chat] | None = None
+    error: bool = False

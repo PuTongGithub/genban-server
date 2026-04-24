@@ -4,18 +4,18 @@
       "id": "local-qwen3.6",
       "max_tokens": 110000,
       "api": "openai",
-      "base_url": "http://1.15.20.110:8500/v1",
+      "base_url": "http://192.168.31.203:8000/v1",
       "api_env_key": "LOCAL_API_KEY",
       "light_model": true,
       "default": true
     },
     "qwen-flash": {
-      "id": "qwen3.5-flash",
+      "id": "qwen3.6-35b-a3b",
       "max_tokens": 1000000,
       "api": "dashscope_multi"
     },
     "qwen-plus": {
-      "id": "qwen3.5-plus-2026-02-15",
+      "id": "qwen3.5-plus-2026-04-20",
       "max_tokens": 1000000,
       "api": "dashscope_multi"
     },
@@ -62,5 +62,8 @@
   },
   "conversation_memory": {
     "max_token": 30000
+  },
+  "server": {
+    "base_url": "http://192.168.31.19:8000"
   }
 }

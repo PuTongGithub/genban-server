@@ -162,7 +162,7 @@ async def get_history(
                     content=cleaned_content,
                     reasoning_content=chat.message.reasoning_content or "",
                     tool_calls=tool_calls,
-                    channel_type=chat.extra.channel_type if chat.extra else "",
+                    channel_type=chat.extra.channel_type if chat.extra is not None else "",
                 )
             )
 

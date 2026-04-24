@@ -3,11 +3,38 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, unique
-from modulefinder import test
 
 from src.agent.hooks.entities import ModelConfig
 from src.common.utils import time_util
 
+
+@dataclass
+class Content:
+    """消息内容定义"""
+
+    text: str | None = None  # 文本内容
+    image: str | None = None  # 图片url
+    video: str | None = None  # 视频url
+
+    def to_dict(self) -> dict:
+        """将 Content 对象转换为字典"""
+        content = {}
+        if self.text is not None:
+            content["text"] = self.text
+        if self.image is not None:
+            content["image"] = self.image
+        if self.video is not None:
+            content["video"] = self.video
+        return content
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Content:
+        """从字典创建 Content 对象"""
+        return cls(
+            text=data.get("text", None),
+            image=data.get("image", None),
+            video=data.get("video", None),
+        )
 
 @dataclass
 class ToolCallFunction:
@@ -30,7 +57,6 @@ class ToolCallFunction:
             name=data.get("name", ""),
             arguments=data.get("arguments", ""),
         )
-
 
 @dataclass
 class ToolCall:
@@ -66,7 +92,7 @@ class ToolCall:
 @dataclass
 class Message:
     role: str = ""  # 角色类型，参考 MessageRole 枚举
-    content: list = field(default_factory=list)  # 内容统一为列表格式，纯文本为 [{"text": "内容"}]
+    content: list[Content] = field(default_factory=list)  # 内容统一为列表格式
     reasoning_content: str = ""
     tool_calls: list[ToolCall] | None = None
     tool_call_id: str | None = None  # 工具调用id，仅作为大模型调用入参时使用
@@ -75,7 +101,7 @@ class Message:
         """将 Message 对象转换为字典"""
         return {
             "role": self.role,
-            "content": self.content,
+            "content": [item.to_dict() for item in self.content],
             "reasoning_content": self.reasoning_content,
             "tool_calls": [tc.to_dict() for tc in self.tool_calls] if self.tool_calls else None,
             "tool_call_id": self.tool_call_id,
@@ -85,8 +111,8 @@ class Message:
         """提取消息中的所有文本内容"""
         text_parts: list[str] = []
         for item in self.content:
-            if isinstance(item, dict) and "text" in item:
-                text_parts.append(item["text"])
+            if item.text is not None:
+                text_parts.append(item.text)
         return text_parts
 
     def get_text_content(self) -> str:
@@ -103,7 +129,7 @@ class Message:
             tool_calls = [ToolCall.from_dict(tc) for tc in tool_calls_data]
         return cls(
             role=data.get("role", ""),
-            content=data.get("content", []),
+            content=[Content.from_dict(item) for item in data.get("content", [])],
             reasoning_content=data.get("reasoning_content", ""),
             tool_calls=tool_calls,
             tool_call_id=data.get("tool_call_id"),
@@ -181,17 +207,17 @@ class Chat:
         """
         chat_type = chat_type_map[self.type]
         if not chat_type.message_with_tag:
-            return self.message.content
+            return [item.to_dict() for item in self.message.content]
 
         cleaned_content = []
         for item in self.message.content:
-            if isinstance(item, dict) and "text" in item:
-                text = item["text"]
+            if item.text is not None:
+                text = item.text
                 if text and text.startswith("["):
                     cleaned_text = re.sub(r"^\[[^\]]*\]", "", text)
                     cleaned_content.append({"text": cleaned_text})
             else:
-                cleaned_content.append(item)
+                cleaned_content.append(item.to_dict())
         return cleaned_content
 
     @classmethod
@@ -228,6 +254,7 @@ class ChatType(ChatTypeInfo, Enum):
     USER = ("user", True, True, True)
     ASSISTANT = ("assistant", True, True, False)
     TOOL = ("tool", True, True, False)
+    TOOL_RESULT = ("tool_result", True, True, False)
     MEMORY = ("memory", False, True, True)
     ERROR = ("error", True, True, True)
     STOP = ("stop", True, True, True)  # 停止消息，用于中断 Agent 执行
