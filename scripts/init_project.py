@@ -59,7 +59,7 @@ def init_rsa_keys() -> None:
 
 
 def check_system_dependencies() -> None:
-    """检查系统依赖（Pandoc、LibreOffice、Node.js）"""
+    """检查系统依赖（Pandoc、LibreOffice、Node.js、libmagic）"""
     is_windows = sys_util.is_mswindows()
     missing_deps = []
 
@@ -88,6 +88,13 @@ def check_system_dependencies() -> None:
             else "sudo apt-get install nodejs npm"
         )
         missing_deps.append(("Node.js", install_cmd))
+
+    # 检查 libmagic（Linux 系统需要）
+    if not is_windows:
+        try:
+            import magic
+        except ImportError:
+            missing_deps.append(("libmagic", "sudo apt-get install libmagic1"))
 
     # 输出需要用户处理的依赖
     if missing_deps:

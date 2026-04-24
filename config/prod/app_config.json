@@ -57,6 +57,6 @@
     "max_token": 28000
   },
   "server": {
-    "base_url": "https://1.15.20.110"
+    "base_url": "https://1.15.20.110/genban"
   }
 }
