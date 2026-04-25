@@ -175,7 +175,7 @@ class ChatFileStorage:
             for chat in all_chats:
                 if found:
                     filtered_chats.append(chat)
-                elif chat.get("id") == after_chat_id:
+                elif chat.get("id") == after_chat_id or chat.get("time") >= after_time:
                     found = True
 
             logger.debug(

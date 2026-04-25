@@ -97,7 +97,7 @@ class ContextCompressor:
         return model_caller.call(
             model_key=app_config.get_light_model_key(),
             chats=chats,
-            enable_thinking=False,
+            enable_thinking=True,
         )
 
     def _parse_compression_result(
@@ -133,8 +133,13 @@ class ContextCompressor:
             if end_chat_time is None:
                 raise ContextCompressionError(f"未找到 end_id 对应的 Chat: {end_chat_id}")
 
+            # 验证 summary 长度
+            summary = result["summary"]
+            if len(summary) > 3000:
+                raise ContextCompressionError("压缩结果 summary 过长")
+
             return CompressionResult(
-                summary=result["summary"],
+                summary=summary,
                 end_chat_id=end_chat_id,
                 end_chat_time=end_chat_time,
             )
