@@ -6,22 +6,13 @@ from typing import Any
 from pydantic import BaseModel
 
 
-class IMMessageType(StrEnum):
-    """IM 消息类型"""
-
-    TEXT = "text"
-    IMAGE = "image"
-    AUDIO = "audio"
-    VIDEO = "video"
-
-
 class IMMessage(BaseModel):
     """IM 消息实体"""
 
     user_id: str
     channel_type: str
-    message_type: IMMessageType
     content: str
+    file_paths: list[str] = []
     raw_data: dict[str, Any] = {}
 
 

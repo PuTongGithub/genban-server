@@ -1,7 +1,8 @@
 """QQ 机器人客户端封装"""
 
+import asyncio
 import logging
-from typing import Callable
+from typing import Awaitable, Callable, Union
 
 import pt_botpy
 from pt_botpy.manage import C2CManageEvent
@@ -14,19 +15,21 @@ from src.gateway.im.qq.entities import QQMessageSendError
 logger = get_logger(__name__)
 intents = pt_botpy.Intents(public_messages=True)
 
+MessageHandler = Callable[[C2CMessage], Union[None, Awaitable[None]]]
+
 
 class QQBotClient(pt_botpy.Client):
     """QQ 机器人客户端，继承自 pt_botpy.Client"""
 
     def __init__(
         self,
-        message_handler: Callable[[C2CMessage], None],
+        message_handler: MessageHandler,
         identity_update_handler: Callable[[dict], None],
         identity: dict,
     ) -> None:
         """初始化 QQ 机器人客户端"""
         super().__init__(intents=intents, is_sandbox=True, bot_log=None, log_level=logging.INFO)
-        self._message_handler: Callable[[C2CMessage], None] = message_handler
+        self._message_handler: MessageHandler = message_handler
         self._identity_update_handler: Callable[[dict], None] = identity_update_handler
         self._identity: dict = identity
 
@@ -69,7 +72,10 @@ class QQBotClient(pt_botpy.Client):
         self._get_user_openid(message.author.user_openid)
 
         try:
-            self._message_handler(message)
+            if asyncio.iscoroutinefunction(self._message_handler):
+                await self._message_handler(message)
+            else:
+                self._message_handler(message)
         except Exception as e:
             logger.exception(f"处理 QQ 消息时发生异常: {e}")
 
@@ -86,4 +92,26 @@ class QQBotClient(pt_botpy.Client):
                 await self.api.post_c2c_message(user_openid, msg_type=2, markdown=markdown)
         except Exception as e:
             logger.exception(f"发送 QQ 消息失败: user_openid={user_openid}, error={e}")
+            raise
+
+    async def send_file(self, file_url: str) -> None:
+        """发送文件到 QQ 用户
+
+        使用 QQ 富媒体 API：先上传文件获取 file_info，再发送富媒体消息
+
+        Args:
+            file_url: 文件 URL
+        """
+        user_openid = self._get_user_openid()
+
+        try:
+            await self.api.post_c2c_file(
+                openid=user_openid,
+                file_type=4,
+                url=file_url,
+                srv_send_msg=True,
+            )
+            logger.info(f"发送 QQ 文件成功: user_openid={user_openid}, file={file_url}")
+        except Exception as e:
+            logger.exception(f"发送 QQ 文件失败: user_openid={user_openid}, file={file_url}, error={e}")
             raise

@@ -2,9 +2,12 @@
 
 from typing import ClassVar
 
+import aiohttp
 from pt_botpy.message import C2CMessage
+from pathlib import Path
 
 from src.common.logger import get_logger
+from src.common.utils.path_util import get_user_dir
 from src.gateway.im.manager.base_channel import BaseIMChannel
 from src.gateway.im.manager.credential_manager import credential_manager
 from src.gateway.im.manager.entities import (
@@ -12,10 +15,12 @@ from src.gateway.im.manager.entities import (
     ChannelSchemaFieldType,
     IMCredentialConfig,
     IMMessage,
-    IMMessageType,
 )
 from src.gateway.im.qq.entities import QQMessageSendError
 from src.gateway.im.qq.qq_bot_client_runner import QQBotClientRunner
+from src.storage.file.file_storage import file_storage
+from src.user.auth import get_relative_path
+from src.modules.file_system.components.file_share_link_generator import FileShareLinkGenerator
 
 logger = get_logger(__name__)
 
@@ -100,6 +105,21 @@ class QQChannel(BaseIMChannel):
         else:
             raise QQMessageSendError("用户未启用 QQ 渠道")
 
+    def send_file(self, user_id: str, file_path: str) -> None:
+        """发送文件到 QQ 用户
+
+        Args:
+            user_id: 用户 ID
+            file_path: 本地文件绝对路径
+        """
+        if user_id in self._client_runners:
+            relative_path = get_relative_path(Path(file_path), user_id)
+            file_url = FileShareLinkGenerator.generate_link(user_id=user_id, path=relative_path)
+            self._client_runners[user_id].send_file(file_url)
+            logger.info(f"发送 QQ 文件成功: user_id={user_id}, file={file_path}")
+        else:
+            raise QQMessageSendError("用户未启用 QQ 渠道")
+
     def update_credential(
         self, user_id: str, im_credential: IMCredentialConfig | None, is_deleted: bool = False
     ) -> None:
@@ -124,28 +144,76 @@ class QQChannel(BaseIMChannel):
             self._client_runners[user_id] = self._start_client(im_credential)
             logger.info(f"QQ 凭证已更新: user_id={user_id}")
 
-    def _handle_message(self, user_id: str, message: C2CMessage) -> None:
+    async def _handle_message(self, user_id: str, message: C2CMessage) -> None:
         """处理 QQ 消息
 
         Args:
+            user_id: 用户 ID
             message: QQ 消息对象
         """
         try:
-            content = message.content
+            content = message.content or ""
+            file_paths: list[str] = []
+
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
                     if attachment.content_type == "voice":
                         content = "（语音消息转文字：" + attachment.asr_refer_text + "）"
+                    else:
+                        file_path = await self._download_attachment(user_id, attachment)
+                        if file_path:
+                            file_paths.append(file_path)
 
             im_message = IMMessage(
                 user_id=user_id,
                 channel_type=self.channel_type,
                 content=content,
-                message_type=IMMessageType.TEXT,
+                file_paths=file_paths,
             )
-
             self._on_message_received(im_message)
 
             logger.info(f"收到 QQ 消息: user_id={user_id}, content={message.content}")
         except Exception as e:
             logger.exception(f"处理 QQ 消息时发生异常: {e}")
+
+    async def _download_attachment(self, user_id: str, attachment) -> str | None:
+        """下载 QQ 消息附件
+
+        Args:
+            user_id: 用户 ID
+            attachment: QQ 附件对象
+
+        Returns:
+            相对于用户目录的文件路径，下载失败返回 None
+        """
+        url = attachment.url
+        if not url:
+            logger.warning(f"附件 URL 为空，跳过下载: user_id={user_id}, filename={attachment.filename}")
+            return None
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        logger.warning(
+                            f"下载附件失败: user_id={user_id}, "
+                            f"url={url}, status={response.status}"
+                        )
+                        return None
+                    content = await response.read()
+        except Exception as e:
+            logger.exception(f"下载附件异常: user_id={user_id}, url={url}, error={e}")
+            return None
+
+        user_dir = get_user_dir(user_id)
+        upload_dir = user_dir / "upload" / "qq"
+        filename = attachment.filename or "unknown"
+
+        file_path = file_storage.write_bytes_with_conflict_resolution(
+            directory=upload_dir,
+            filename=filename,
+            content=content,
+        )
+        relative_path = get_relative_path(file_path, user_id)
+        logger.info(f"附件下载成功: user_id={user_id}, path={relative_path}")
+        return relative_path

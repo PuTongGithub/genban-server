@@ -60,6 +60,18 @@ class BaseIMChannel(ABC):
         pass
 
     @abstractmethod
+    def send_file(self, user_id: str, file_path: str) -> None:
+        """发送文件到用户
+
+        默认实现为空，支持文件发送的渠道可重写此方法
+
+        Args:
+            user_id: 用户 ID
+            file_path: 本地文件绝对路径
+        """
+        pass
+
+    @abstractmethod
     def update_credential(
         self, user_id: str, im_credential: IMCredentialConfig | None, is_deleted: bool = False
     ) -> None:

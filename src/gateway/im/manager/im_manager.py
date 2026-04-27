@@ -6,9 +6,11 @@ from typing import Type
 from src.agent.entities import Chat, ChatType
 from src.common.async_executor import AsyncExecutor
 from src.common.logger import get_logger
+from src.common.utils.path_util import get_user_dir
 from src.gateway.im.manager.base_channel import BaseIMChannel
 from src.gateway.im.manager.credential_manager import credential_manager
 from src.gateway.im.manager.entities import ChannelNotFoundError, IMCredentialConfig, IMMessage
+from src.storage.file.file_storage import file_storage
 
 logger = get_logger(__name__)
 
@@ -90,7 +92,12 @@ class IMManager:
             chat = chat_factory.create_user_chat(
                 message.user_id, message.content, message.channel_type
             )
-            assistant_manager.submit_chat(message.user_id, [chat])
+            chats = []
+            if message.file_paths:
+                file_chat = chat_factory.create_file_upload_chat(message.file_paths)
+                chats.append(file_chat)
+            chats.append(chat)
+            assistant_manager.submit_chat(message.user_id, chats)
         except Exception:
             logger.exception(f"处理 IM 消息失败: user_id={message.user_id}")
 
@@ -99,6 +106,7 @@ class IMManager:
         user_chat_channel_type = None
         user_content = None
         assistant_contents = []
+        file_paths: list[str] = []
         for chat in chats:
             if chat.type == ChatType.USER.type:
                 user_chat_channel_type = chat.extra.channel_type
@@ -113,19 +121,50 @@ class IMManager:
                 if chat.message.reasoning_content:
                     assistant_contents.append(f"思考过程：\n{chat.message.reasoning_content}")
                 assistant_contents.append(text)
+            elif chat.type == ChatType.FILE.type:
+                file_text = chat.message.get_text_content()
+                file_path = self._resolve_file_path(user_id, file_text)
+                if file_path:
+                    file_paths.append(file_path)
 
         channels = list(self._channels.values())
         for channel in channels:
             try:
+                if file_paths:
+                    for file_path in file_paths:
+                        channel.send_file(user_id, file_path)
                 if user_content is not None and channel.channel_type != user_chat_channel_type:
                     messages = [user_content] + assistant_contents
                 else:
                     messages = assistant_contents
-                self._executor.submit(channel.send_messages(user_id, messages))
+                if messages:
+                    self._executor.submit(channel.send_messages(user_id, messages))
             except Exception:
                 logger.exception(
                     f"分发消息失败: user_id={user_id}, channel_type={channel.channel_type}"
                 )
+
+    def _resolve_file_path(self, user_id: str, file_text: str) -> str | None:
+        """解析并校验文件路径
+
+        Args:
+            user_id: 用户 ID
+            file_text: Chat 中的文件路径文本
+
+        Returns:
+            绝对路径，文件不存在或路径非法返回 None
+        """
+        try:
+            user_dir = get_user_dir(user_id)
+            file_path = user_dir / file_text
+            file_path = file_path.resolve()
+            if not file_storage.exists(file_path) or not file_storage.is_file(file_path):
+                logger.warning(f"文件不存在或不是文件: {file_path}")
+                return None
+            return str(file_path)
+        except Exception as e:
+            logger.warning(f"解析文件路径失败: user_id={user_id}, path={file_text}, error={e}")
+            return None
 
     def list_channel_types(self) -> list[Type[BaseIMChannel]]:
         """列出所有支持的渠道类型"""

@@ -170,7 +170,8 @@ def get_relative_path(path: Path, user_id: str) -> str:
         user_id: 用户ID
 
     Returns:
-        相对路径字符串
+        相对路径字符串（使用正斜杠 / 作为分隔符）
     """
     user_dir = get_user_dir(user_id)
-    return str(path.relative_to(user_dir))
+    relative_path = path.relative_to(user_dir)
+    return relative_path.as_posix()

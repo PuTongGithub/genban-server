@@ -4,7 +4,7 @@
 """
 
 import asyncio
-from typing import Callable
+from typing import Awaitable, Callable, Union
 
 from pt_botpy.message import C2CMessage
 
@@ -13,6 +13,8 @@ from src.common.logger import get_logger
 from src.gateway.im.qq.qq_bot_client import QQBotClient
 
 logger = get_logger(__name__)
+
+MessageHandler = Callable[[str, C2CMessage], Union[None, Awaitable[None]]]
 
 
 class QQBotClientRunner:
@@ -25,7 +27,7 @@ class QQBotClientRunner:
         app_id: str,
         app_secret: str,
         identity: dict,
-        message_handler: Callable[[str, C2CMessage], None],
+        message_handler: MessageHandler,
         identity_update_handler: Callable[[str, int, dict], None],
     ) -> None:
         """初始化 QQ 机器人客户端运行器
@@ -76,9 +78,9 @@ class QQBotClientRunner:
         except Exception as e:
             logger.exception(f"QQ 机器人客户端运行异常: {e}")
 
-    def _on_message_handler(self, message: C2CMessage) -> None:
+    async def _on_message_handler(self, message: C2CMessage) -> None:
         """处理 QQ 消息"""
-        self._message_handler(self._user_id, message)
+        await self._message_handler(self._user_id, message)
 
     def _on_identity_update_handler(self, identity: dict) -> None:
         """处理 QQ 身份信息更新"""
@@ -110,3 +112,8 @@ class QQBotClientRunner:
         """发送消息"""
         if self._client is not None and self._executor.is_running():
             self._executor.submit(self._client.send_messages(contents))
+
+    def send_file(self, file_url: str) -> None:
+        """发送文件到 QQ 用户"""
+        if self._client is not None and self._executor.is_running():
+            self._executor.submit(self._client.send_file(file_url))

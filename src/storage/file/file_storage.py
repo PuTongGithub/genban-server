@@ -88,5 +88,51 @@ class _FileStorage:
         with open(file_path, "wb") as f:
             f.write(content)
 
+    # 解析唯一的文件路径，处理文件名冲突
+    def resolve_unique_path(self, directory: Path, filename: str) -> Path:
+        """解析唯一的文件路径，处理文件名冲突
+
+        如果目标文件已存在，会自动添加数字后缀（如 file_1.txt, file_2.txt）
+
+        Args:
+            directory: 目标目录路径
+            filename: 原始文件名
+
+        Returns:
+            唯一的文件路径
+        """
+        file_path = directory / filename
+
+        if not file_path.exists():
+            return file_path
+
+        # 处理文件名冲突
+        counter = 1
+        stem = file_path.stem
+        suffix = file_path.suffix
+        while file_path.exists():
+            file_path = directory / f"{stem}_{counter}{suffix}"
+            counter += 1
+
+        return file_path
+
+    # 保存文件，自动处理文件名冲突
+    def write_bytes_with_conflict_resolution(
+        self, directory: Path, filename: str, content: bytes
+    ) -> Path:
+        """保存文件，自动处理文件名冲突
+
+        Args:
+            directory: 目标目录路径
+            filename: 原始文件名
+            content: 文件内容
+
+        Returns:
+            最终保存的文件路径
+        """
+        file_path = self.resolve_unique_path(directory, filename)
+        self.write_bytes(file_path, content)
+        return file_path
+
 
 file_storage = _FileStorage()

@@ -57,9 +57,7 @@ async def submit(
         chats: list = []
         # 如果有上传的文件，创建 FILE_UPLOAD Chat
         if request.files:
-            file_upload_chat = chat_factory.create_file_upload_chat(
-                content="用户上传了以下文件：" + "、".join(request.files)
-            )
+            file_upload_chat = chat_factory.create_file_upload_chat(files=request.files)
             chats.append(file_upload_chat)
         chats.append(input_chat)
         

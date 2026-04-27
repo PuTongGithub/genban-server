@@ -1,6 +1,7 @@
 """FileSystem 模块 HTTP 接口控制器"""
 
 from datetime import datetime
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, PlainTextResponse
@@ -15,17 +16,15 @@ from src.modules.file_system.entities import (
 )
 from src.modules.file_system.exceptions import PathNotAllowedException
 from src.storage.file.file_storage import file_storage
-from src.user.auth import get_current_user_id, validate_path
+from src.user.auth import get_current_user_id, get_relative_path, validate_path
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/file_system", tags=["file_system"])
 
 
-def get_path(path: str, user_id: str):
+def get_path(path: str, user_id: str) -> Path:
     """获取路径对象，接口可操作的文件均为用户目录下的文件"""
-    from pathlib import Path
-
     if Path(path).is_absolute():
         raise PathNotAllowedException("路径不能为绝对路径")
     return validate_path(path, user_id)
@@ -201,13 +200,19 @@ async def upload_file(
         logger.warning(f"文件上传路径被拒绝，user_id: {user_id}, path: {path}")
         raise HTTPException(status_code=403, detail=str(e))
 
-    # 保存文件（支持二进制文件）
+    # 保存文件（支持二进制文件），自动处理文件名冲突
     content = await file.read()
-    file_storage.write_bytes(file_path, content)
+
+    final_path = file_storage.write_bytes_with_conflict_resolution(
+        directory=file_path.parent,
+        filename=file_path.name,
+        content=content,
+    )
 
     # 判断是否为图片文件，如果是则生成分享链接
     url = None
-    if FileTypeUtil.is_image_file(file_path):
-        url = FileShareLinkGenerator.generate_link(user_id, path)
+    final_relative_path = get_relative_path(final_path, user_id)
+    if FileTypeUtil.is_image_file(final_path):
+        url = FileShareLinkGenerator.generate_link(user_id, final_relative_path)
 
-    return FileUploadResponse(success=True, path=path, size=len(content), url=url)
+    return FileUploadResponse(success=True, path=final_relative_path, size=len(content), url=url)
