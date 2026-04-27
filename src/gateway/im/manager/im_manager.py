@@ -89,13 +89,14 @@ class IMManager:
         from src.assistant.assistant_manager import assistant_manager
 
         try:
-            chat = chat_factory.create_user_chat(
-                message.user_id, message.content, message.channel_type
-            )
             chats = []
             if message.file_paths:
                 file_chat = chat_factory.create_file_upload_chat(message.file_paths)
                 chats.append(file_chat)
+            message_content = "(一条来自渠道的消息)" if not message.content else message.content
+            chat = chat_factory.create_user_chat(
+                message.user_id, message_content, message.channel_type
+            )
             chats.append(chat)
             assistant_manager.submit_chat(message.user_id, chats)
         except Exception:
