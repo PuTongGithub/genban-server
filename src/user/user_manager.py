@@ -106,9 +106,9 @@ class _UserManager:
         # 初始化助手并发送打招呼消息
         assistant_manager.submit_chat(
             user_id=user_id,
-            chat=chat_factory.create_system_remainder_chat(
+            chats=[chat_factory.create_system_remainder_chat(
                 "这是你与用户的首次聊天，请向用户做个自我介绍吧。"
-            ),
+            )],
         )
 
         return self._create_token(user_id)

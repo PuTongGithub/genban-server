@@ -1,10 +1,10 @@
 """消息格式化工具模块"""
 
-import copy
-
-from src.agent.entities import Message, MessageRole, ToolCall, ToolCallFunction, Content
+from src.agent.entities import Content, Message, MessageRole, ToolCall, ToolCallFunction
 from src.agent.exceptions import ModelResponseException
 from src.model.entities import CallResponse
+from src.modules.file_system.components.file_share_link_generator import FileShareLinkGenerator
+from src.user.auth import validate_path
 
 
 def convert_dashscope_tool_calls(tool_calls_data: list | None) -> list[ToolCall] | None:
@@ -192,6 +192,55 @@ def format_text_content(content: str | list) -> list[Content]:
                 contents.append(Content(text=item.get("text")))
         return contents
 
+
+def _convert_image_url_to_base64(image_url: str) -> str | None:
+    """将图片 URL 转换为 Base64 编码（如果是分享链接）
+
+    如果是分享链接，则转换为 Base64 编码；否则保持原样
+
+    Args:
+        image_url: 图片 URL
+
+    Returns:
+        转换后的 URL 或 Base64 编码字符串
+    """
+    result = FileShareLinkGenerator.extract_path_from_share_link(image_url)
+    if result:
+        user_id, path = result
+        try:
+            file_path = validate_path(path, user_id)
+            if file_path.exists():
+                return FileShareLinkGenerator.encode_file_to_base64(file_path)
+            else:
+                return None
+        except Exception:
+            # 如果转换失败，返回原链接
+            return image_url
+    return image_url
+
+
+def _convert_content_images_to_base64(content: list[dict]) -> list[dict]:
+    """将 content 列表中的图片链接转为 Base64
+
+    Args:
+        content: content 字典列表
+
+    Returns:
+        转换后的 content 列表
+    """
+    result = []
+    for item in content:
+        new_item = dict(item)
+        if "image" in new_item and new_item["image"]:
+            image = _convert_image_url_to_base64(new_item["image"])
+            if image is not None:
+                new_item["image"] = image
+                result.append(new_item)
+        else:
+            result.append(new_item)
+    return result
+
+
 def _convert_content_for_openai(content: list[Content]) -> list:
     """从列表格式的 content 中提取文本
 
@@ -206,7 +255,9 @@ def _convert_content_for_openai(content: list[Content]) -> list:
         if item.text is not None:
             list.append({"type": "text", "text": item.text})
         elif item.image is not None:
-            list.append({"type": "image_url", "image_url": {"url": item.image}})
+            image_url = _convert_image_url_to_base64(item.image)
+            if image_url is not None:
+                list.append({"type": "image_url", "image_url": {"url": image_url}})
         elif item.video is not None:
             list.append({"type": "video_url", "video_url": {"url": item.video}})
     return list
@@ -249,4 +300,12 @@ def convert_messages_for_dashscope(messages: list[Message]) -> list[dict]:
     Returns:
         转换后的消息字典列表，content 为列表格式
     """
-    return [msg.to_dict() for msg in messages]
+    converted_messages = []
+    for msg in messages:
+        msg_dict = msg.to_dict()
+        # 将 content 中的图片链接转为 Base64
+        if msg_dict.get("content"):
+            msg_dict["content"] = _convert_content_images_to_base64(msg_dict["content"])
+        converted_messages.append(msg_dict)
+
+    return converted_messages

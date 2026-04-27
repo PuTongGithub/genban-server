@@ -29,12 +29,12 @@ class Assistant:
         # 向调度器注册用户上线
         Scheduler.get_instance().user_online(user_id)
 
-    def send_chat(self, chat: Chat) -> None:
+    def send_chat(self, chats: list[Chat]) -> None:
         """发送消息给 Agent"""
         self._last_active_time = time_util.get_timestamp()
         if not self._executor.is_running():
             self._executor.start()
-        self.agent.send_chat(chat)
+        self.agent.send_chat(chats)
 
     def stop_generation(self) -> None:
         """停止当前生成过程"""

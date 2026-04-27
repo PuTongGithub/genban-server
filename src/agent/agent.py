@@ -93,9 +93,9 @@ class Agent:
             for hook in hooks:
                 self.register_hook(hook)
 
-    def send_chat(self, chat: Chat) -> None:
+    def send_chat(self, chats: list[Chat]) -> None:
         """发送消息到输入管道"""
-        self._in_message_pipe.push(MessagePipeContent(chat=chat))
+        self._in_message_pipe.push(MessagePipeContent(chat=chats))
 
     def recv_content(self) -> MessagePipeContent | None:
         """从输出管道接收消息"""
@@ -170,14 +170,14 @@ class Agent:
             logger.info(f"用户 {self.user_id} 主动停止生成")
             stop_chat = chat_factory.create_stop_chat()
             context.new_chats.append(stop_chat)
-            self._send_to_output_pipe(stop_chat)
+            self._send_to_output_pipe([stop_chat])
             context.process_result = True
             return True
         except Exception as e:
             logger.exception(f"Agent 处理消息时出错: {e}")
             error_chat = chat_factory.create_error_chat(f"Agent 处理消息时出错: {str(e)}")
             context.new_chats.append(error_chat)
-            self._send_to_output_pipe(error_chat)
+            self._send_to_output_pipe([error_chat])
             context.process_result = True
             return True
         finally:
@@ -188,11 +188,11 @@ class Agent:
     def _handle_new_chat(self, context: AgentContext, contents: list[MessagePipeContent]) -> None:
         """处理新增的 Chat，收集到 context.new_chats 并发送到输出管道"""
         for content in contents:
-            new_chat = content.chat
-            if new_chat is None:
+            new_chats = content.chat
+            if new_chats is None:
                 continue
-            context.new_chats.append(new_chat)
-            self._send_to_output_pipe(new_chat)
+            context.new_chats.extend(new_chats)
+            self._send_to_output_pipe(new_chats)
 
     def _execute_pre_hooks(self, context: AgentContext) -> None:
         """执行前置钩子链"""
@@ -238,8 +238,10 @@ class Agent:
                 options=options,
             ):
                 response_chat = chat_factory.create_assistant_chat(response)
-                self._send_to_output_pipe(response_chat)
+                self._send_to_output_pipe([response_chat])
                 last_response = response
+            if response_chat is None:
+                raise ModelCallException("模型调用返回空响应")
             return response_chat
         finally:
             if last_response is not None and response_chat is not None:
@@ -280,7 +282,7 @@ class Agent:
                 tool_chat_content = f"工具调用异常：{tool_result.result.result_content}"
             else:
                 tool_chat_content = tool_result.result.result_content
-            
+
             tool_chats = [chat_factory.create_tool_chat(
                 tool_call_id=tool_result.tool_call_id,
                 tool_result=tool_chat_content,
@@ -288,13 +290,12 @@ class Agent:
             if tool_result.result.tool_chats is not None:
                 tool_chats.extend(tool_result.result.tool_chats)
 
-            for chat in tool_chats:
-                self._send_to_output_pipe(chat)
-                context.new_chats.append(chat)
+            self._send_to_output_pipe(tool_chats)
+            context.new_chats.extend(tool_chats)
         return False
 
     def _send_to_output_pipe(
-        self, chat: Chat | None = None, type: ContentType = ContentType.CHAT
+        self, chats: list[Chat] | None = None, type: ContentType = ContentType.CHAT
     ) -> None:
         """发送消息到输出管道"""
-        self._out_message_pipe.push(MessagePipeContent(chat=chat, type=type))
+        self._out_message_pipe.push(MessagePipeContent(chat=chats, type=type))

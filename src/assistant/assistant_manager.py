@@ -28,9 +28,9 @@ class AssistantManager:
                     self._assistants[user_id] = Assistant(user_id=user_id)
         return self._assistants[user_id]
 
-    def submit_chat(self, user_id: str, chat: Chat) -> None:
+    def submit_chat(self, user_id: str, chats: list[Chat]) -> None:
         """将消息发送给用户 Assistant"""
-        self._get_assistant(user_id).send_chat(chat)
+        self._get_assistant(user_id).send_chat(chats)
 
     def stop_generation(self, user_id: str) -> None:
         """停止用户的生成过程"""

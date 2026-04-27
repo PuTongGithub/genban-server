@@ -244,7 +244,7 @@ class ChatTypeInfo:
 
 @unique
 class ChatType(ChatTypeInfo, Enum):
-    DEFAULT = ("default", False, False, False)
+    DEFAULT = ("default", False, True, False)
     PROMPT = ("prompt", False, True, False)
     SYSTEM_REMAINDER = ("system_remainder", False, True, True)
     SKILL_PROMPT = ("skill_prompt", False, True, True)
@@ -255,6 +255,8 @@ class ChatType(ChatTypeInfo, Enum):
     ASSISTANT = ("assistant", True, True, False)
     TOOL = ("tool", True, True, False)
     TOOL_RESULT = ("tool_result", True, True, False)
+    FILE = ("file", True, False, False)
+    FILE_UPLOAD = ("file_upload", True, True, False)
     MEMORY = ("memory", False, True, True)
     ERROR = ("error", True, True, True)
     STOP = ("stop", True, True, True)  # 停止消息，用于中断 Agent 执行
@@ -287,5 +289,5 @@ class ContentType(StrEnum):
 class MessagePipeContent:
     """消息管道实体"""
 
-    chat: Chat | None = None
+    chat: list[Chat] | None = None
     type: ContentType = ContentType.CHAT

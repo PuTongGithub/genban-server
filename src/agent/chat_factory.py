@@ -145,6 +145,22 @@ class _ChatFactory:
             ),
         )
 
+    def create_file_chat(self, file_path: str) -> Chat:
+        """创建 Chat 对象"""
+        return Chat(
+            type=ChatType.FILE.type,
+            id=self._create_chat_id(),
+            message=self.create_message(content=file_path, role=MessageRole.USER, chat_type=ChatType.FILE),
+        )
+
+    def create_file_upload_chat(self, content: str) -> Chat:
+        """创建 Chat 对象"""
+        return Chat(
+            type=ChatType.FILE_UPLOAD.type,
+            id=self._create_chat_id(),
+            message=self.create_message(content=content, role=MessageRole.USER, chat_type=ChatType.SYSTEM_REMAINDER),
+        )
+
     def create_system_remainder_chat(self, content: str) -> Chat:
         """创建系统提醒对话"""
         return Chat(

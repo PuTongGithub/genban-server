@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, PlainTextResponse
 
 from src.common.logger import get_logger
+from src.common.utils.file_type_util import FileTypeUtil
+from src.modules.file_system.components.file_share_link_generator import FileShareLinkGenerator
 from src.modules.file_system.entities import (
     FileListResponse,
     FileSystemItem,
@@ -145,17 +147,20 @@ async def download_file(
 
 @router.get("/share/{user_id}/{path:path}")
 @router.post("/share/{user_id}/{path:path}")
-async def download_shared_file(
+async def share_file(
     user_id: str,
     path: str,
+    current_user_id: str = Depends(get_current_user_id),
 ):
     """分享文件下载（通过URL路径参数）
 
     支持 GET 和 POST 两种请求方式
+    需要用户认证，通过认证后可访问任意用户的文件
 
     Args:
-        user_id: 用户ID（从URL路径获取）
+        user_id: 文件所属用户ID（从URL路径获取）
         path: 文件相对路径（从URL路径获取）
+        current_user_id: 当前登录用户ID（由依赖注入验证）
 
     Returns:
         文件下载流
@@ -200,4 +205,9 @@ async def upload_file(
     content = await file.read()
     file_storage.write_bytes(file_path, content)
 
-    return FileUploadResponse(success=True, path=path, size=len(content))
+    # 判断是否为图片文件，如果是则生成分享链接
+    url = None
+    if FileTypeUtil.is_image_file(file_path):
+        url = FileShareLinkGenerator.generate_link(user_id, path)
+
+    return FileUploadResponse(success=True, path=path, size=len(content), url=url)

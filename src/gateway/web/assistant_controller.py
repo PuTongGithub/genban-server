@@ -50,11 +50,21 @@ async def submit(
 
         # 创建用户输入 Chat
         input_chat = chat_factory.create_user_chat(
-            user_id=current_user_id, user_input=request.message
+            user_id=current_user_id, user_input=request.message, images=request.images
         )
 
+        # 构建 Chat 列表
+        chats: list = []
+        # 如果有上传的文件，创建 FILE_UPLOAD Chat
+        if request.files:
+            file_upload_chat = chat_factory.create_file_upload_chat(
+                content="用户上传了以下文件：" + "、".join(request.files)
+            )
+            chats.append(file_upload_chat)
+        chats.append(input_chat)
+        
         # 创建队列项并入队
-        assistant_manager.submit_chat(user_id=current_user_id, chat=input_chat)
+        assistant_manager.submit_chat(user_id=current_user_id, chats=chats)
 
         logger.info(f"消息已提交，user_id: {current_user_id}, chat_id: {input_chat.id}")
         return SubmitResponse(success=True, chat_id=input_chat.id)

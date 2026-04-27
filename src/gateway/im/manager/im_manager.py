@@ -90,7 +90,7 @@ class IMManager:
             chat = chat_factory.create_user_chat(
                 message.user_id, message.content, message.channel_type
             )
-            assistant_manager.submit_chat(message.user_id, chat)
+            assistant_manager.submit_chat(message.user_id, [chat])
         except Exception:
             logger.exception(f"处理 IM 消息失败: user_id={message.user_id}")
 

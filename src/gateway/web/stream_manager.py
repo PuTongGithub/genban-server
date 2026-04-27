@@ -76,13 +76,16 @@ class StreamManager:
                     yield sse_formatter.format_complete_signal()
                 elif content.type == ContentType.CHAT:
                     # chat 事件需要检查 user_visible
-                    chat = content.chat
-                    chat_type = chat_type_map[chat.type]
-                    if not chat_type.user_visible:
+                    chats = content.chat
+                    if chats is None:
                         continue
-                    # 格式化为 SSE 格式
-                    event_data = sse_formatter.format_chat_to_sse(chat)
-                    yield event_data
+                    for chat in chats:
+                        chat_type = chat_type_map[chat.type]
+                        if not chat_type.user_visible:
+                            continue
+                        # 格式化为 SSE 格式
+                        event_data = sse_formatter.format_chat_to_sse(chat)
+                        yield event_data
 
         except asyncio.CancelledError:
             # 客户端断开连接

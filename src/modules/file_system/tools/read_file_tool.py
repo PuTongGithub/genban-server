@@ -6,11 +6,12 @@ from src.agent.entities import AgentContext
 from src.agent.tools.base_tool import BaseTool
 from src.agent.tools.entities import ToolParameter, ToolExecute
 from src.agent.chat_factory import chat_factory
+from src.common.utils.file_type_util import FileTypeUtil, FileType
 from src.modules.file_system.components.file_share_link_generator import (
     FileShareLinkGenerator,
 )
 from src.modules.file_system.exceptions import FileNotFoundException
-from src.storage.file.file_storage import file_storage, FileType
+from src.storage.file.file_storage import file_storage
 from src.user.auth import validate_path, get_relative_path
 
 
@@ -61,7 +62,7 @@ class ReadFileTool(BaseTool):
         if not file_storage.exists(file_path):
             raise FileNotFoundException(path)
 
-        file_type = file_storage.get_file_type(file_path)
+        file_type = FileTypeUtil.get_file_type(file_path)
 
         if file_type == FileType.TEXT:
             content = self._handle_text_file(file_path, start_line, end_line)

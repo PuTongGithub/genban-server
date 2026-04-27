@@ -61,6 +61,9 @@ def get_user_skills_dir(user_id: str) -> Path:
     """获取用户 Skills 目录"""
     return get_path(get_user_dir(user_id) / "skills")
 
+def get_user_downloads_dir(user_id: str) -> Path:
+    """获取用户下载目录"""
+    return get_path(get_user_dir(user_id) / "downloads")
 
 def get_memory_data_dir() -> Path:
     """获取记忆数据目录"""

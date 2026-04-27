@@ -9,6 +9,8 @@ class SubmitRequest(BaseModel):
     """提交消息请求"""
 
     message: str
+    images: list[str] | None = None
+    files: list[str] | None = None  # 用户上传的文件路径列表
 
 
 class SubmitResponse(BaseModel):

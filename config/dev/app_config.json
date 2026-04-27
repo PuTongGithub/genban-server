@@ -64,6 +64,6 @@
     "max_token": 30000
   },
   "server": {
-    "base_url": "http://192.168.31.19:8000"
+    "base_url": "http://localhost:8000"
   }
 }

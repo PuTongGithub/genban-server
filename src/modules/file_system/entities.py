@@ -26,3 +26,4 @@ class FileUploadResponse(BaseModel):
     success: bool
     path: str
     size: int
+    url: str | None = None  # 图片文件的分享链接，非图片为 None

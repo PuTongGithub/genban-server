@@ -1,6 +1,6 @@
 """模型调用器"""
 
-from src.agent.entities import Chat, Message, ToolCall, ToolCallFunction, Content
+from src.agent.entities import Chat, Message, ToolCall, ToolCallFunction, Content, ChatType, chat_type_map
 from src.agent.exceptions import (
     ModelCallException,
     ModelCallLengthLimitedException,
@@ -42,7 +42,9 @@ class ModelCaller:
         """将 Chat 列表转换为 Message 列表"""
         messages: list[Message] = []
         for chat in chats:
-            messages.append(chat.message)
+            type = chat_type_map[chat.type]
+            if type.assistant_visible:
+                messages.append(chat.message)
         return messages
 
     def _validate_response(self, response: CallResponse) -> None:

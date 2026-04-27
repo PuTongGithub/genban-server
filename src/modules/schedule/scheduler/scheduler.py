@@ -127,9 +127,9 @@ class Scheduler:
             remind_content += f"\n- ID:{schedule.id} | {schedule.title}"
             if schedule.content:
                 remind_content += f"\n- 内容: {schedule.content}"
-                
+
             if schedule.onetime:
-                remind_content += f"\n- 一次性日程，无下次触发时间"
+                remind_content += "\n- 一次性日程，无下次触发时间"
             else:
                 next_trigger_times = schedule_calculator.get_next_trigger_times(schedule, now + 1, 1)
                 if next_trigger_times:
@@ -139,7 +139,7 @@ class Scheduler:
                 remind_content += f"\n- 下次触发时间：{next_trigger_time}"
 
             chat: Chat = chat_factory.create_schedule_remainder_chat(remind_content)
-            assistant_manager.submit_chat(user_id, chat)
+            assistant_manager.submit_chat(user_id, [chat])
 
             logger.info(f"日程提醒已发送: user_id={user_id}, schedule_id={schedule.id}")
 

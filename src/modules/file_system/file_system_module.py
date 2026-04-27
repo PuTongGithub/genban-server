@@ -5,6 +5,7 @@ from src.agent.tools.base_tool import BaseTool
 from src.modules.base_module import BaseModule
 from src.modules.file_system.tools.edit_file_tool import EditFileTool
 from src.modules.file_system.tools.read_file_tool import ReadFileTool
+from src.modules.file_system.tools.send_file_tool import SendFileTool
 from src.modules.file_system.tools.write_file_tool import WriteFileTool
 
 
@@ -23,6 +24,7 @@ class FileSystemModule(BaseModule):
             ReadFileTool(),
             WriteFileTool(),
             EditFileTool(),
+            SendFileTool(),
         ]
         self._hooks: list[BaseHook] = []
 
