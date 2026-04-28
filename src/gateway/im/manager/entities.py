@@ -12,6 +12,7 @@ class IMMessage(BaseModel):
     user_id: str
     channel_type: str
     content: str
+    image_urls: list[str] = []
     file_paths: list[str] = []
     raw_data: dict[str, Any] = {}
 

@@ -55,6 +55,30 @@ class ConversationManager:
 
         logger.info(f"上下文压缩完成: user_id={context.user_id}, end_chat_id={result.end_chat_id}")
 
+    def get_current_memory_chat_id(self, user_id: str) -> str:
+        """获取当前用户的 memory 对应的 chat ID
+
+        Args:
+            user_id: 用户 ID
+
+        Returns:
+            当前用户的 memory 对话的 chat ID
+        """
+        memory = conversation_repository.get_memory(user_id)
+        return self.get_memory_chat_id(user_id, memory)
+
+    def get_memory_chat_id(self, user_id:str, memory:ConversationMemory) -> str:
+        """获取 memory 对应的 chat ID
+
+        Args:
+            user_id: 用户 ID
+            memory: 对话记忆
+
+        Returns:
+            对话的 chat ID
+        """
+        return f"{user_id}_{memory.id}"
+
     def get_combined_history(self, user_id: str) -> list[Chat]:
         """获取组合的历史对话（memory + chat）
 
@@ -70,7 +94,8 @@ class ConversationManager:
             recent_chats = chat_repository.get_chats_after(
                 user_id, memory.end_chat_id, memory.end_chat_time
             )
-            memory_chat = chat_factory.create_conversation_chat(memory.summary)
+            memory_id = self.get_memory_chat_id(user_id, memory)
+            memory_chat = chat_factory.create_conversation_chat(id=memory_id, content=memory.summary)
             result = [memory_chat] + recent_chats
         else:
             recent_chats = chat_repository.get_recent_chats(user_id)

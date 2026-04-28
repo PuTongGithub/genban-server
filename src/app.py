@@ -11,6 +11,7 @@ from src.assistant import modules
 from src.common.async_executor import AsyncExecutor
 from src.common.logger import get_logger, setup_logging
 from src.common.thread_executor import ThreadExecutor
+from src.common.thread_pool_executor import ThreadPoolExecutor
 from src.gateway.im.manager.im_manager import IMManager
 from src.gateway.web.routers import routers
 from src.gateway.web.stream_manager import StreamManager
@@ -27,6 +28,7 @@ def stop() -> None:
     logger.info("应用正在关闭...")
     AsyncExecutor.stop_all()
     ThreadExecutor.stop_all()
+    ThreadPoolExecutor.stop_all()
     StreamManager.get_instance().stop()
     Scheduler.get_instance().shutdown()
     logger.info("应用已关闭")

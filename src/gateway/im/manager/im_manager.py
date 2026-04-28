@@ -90,12 +90,22 @@ class IMManager:
 
         try:
             chats = []
+            content_parts = []
             if message.file_paths:
                 file_chat = chat_factory.create_file_upload_chat(message.file_paths)
                 chats.append(file_chat)
-            message_content = "(一条来自渠道的消息)" if not message.content else message.content
+                content_parts.append("文件")
+            if message.image_urls:
+                content_parts.append("图片")
+            if message.content:
+                message_content = message.content
+            else:
+                message_content = f"(用户从渠道给你发了{'，'.join(content_parts)})"
             chat = chat_factory.create_user_chat(
-                message.user_id, message_content, message.channel_type
+                message.user_id, 
+                message_content, 
+                message.channel_type, 
+                images=None if not message.image_urls else message.image_urls
             )
             chats.append(chat)
             assistant_manager.submit_chat(message.user_id, chats)

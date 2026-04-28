@@ -8,6 +8,7 @@ from pathlib import Path
 
 from src.common.logger import get_logger
 from src.common.utils.path_util import get_user_dir
+from src.common.utils.file_type_util  import FileTypeUtil, FileType
 from src.gateway.im.manager.base_channel import BaseIMChannel
 from src.gateway.im.manager.credential_manager import credential_manager
 from src.gateway.im.manager.entities import (
@@ -154,20 +155,24 @@ class QQChannel(BaseIMChannel):
         try:
             content = message.content or ""
             file_paths: list[str] = []
-
+            image_urls: list[str] = []
             if len(message.attachments) > 0:
                 for attachment in message.attachments:
                     if attachment.content_type == "voice":
-                        content = "（语音消息转文字：" + attachment.asr_refer_text + "）"
+                        content += "（语音消息转文字：" + attachment.asr_refer_text + "）"
                     else:
-                        file_path = await self._download_attachment(user_id, attachment)
-                        if file_path:
-                            file_paths.append(file_path)
+                        file_path, file_type = await self._download_attachment(user_id, attachment)
+                        if file_type is not None:
+                            if file_type == FileType.IMAGE:
+                                image_urls.append(FileShareLinkGenerator.generate_link(user_id=user_id, path=file_path))
+                            else:
+                                file_paths.append(file_path)
 
             im_message = IMMessage(
                 user_id=user_id,
                 channel_type=self.channel_type,
                 content=content,
+                image_urls=image_urls,
                 file_paths=file_paths,
             )
             self._on_message_received(im_message)
@@ -176,7 +181,7 @@ class QQChannel(BaseIMChannel):
         except Exception as e:
             logger.exception(f"处理 QQ 消息时发生异常: {e}")
 
-    async def _download_attachment(self, user_id: str, attachment) -> str | None:
+    async def _download_attachment(self, user_id: str, attachment) -> tuple[str, FileType | None]:
         """下载 QQ 消息附件
 
         Args:
@@ -184,12 +189,12 @@ class QQChannel(BaseIMChannel):
             attachment: QQ 附件对象
 
         Returns:
-            相对于用户目录的文件路径，下载失败返回 None
+            tuple[文件路径, 文件类型]，下载失败返回 ("下载失败", None)
         """
         url = attachment.url
         if not url:
             logger.warning(f"附件 URL 为空，跳过下载: user_id={user_id}, filename={attachment.filename}")
-            return None
+            return "url为空", None
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -199,11 +204,11 @@ class QQChannel(BaseIMChannel):
                             f"下载附件失败: user_id={user_id}, "
                             f"url={url}, status={response.status}"
                         )
-                        return None
+                        return "下载附件失败", None
                     content = await response.read()
         except Exception as e:
             logger.exception(f"下载附件异常: user_id={user_id}, url={url}, error={e}")
-            return None
+            return "下载附件异常", None
 
         user_dir = get_user_dir(user_id)
         upload_dir = user_dir / "upload" / "qq"
@@ -216,4 +221,4 @@ class QQChannel(BaseIMChannel):
         )
         relative_path = get_relative_path(file_path, user_id)
         logger.info(f"附件下载成功: user_id={user_id}, path={relative_path}")
-        return relative_path
+        return relative_path, FileTypeUtil.get_file_type(file_path)

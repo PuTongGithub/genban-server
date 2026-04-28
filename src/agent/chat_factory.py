@@ -201,11 +201,11 @@ class _ChatFactory:
             ),
         )
 
-    def create_conversation_chat(self, content: str) -> Chat:
+    def create_conversation_chat(self, id:str, content: str) -> Chat:
         """创建对话概要对话"""
         return Chat(
             type=ChatType.CONVERSATION.type,
-            id=self._create_chat_id(),
+            id=id,
             message=self.create_message(
                 content=content, role=MessageRole.USER, chat_type=ChatType.CONVERSATION
             ),

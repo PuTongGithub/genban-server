@@ -149,7 +149,6 @@ async def download_file(
 async def share_file(
     user_id: str,
     path: str,
-    current_user_id: str = Depends(get_current_user_id),
 ):
     """分享文件下载（通过URL路径参数）
 
@@ -159,7 +158,6 @@ async def share_file(
     Args:
         user_id: 文件所属用户ID（从URL路径获取）
         path: 文件相对路径（从URL路径获取）
-        current_user_id: 当前登录用户ID（由依赖注入验证）
 
     Returns:
         文件下载流

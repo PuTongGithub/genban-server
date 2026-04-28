@@ -13,6 +13,7 @@ class BaseHook(ABC, Generic[T]):
     """钩子抽象基类，入参出参同类型"""
 
     order: ClassVar[int] = 100  # 执行顺序，数值越小越先执行，默认靠后
+    async_execute: ClassVar[bool] = False  # 是否异步执行，默认同步
 
     @abstractmethod
     def execute(self, data: T | None, context: AgentContext) -> T | None:
