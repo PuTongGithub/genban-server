@@ -16,7 +16,8 @@
     "qwen3.6-plus": {
       "id": "qwen3.6-plus-2026-04-02",
       "max_tokens": 1000000,
-      "api": "dashscope_multi"
+      "api": "dashscope_multi",
+      "default": true
     },
     "kimi-k2.6": {
       "id": "kimi-k2.6",
@@ -27,14 +28,6 @@
       "id": "deepseek-v3.2-exp",
       "max_tokens": 131072,
       "api": "dashscope"
-    },
-    "glm-4.7": {
-      "id": "glm-4.7",
-      "max_tokens": 200000,
-      "api": "openai",
-      "base_url": "https://open.bigmodel.cn/api/paas/v4/",
-      "api_env_key": "ZHIPU_API_KEY",
-      "default": true
     },
     "glm-5.1": {
       "id": "glm-5.1",
