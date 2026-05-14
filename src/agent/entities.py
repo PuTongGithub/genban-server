@@ -99,13 +99,16 @@ class Message:
 
     def to_dict(self) -> dict:
         """将 Message 对象转换为字典"""
-        return {
+        m = {
             "role": self.role,
             "content": [item.to_dict() for item in self.content],
             "reasoning_content": self.reasoning_content,
-            "tool_calls": [tc.to_dict() for tc in self.tool_calls] if self.tool_calls else None,
-            "tool_call_id": self.tool_call_id,
         }
+        if self.tool_calls:
+            m["tool_calls"] = [tc.to_dict() for tc in self.tool_calls]
+        if self.tool_call_id:
+            m["tool_call_id"] = self.tool_call_id
+        return m
 
     def get_text_contents(self) -> list[str]:
         """提取消息中的所有文本内容"""

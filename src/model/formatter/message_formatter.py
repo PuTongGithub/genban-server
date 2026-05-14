@@ -274,20 +274,9 @@ def convert_messages_for_openai(messages: list[Message]) -> list[dict]:
     """
     converted_messages = []
     for msg in messages:
-        msg_dict: dict = {
-            "role": msg.role,
-            "content": _convert_content_for_openai(msg.content),
-            "reasoning_content": msg.reasoning_content,
-        }
-
-        if msg.tool_calls:
-            msg_dict["tool_calls"] = [tc.to_dict() for tc in msg.tool_calls]
-
-        if msg.tool_call_id:
-            msg_dict["tool_call_id"] = msg.tool_call_id
-
+        msg_dict = msg.to_dict()
+        msg_dict["content"] = _convert_content_for_openai(msg.content)
         converted_messages.append(msg_dict)
-
     return converted_messages
 
 
@@ -303,9 +292,6 @@ def convert_messages_for_dashscope(messages: list[Message]) -> list[dict]:
     converted_messages = []
     for msg in messages:
         msg_dict = msg.to_dict()
-        # 将 content 中的图片链接转为 Base64
-        if msg_dict.get("content"):
-            msg_dict["content"] = _convert_content_images_to_base64(msg_dict["content"])
+        msg_dict["content"] = _convert_content_images_to_base64(msg_dict["content"])
         converted_messages.append(msg_dict)
-
     return converted_messages
