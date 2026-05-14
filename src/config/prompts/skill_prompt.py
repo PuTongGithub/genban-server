@@ -8,5 +8,4 @@ SKILL_PROMPT_TEMPLATE = """
 4. 执行过程中按需加载引用资源。
 5. 严格按技能说明执行。
 - 可用技能列表：
-{available_skills_prompt}
-"""
+{available_skills_prompt}"""

@@ -18,9 +18,9 @@ class ToolCaller:
 
     def __init__(self, registry: ToolRegistry | None = None) -> None:
         self.registry = registry or ToolRegistry()
-        # 获取工具返回的最大字符串长度（conversation_memory.max_token / 2）
-        max_token = app_config.get("conversation_memory", {}).get("max_token", 10000)
-        self._max_tool_result_length = max_token // 2
+        # 获取工具返回的最大字符串长度
+        max_token = app_config.get("conversation_memory", {}).get("max_token", 20000)
+        self._max_tool_result_length = max(10000, max_token // 3 * 2)
 
     def register(self, tool: BaseTool) -> None:
         """注册工具"""

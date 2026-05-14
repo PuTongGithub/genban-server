@@ -3,7 +3,7 @@
 from src.common.utils import path_util, sys_util, time_util
 from src.config.prompts.assistant_prompt import ASSISTANT_PROMPT
 from src.config.prompts.env_prompt import ENV_PROMPT_TEMPLATE
-from src.config.prompts.memory_prompt import CONTEXT_COMPRESSION_PROMPT_TEMPLATE
+from src.config.prompts.context_compression_prompt import CONTEXT_COMPRESSION_PROMPT_TEMPLATE, CONTEXT_COMPRESSION_CHAT_HISTORY_TEMPLATE
 from src.config.prompts.schedule_prompt import (
     EXPIRED_SCHEDULES_PROMPT,
     FUTURE_SCHEDULES_PROMPT,
@@ -55,13 +55,9 @@ class PromptsLoader:
         self,
         available_modules_prompt: str,
         chat_history: str,
-    ) -> str:
+    ) -> tuple[str, str]:
         """获取对话压缩提示词"""
-        return CONTEXT_COMPRESSION_PROMPT_TEMPLATE.format(
-            available_modules_prompt=available_modules_prompt,
-            chat_history=chat_history,
-            current_timestamp=time_util.get_timestamp(),
-        )
+        return CONTEXT_COMPRESSION_PROMPT_TEMPLATE.format(available_modules_prompt=available_modules_prompt), CONTEXT_COMPRESSION_CHAT_HISTORY_TEMPLATE.format(chat_history=chat_history)
 
     def get_search_compression_prompt(
         self,

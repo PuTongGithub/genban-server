@@ -21,5 +21,4 @@ SEARCH_RESULT_COMPRESSION_PROMPT_TEMPLATE = """<background>
 3. 按信息的重要程度组织摘要，优先呈现核心答案和关键事实。
 4. 保留重要的数据来源链接，至少3条。
 5. 输出应为纯文本的摘要内容，不使用非必要的格式或标记。
-</output_instruction>
-"""
+</output_instruction>"""

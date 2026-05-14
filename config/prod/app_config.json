@@ -24,10 +24,12 @@
       "max_tokens": 1000000,
       "api": "dashscope_multi"
     },
-    "deepseek-v3.2": {
-      "id": "deepseek-v3.2-exp",
-      "max_tokens": 131072,
-      "api": "dashscope"
+    "deepseek-v4-flash": {
+      "id": "deepseek-v4-flash",
+      "max_tokens": 1000000,
+      "api": "openai",
+      "base_url": "https://api.deepseek.com/",
+      "api_env_key": "DEEPSEEK_API_KEY"
     },
     "glm-5.1": {
       "id": "glm-5.1",

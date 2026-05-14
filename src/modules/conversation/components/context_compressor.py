@@ -37,10 +37,10 @@ class ContextCompressor:
             raise ContextCompressionError("没有待压缩的对话内容")
 
         # 构造 prompt
-        prompt = self._build_compression_prompt(chats)
+        compression_prompt, chat_history_prompt = self._build_compression_prompt(chats)
 
         # 调用大模型进行压缩
-        response = self._call_compression_model(prompt)
+        response = self._call_compression_model(compression_prompt, chat_history_prompt)
 
         # 记录 token 用量（type=conversation）
         self._record_compression_cost(user_id, response)
@@ -57,7 +57,7 @@ class ContextCompressor:
 
         return result
 
-    def _build_compression_prompt(self, chats: list[Chat]) -> str:
+    def _build_compression_prompt(self, chats: list[Chat]) -> tuple[str, str]:
         """构造压缩 prompt
 
         Args:
@@ -79,18 +79,19 @@ class ContextCompressor:
             chat_history=chat_history,
         )
 
-    def _call_compression_model(self, prompt: str) -> CallResponse:
+    def _call_compression_model(self, compression_prompt: str, chat_history_prompt: str) -> CallResponse:
         """调用压缩模型
 
         Args:
-            prompt: 压缩 prompt
+            compression_prompt: 压缩 prompt
+            chat_history_prompt: 对话历史内容 prompt
 
         Returns:
             模型响应对象
         """
         
-        prompt_chat = chat_factory.create_prompt_chat(prompt)
-        user_chat = chat_factory.create_default_chat("请输出结果")
+        prompt_chat = chat_factory.create_prompt_chat(compression_prompt)
+        user_chat = chat_factory.create_default_chat(chat_history_prompt)
 
         chats = [prompt_chat, user_chat]
 
